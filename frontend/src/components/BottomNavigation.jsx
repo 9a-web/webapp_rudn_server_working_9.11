@@ -43,17 +43,20 @@ export const BottomNavigation = ({ activeTab = 'home', onTabChange, hapticFeedba
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
-      className="fixed bottom-0 left-0 right-0 z-50"
+      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50"
+      style={{ width: '370px', height: '75px' }}
     >
-      {/* Backdrop blur container */}
-      <div className="relative">
-        {/* Top gradient border */}
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      {/* Main navigation with rounded corners */}
+      <div className="relative h-full">
+        {/* Background with blur and border */}
+        <div 
+          className="absolute inset-0 bg-[#1C1C1E]/95 backdrop-blur-xl border border-white/10"
+          style={{ borderRadius: '80px' }}
+        />
         
-        {/* Main navigation */}
-        <div className="bg-[#1C1C1E]/95 backdrop-blur-xl border-t border-white/5">
-          <div className="max-w-md mx-auto px-4 py-2 safe-area-inset-bottom">
-            <div className="flex items-center justify-around gap-2">
+        {/* Content container */}
+        <div className="relative h-full px-4 py-2">
+          <div className="flex items-center justify-around gap-2 h-full">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
