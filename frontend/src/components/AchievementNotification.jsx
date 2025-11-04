@@ -68,7 +68,14 @@ export const AchievementNotification = ({ achievement, onClose, hapticFeedback }
               ease: "easeInOut"
             }}
           >
-            <div className="bg-[#2A2A2A] rounded-xl p-3 relative overflow-hidden">
+            <div 
+              className="rounded-xl p-3 relative overflow-hidden border border-white/10"
+              style={{
+                backgroundColor: 'rgba(42, 42, 42, 0.85)',
+                backdropFilter: 'blur(30px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(30px) saturate(180%)'
+              }}
+            >
               {/* Анимированный фон */}
               <motion.div
                 className="absolute inset-0 bg-gradient-to-br from-[#A3F7BF]/10 via-[#FFE66D]/10 to-transparent"
