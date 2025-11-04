@@ -175,7 +175,14 @@ export const AchievementsModal = ({
               </div>
 
               {/* Footer */}
-              <div className="sticky bottom-0 bg-[#2A2A2A] border-t border-gray-700 p-4">
+              <div 
+                className="sticky bottom-0 border-t border-gray-700 p-4"
+                style={{
+                  backgroundColor: 'rgba(42, 42, 42, 0.95)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)'
+                }}
+              >
                 <p className="text-xs text-gray-500 text-center">
                   Продолжайте использовать приложение, чтобы получить больше достижений!
                 </p>
