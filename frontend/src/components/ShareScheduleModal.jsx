@@ -219,12 +219,7 @@ export const ShareScheduleModal = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-[150]"
-            style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.7)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)'
-            }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150]"
           />
 
           {/* Modal Container - адаптивное позиционирование */}
@@ -236,17 +231,10 @@ export const ShareScheduleModal = ({
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
               className="w-full max-w-[95vw] sm:max-w-md md:max-w-lg lg:max-w-xl max-h-[90vh] overflow-y-auto"
             >
-              <div 
-                className="rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl border border-white/10"
-                style={{
-                  backgroundColor: 'rgba(42, 42, 42, 0.8)',
-                  backdropFilter: 'blur(40px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(40px) saturate(180%)'
-                }}
-              >
+              <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4 sm:mb-6">
-                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white leading-tight pr-2">
+                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 leading-tight pr-2">
                     Поделиться расписанием
                   </h2>
                   <button
@@ -254,19 +242,19 @@ export const ShareScheduleModal = ({
                       if (hapticFeedback) hapticFeedback('impact', 'light');
                       onClose();
                     }}
-                    className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 transition-colors"
+                    className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 active:bg-gray-300 transition-colors"
                   >
-                    <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-300" />
+                    <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
                   </button>
                 </div>
 
                 {/* Info */}
-                <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl sm:rounded-2xl border border-white/10">
-                  <p className="text-xs sm:text-sm text-gray-200 text-center">
+                <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl sm:rounded-2xl">
+                  <p className="text-xs sm:text-sm text-gray-600 text-center">
                     📅 {formatDate(selectedDate)}
                   </p>
                   {groupName && (
-                    <p className="text-xs text-gray-400 text-center mt-1">
+                    <p className="text-xs text-gray-500 text-center mt-1">
                       Группа: {groupName}
                     </p>
                   )}
