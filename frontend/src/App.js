@@ -555,6 +555,15 @@ const Home = () => {
           <SwipeHint onSwipe={true} />
         )}
       </div>
+
+      {/* Bottom Navigation */}
+      {!showGroupSelector && userSettings && (
+        <BottomNavigation 
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          hapticFeedback={hapticFeedback}
+        />
+      )}
     </div>
   );
 };
