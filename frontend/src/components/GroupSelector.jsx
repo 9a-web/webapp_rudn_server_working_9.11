@@ -294,7 +294,14 @@ const GroupSelector = ({ onGroupSelected, onCancel }) => {
       )}
 
       {/* Progress indicator */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm p-4">
+      <div 
+        className="fixed bottom-0 left-0 right-0 p-4 border-t border-white/10"
+        style={{
+          backgroundColor: 'rgba(28, 28, 30, 0.85)',
+          backdropFilter: 'blur(30px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(30px) saturate(180%)'
+        }}
+      >
         <div className="flex justify-center space-x-2">
           {['faculty', 'level', 'course', 'form', 'group'].map((s, index) => (
             <div
