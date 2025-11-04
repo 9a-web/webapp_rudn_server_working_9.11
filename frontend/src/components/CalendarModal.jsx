@@ -71,14 +71,24 @@ export const CalendarModal = ({ isOpen, onClose, onDateSelect }) => {
   return (
     <AnimatePresence>
       <motion.div 
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 bg-black/70 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6"
+        style={{
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)'
+        }}
         initial="initial"
         animate="animate"
         exit="exit"
         variants={backdropVariants}
       >
         <motion.div 
-          className="bg-card rounded-3xl p-6 md:p-8 w-full max-w-md md:max-w-lg shadow-2xl"
+          className="rounded-3xl p-6 md:p-8 w-full max-w-md md:max-w-lg shadow-2xl border border-white/10"
+          style={{
+            backgroundColor: 'rgba(42, 42, 42, 0.8)',
+            backdropFilter: 'blur(40px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(40px) saturate(180%)'
+          }}
           initial="initial"
           animate="animate"
           exit="exit"
@@ -138,11 +148,12 @@ export const CalendarModal = ({ isOpen, onClose, onDateSelect }) => {
                 onClick={() => handleDateClick(day)}
                 className={`
                   aspect-square rounded-lg md:rounded-xl text-sm md:text-base font-medium transition-all duration-200
-                  ${isSelected(day)
-                    ? 'bg-gradient-live text-card shadow-glow scale-105'
-                    : isToday(day)
-                    ? 'bg-accent text-foreground'
-                    : 'text-foreground hover:bg-accent/50'
+                  ${
+                    isSelected(day)
+                      ? 'bg-gradient-live text-card shadow-glow scale-105'
+                      : isToday(day)
+                      ? 'bg-accent text-foreground'
+                      : 'text-foreground hover:bg-accent/50'
                   }
                   hover:scale-105 active:scale-95
                 `}

@@ -45,16 +45,6 @@ export const MenuModal = React.memo(({
       action: onAnalyticsClick,
       show: !!onAnalyticsClick
     }
-    // Language switcher hidden by user request
-    // {
-    //   id: 'language',
-    //   icon: Languages,
-    //   label: `${t('menu.language', 'Язык')}: ${i18n.language.toUpperCase()}`,
-    //   color: '#C4A3FF',
-    //   action: toggleLanguage,
-    //   show: true,
-    //   disabled: false
-    // }
   ];
 
   const backdropVariants = {
@@ -108,7 +98,12 @@ export const MenuModal = React.memo(({
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+            className="fixed inset-0 z-40"
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)'
+            }}
             variants={backdropVariants}
             initial="hidden"
             animate="visible"
@@ -124,7 +119,14 @@ export const MenuModal = React.memo(({
             animate="visible"
             exit="exit"
           >
-            <div className="bg-[#2A2A2A]/95 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden border border-white/10">
+            <div 
+              className="rounded-2xl shadow-2xl overflow-hidden border border-white/10"
+              style={{
+                backgroundColor: 'rgba(42, 42, 42, 0.75)',
+                backdropFilter: 'blur(40px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(40px) saturate(180%)'
+              }}
+            >
               {/* Header */}
               <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
                 <h3 className="text-lg font-bold text-white">
