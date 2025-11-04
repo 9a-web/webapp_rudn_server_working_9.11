@@ -28,8 +28,12 @@ export const BottomNavigation = ({ activeTab = 'home', onTabChange, hapticFeedba
   ];
 
   const handleTabClick = (tabId) => {
-    if (hapticFeedback) {
-      hapticFeedback.impactOccurred('light');
+    if (hapticFeedback?.impactOccurred) {
+      try {
+        hapticFeedback.impactOccurred('light');
+      } catch (e) {
+        // Haptic feedback not available
+      }
     }
     onTabChange?.(tabId);
   };
