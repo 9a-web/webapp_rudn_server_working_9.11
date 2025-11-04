@@ -40,15 +40,14 @@ export const BottomNavigation = ({ activeTab = 'home', onTabChange, hapticFeedba
 
   return (
     <motion.nav
-      initial={{ y: 100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
+      initial={{ y: 100, opacity: 0, x: '-50%' }}
+      animate={{ y: 0, opacity: 1, x: '-50%' }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
       className="fixed bottom-4 z-50"
       style={{ 
         width: '370px', 
         height: '75px',
-        left: '50%',
-        transform: 'translateX(-50%)'
+        left: '50%'
       }}
     >
       {/* Main navigation with rounded corners */}
