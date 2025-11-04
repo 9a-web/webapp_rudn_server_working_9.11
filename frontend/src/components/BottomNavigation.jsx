@@ -47,20 +47,47 @@ export const BottomNavigation = ({ activeTab = 'home', onTabChange, hapticFeedba
       style={{ 
         width: '370px', 
         height: '50px',
-        left: '50%'
+        left: '50%',
+        overflow: 'visible'
       }}
     >
       {/* Main navigation with rounded corners */}
-      <div className="relative h-full" style={{ overflow: 'visible' }}>
+      <div className="relative h-full">
+        {/* Glow effects layer - rendered behind the background */}
+        <div className="absolute inset-0 pointer-events-none" style={{ overflow: 'visible' }}>
+          <div className="relative h-full px-4 py-1">
+            <div className="flex items-center justify-around gap-2 h-full">
+              {tabs.map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <div
+                    key={`glow-${tab.id}`}
+                    className="flex-1 relative"
+                  >
+                    {isActive && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className={`absolute inset-0 bg-gradient-to-br ${tab.gradient} opacity-20 blur-xl`}
+                        style={{ borderRadius: '40px' }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
         {/* Background with blur and border */}
         <div 
           className="absolute inset-0 bg-[#1C1C1E]/95 backdrop-blur-xl border border-white/10"
-          style={{ borderRadius: '80px' }}
+          style={{ borderRadius: '80px', overflow: 'hidden' }}
         />
         
         {/* Content container */}
-        <div className="relative h-full px-4 py-1" style={{ overflow: 'visible' }}>
-          <div className="flex items-center justify-around gap-2 h-full" style={{ overflow: 'visible' }}>
+        <div className="relative h-full px-4 py-1">
+          <div className="flex items-center justify-around gap-2 h-full">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -73,8 +100,7 @@ export const BottomNavigation = ({ activeTab = 'home', onTabChange, hapticFeedba
                     className="relative flex-1 flex items-center justify-center px-3 transition-all duration-300 touch-manipulation"
                     style={{
                       backgroundColor: isActive ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
-                      borderRadius: '40px',
-                      overflow: 'visible'
+                      borderRadius: '40px'
                     }}
                   >
                     {/* Active indicator */}
@@ -107,16 +133,6 @@ export const BottomNavigation = ({ activeTab = 'home', onTabChange, hapticFeedba
                         </div>
                       )}
                     </div>
-
-                    {/* Active glow effect */}
-                    {isActive && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className={`absolute inset-0 bg-gradient-to-br ${tab.gradient} opacity-10 blur-xl`}
-                        style={{ borderRadius: '40px' }}
-                      />
-                    )}
                   </motion.button>
                 );
               })}
