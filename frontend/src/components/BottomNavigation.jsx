@@ -107,8 +107,7 @@ export const BottomNavigation = ({ activeTab = 'home', onTabChange, hapticFeedba
                     {isActive && (
                       <motion.div
                         layoutId="activeTab"
-                        className="absolute inset-0 bg-white/5"
-                        style={{ borderRadius: '40px' }}
+                        className="absolute inset-0 bg-white/5 rounded-[40px]"
                         transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                       />
                     )}
