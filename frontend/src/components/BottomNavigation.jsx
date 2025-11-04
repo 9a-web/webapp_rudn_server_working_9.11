@@ -128,7 +128,6 @@ export const BottomNavigation = ({ activeTab = 'home', onTabChange, hapticFeedba
                   </motion.button>
                 );
               })}
-            </div>
           </div>
         </div>
       </div>
