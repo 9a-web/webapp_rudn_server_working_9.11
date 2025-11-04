@@ -81,8 +81,14 @@ export const BottomNavigation = ({ activeTab = 'home', onTabChange, hapticFeedba
 
         {/* Background with blur and border */}
         <div 
-          className="absolute inset-0 bg-[#1C1C1E]/95 backdrop-blur-xl border border-white/10"
-          style={{ borderRadius: '80px', overflow: 'hidden' }}
+          className="absolute inset-0 border border-white/10"
+          style={{ 
+            borderRadius: '80px', 
+            overflow: 'hidden',
+            backgroundColor: 'rgba(28, 28, 30, 0.95)',
+            backdropFilter: 'blur(40px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(40px) saturate(180%)'
+          }}
         />
         
         {/* Content container */}
