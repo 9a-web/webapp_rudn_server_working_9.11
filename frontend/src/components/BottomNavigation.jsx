@@ -73,7 +73,8 @@ export const BottomNavigation = ({ activeTab = 'home', onTabChange, hapticFeedba
                     className="relative flex-1 flex items-center justify-center px-3 transition-all duration-300 touch-manipulation"
                     style={{
                       backgroundColor: isActive ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
-                      borderRadius: '40px'
+                      borderRadius: '40px',
+                      overflow: 'visible'
                     }}
                   >
                     {/* Active indicator */}
