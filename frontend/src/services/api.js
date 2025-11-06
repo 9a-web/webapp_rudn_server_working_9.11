@@ -375,12 +375,14 @@ export const tasksAPI = {
    * Создать новую задачу
    * @param {number} telegramId - Telegram ID пользователя
    * @param {string} text - Текст задачи
+   * @param {Object} additionalData - Дополнительные поля (category, priority, deadline, subject)
    */
-  createTask: async (telegramId, text) => {
+  createTask: async (telegramId, text, additionalData = {}) => {
     try {
       const response = await api.post('/tasks', {
         telegram_id: telegramId,
         text,
+        ...additionalData,
       });
       return response.data;
     } catch (error) {
