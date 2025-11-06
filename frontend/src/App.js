@@ -12,6 +12,8 @@ import { ScheduleListSkeleton } from './components/SkeletonCard';
 import { DesktopSidebar } from './components/DesktopSidebar';
 import { SwipeHint } from './components/SwipeHint';
 import { BottomNavigation } from './components/BottomNavigation';
+import { TasksSection } from './components/TasksSection';
+import { JournalSection } from './components/JournalSection';
 import GroupSelector from './components/GroupSelector';
 import StatusTester from './StatusTester';
 import { TelegramProvider, useTelegram } from './contexts/TelegramContext';
