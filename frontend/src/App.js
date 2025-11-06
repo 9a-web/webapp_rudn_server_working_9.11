@@ -444,61 +444,80 @@ const Home = () => {
           hapticFeedback={hapticFeedback}
         />
         
-        {/* Responsive layout: 
-            - Mobile (< 768px): single column
-            - Tablet (768px - 1279px): two columns equal width
-            - Desktop (>= 1280px): main content + sidebar (380px fixed)
-        */}
-        <div className="md:grid md:grid-cols-2 md:gap-6 md:px-6 lg:grid-cols-2 xl:grid-cols-[1fr_380px]">
-          {/* Main content column */}
-          <div className="md:min-w-0 md:overflow-visible">
-            <LiveScheduleCarousel
-              currentClass={currentClass} 
-              minutesLeft={minutesLeft}
-              hapticFeedback={hapticFeedback}
-              allAchievements={allAchievements}
-              userAchievements={userAchievements}
-              userStats={userStats}
-              user={user}
-            />
-          
-            <WeekDaySelector 
-              selectedDate={selectedDate}
-              onDateSelect={handleDateSelect}
-              weekNumber={weekNumber}
-              hapticFeedback={hapticFeedback}
-            />
-            
-            {loading ? (
-              <div className="bg-white rounded-t-[40px] mt-6 pt-8">
-                <ScheduleListSkeleton count={4} />
+        {/* Условное отображение разделов в зависимости от активной вкладки */}
+        {activeTab === 'home' && (
+          <>
+            {/* Responsive layout: 
+                - Mobile (< 768px): single column
+                - Tablet (768px - 1279px): two columns equal width
+                - Desktop (>= 1280px): main content + sidebar (380px fixed)
+            */}
+            <div className="md:grid md:grid-cols-2 md:gap-6 md:px-6 lg:grid-cols-2 xl:grid-cols-[1fr_380px]">
+              {/* Main content column */}
+              <div className="md:min-w-0 md:overflow-visible">
+                <LiveScheduleCarousel
+                  currentClass={currentClass} 
+                  minutesLeft={minutesLeft}
+                  hapticFeedback={hapticFeedback}
+                  allAchievements={allAchievements}
+                  userAchievements={userAchievements}
+                  userStats={userStats}
+                  user={user}
+                />
+              
+                <WeekDaySelector 
+                  selectedDate={selectedDate}
+                  onDateSelect={handleDateSelect}
+                  weekNumber={weekNumber}
+                  hapticFeedback={hapticFeedback}
+                />
+                
+                {loading ? (
+                  <div className="bg-white rounded-t-[40px] mt-6 pt-8">
+                    <ScheduleListSkeleton count={4} />
+                  </div>
+                ) : (
+                  <LiveScheduleSection 
+                    selectedDate={selectedDate}
+                    mockSchedule={schedule}
+                    weekNumber={weekNumber}
+                    onWeekChange={handleWeekChange}
+                    groupName={userSettings?.group_name}
+                    onChangeGroup={handleChangeGroup}
+                    onDateSelect={handleDateSelect}
+                    hapticFeedback={hapticFeedback}
+                    telegramId={user?.id}
+                  />
+                )}
               </div>
-            ) : (
-              <LiveScheduleSection 
-                selectedDate={selectedDate}
-                mockSchedule={schedule}
-                weekNumber={weekNumber}
-                onWeekChange={handleWeekChange}
-                groupName={userSettings?.group_name}
-                onChangeGroup={handleChangeGroup}
-                onDateSelect={handleDateSelect}
-                hapticFeedback={hapticFeedback}
-                telegramId={user?.id}
+              
+              {/* Desktop Sidebar - right column (desktop only) */}
+              <DesktopSidebar
+                user={user}
+                userStats={userStats}
+                userAchievements={userAchievements}
+                allAchievements={allAchievements}
+                onAchievementsClick={user ? handleAchievementsClick : null}
+                onAnalyticsClick={schedule.length > 0 ? handleAnalyticsClick : null}
+                onCalendarClick={handleCalendarClick}
               />
-            )}
+            </div>
+          </>
+        )}
+
+        {/* Раздел "Список дел" */}
+        {activeTab === 'tasks' && (
+          <div className="px-4">
+            <TasksSection />
           </div>
-          
-          {/* Desktop Sidebar - right column (desktop only) */}
-          <DesktopSidebar
-            user={user}
-            userStats={userStats}
-            userAchievements={userAchievements}
-            allAchievements={allAchievements}
-            onAchievementsClick={user ? handleAchievementsClick : null}
-            onAnalyticsClick={schedule.length > 0 ? handleAnalyticsClick : null}
-            onCalendarClick={handleCalendarClick}
-          />
-        </div>
+        )}
+
+        {/* Раздел "Журнал" */}
+        {activeTab === 'journal' && (
+          <div className="px-4">
+            <JournalSection />
+          </div>
+        )}
         
         <Suspense fallback={null}>
           <CalendarModal
