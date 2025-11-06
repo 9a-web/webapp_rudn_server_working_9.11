@@ -513,7 +513,11 @@ const Home = () => {
         {/* Раздел "Список дел" */}
         {activeTab === 'tasks' && (
           <div className="px-4">
-            <TasksSection />
+            <TasksSection 
+              userSettings={userSettings}
+              selectedDate={selectedDate}
+              weekNumber={weekNumber}
+            />
           </div>
         )}
 
