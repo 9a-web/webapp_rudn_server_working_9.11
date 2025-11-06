@@ -702,6 +702,119 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber }) => {
             </p>
           </div>
         </motion.div>
+
+        {/* Группы задач по дедлайнам */}
+        <div className="space-y-4 max-w-2xl">
+          {/* Просроченные задачи */}
+          {groupedTasks.overdue.length > 0 && (
+            <TaskGroup
+              title="Просроченные"
+              icon={<AlertCircle className="w-5 h-5 text-red-600" />}
+              tasks={groupedTasks.overdue}
+              accentColor="red"
+              onToggle={toggleTask}
+              onEdit={handleStartEdit}
+              onDelete={handleDeleteTask}
+              editingTaskId={editingTaskId}
+              editingText={editingText}
+              setEditingText={setEditingText}
+              onSaveEdit={handleSaveEdit}
+              onCancelEdit={handleCancelEdit}
+              getCategoryEmoji={getCategoryEmoji}
+              getPriorityColor={getPriorityColor}
+              getDeadlineStatus={getDeadlineStatus}
+              hapticFeedback={hapticFeedback}
+            />
+          )}
+
+          {/* Задачи на сегодня */}
+          {groupedTasks.today.length > 0 && (
+            <TaskGroup
+              title="Сегодня"
+              icon={<Calendar className="w-5 h-5 text-orange-600" />}
+              tasks={groupedTasks.today}
+              accentColor="orange"
+              onToggle={toggleTask}
+              onEdit={handleStartEdit}
+              onDelete={handleDeleteTask}
+              editingTaskId={editingTaskId}
+              editingText={editingText}
+              setEditingText={setEditingText}
+              onSaveEdit={handleSaveEdit}
+              onCancelEdit={handleCancelEdit}
+              getCategoryEmoji={getCategoryEmoji}
+              getPriorityColor={getPriorityColor}
+              getDeadlineStatus={getDeadlineStatus}
+              hapticFeedback={hapticFeedback}
+            />
+          )}
+
+          {/* Задачи на этой неделе */}
+          {groupedTasks.thisWeek.length > 0 && (
+            <TaskGroup
+              title="На этой неделе"
+              icon={<Clock className="w-5 h-5 text-blue-600" />}
+              tasks={groupedTasks.thisWeek}
+              accentColor="blue"
+              onToggle={toggleTask}
+              onEdit={handleStartEdit}
+              onDelete={handleDeleteTask}
+              editingTaskId={editingTaskId}
+              editingText={editingText}
+              setEditingText={setEditingText}
+              onSaveEdit={handleSaveEdit}
+              onCancelEdit={handleCancelEdit}
+              getCategoryEmoji={getCategoryEmoji}
+              getPriorityColor={getPriorityColor}
+              getDeadlineStatus={getDeadlineStatus}
+              hapticFeedback={hapticFeedback}
+            />
+          )}
+
+          {/* Задачи позже */}
+          {groupedTasks.later.length > 0 && (
+            <TaskGroup
+              title="Позже"
+              icon={<Star className="w-5 h-5 text-purple-600" />}
+              tasks={groupedTasks.later}
+              accentColor="purple"
+              onToggle={toggleTask}
+              onEdit={handleStartEdit}
+              onDelete={handleDeleteTask}
+              editingTaskId={editingTaskId}
+              editingText={editingText}
+              setEditingText={setEditingText}
+              onSaveEdit={handleSaveEdit}
+              onCancelEdit={handleCancelEdit}
+              getCategoryEmoji={getCategoryEmoji}
+              getPriorityColor={getPriorityColor}
+              getDeadlineStatus={getDeadlineStatus}
+              hapticFeedback={hapticFeedback}
+            />
+          )}
+
+          {/* Задачи без дедлайна */}
+          {groupedTasks.noDeadline.length > 0 && (
+            <TaskGroup
+              title="Без срока"
+              icon={<ClipboardList className="w-5 h-5 text-gray-600" />}
+              tasks={groupedTasks.noDeadline}
+              accentColor="gray"
+              onToggle={toggleTask}
+              onEdit={handleStartEdit}
+              onDelete={handleDeleteTask}
+              editingTaskId={editingTaskId}
+              editingText={editingText}
+              setEditingText={setEditingText}
+              onSaveEdit={handleSaveEdit}
+              onCancelEdit={handleCancelEdit}
+              getCategoryEmoji={getCategoryEmoji}
+              getPriorityColor={getPriorityColor}
+              getDeadlineStatus={getDeadlineStatus}
+              hapticFeedback={hapticFeedback}
+            />
+          )}
+        </div>
       </div>
 
       {/* Модальное окно добавления задачи */}
@@ -710,7 +823,214 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber }) => {
         onClose={() => setIsAddModalOpen(false)}
         onAddTask={handleAddTask}
         hapticFeedback={hapticFeedback}
+        scheduleSubjects={scheduleSubjects}
       />
+    </motion.div>
+  );
+};
+
+// Компонент группы задач
+const TaskGroup = ({ 
+  title, 
+  icon, 
+  tasks, 
+  accentColor,
+  onToggle,
+  onEdit,
+  onDelete,
+  editingTaskId,
+  editingText,
+  setEditingText,
+  onSaveEdit,
+  onCancelEdit,
+  getCategoryEmoji,
+  getPriorityColor,
+  getDeadlineStatus,
+  hapticFeedback
+}) => {
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  const accentColors = {
+    red: { bg: 'from-red-50 to-red-100', border: 'border-red-200', text: 'text-red-600' },
+    orange: { bg: 'from-orange-50 to-orange-100', border: 'border-orange-200', text: 'text-orange-600' },
+    blue: { bg: 'from-blue-50 to-blue-100', border: 'border-blue-200', text: 'text-blue-600' },
+    purple: { bg: 'from-purple-50 to-purple-100', border: 'border-purple-200', text: 'text-purple-600' },
+    gray: { bg: 'from-gray-50 to-gray-100', border: 'border-gray-200', text: 'text-gray-600' },
+  };
+
+  const colors = accentColors[accentColor] || accentColors.gray;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`rounded-2xl bg-gradient-to-br ${colors.bg} border ${colors.border} overflow-hidden`}
+    >
+      {/* Заголовок группы */}
+      <button
+        onClick={() => {
+          setIsExpanded(!isExpanded);
+          hapticFeedback && hapticFeedback('selection');
+        }}
+        className="w-full flex items-center justify-between p-4 hover:bg-white/30 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          {icon}
+          <h3 className={`text-sm font-bold ${colors.text}`}>{title}</h3>
+          <span className="text-xs text-gray-500">
+            ({tasks.filter(t => t.completed).length}/{tasks.length})
+          </span>
+        </div>
+        <motion.div
+          animate={{ rotate: isExpanded ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ChevronDown className={`w-5 h-5 ${colors.text}`} />
+        </motion.div>
+      </button>
+
+      {/* Список задач */}
+      {isExpanded && (
+        <div className="px-4 pb-4 space-y-2">
+          {tasks.map((task) => {
+            const isEditing = editingTaskId === task.id;
+            
+            return (
+              <motion.div
+                key={task.id}
+                drag="x"
+                dragConstraints={{ left: -80, right: 0 }}
+                dragElastic={0.2}
+                onDragEnd={(e, info) => {
+                  if (info.offset.x < -60 && window.innerWidth < 768) {
+                    onDelete(task.id);
+                  }
+                }}
+                className="relative"
+              >
+                {/* Фон для свайпа */}
+                <div className="absolute right-0 top-0 bottom-0 w-16 bg-red-500 rounded-lg flex items-center justify-center">
+                  <Trash2 className="w-4 h-4 text-white" />
+                </div>
+                
+                {/* Контент задачи */}
+                <motion.div
+                  whileTap={{ scale: 0.98 }}
+                  className="relative bg-white rounded-lg p-3 group shadow-sm"
+                >
+                  {isEditing ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={editingText}
+                        onChange={(e) => setEditingText(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            onSaveEdit(task.id);
+                          } else if (e.key === 'Escape') {
+                            onCancelEdit();
+                          }
+                        }}
+                        className="flex-1 text-sm bg-gray-50 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-yellow-400"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => onSaveEdit(task.id)}
+                        className="p-1 text-green-600 hover:bg-green-100 rounded"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={onCancelEdit}
+                        className="p-1 text-red-600 hover:bg-red-100 rounded"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-3">
+                      {/* Checkbox */}
+                      <div 
+                        onClick={() => onToggle(task.id)}
+                        className={`
+                          w-5 h-5 rounded-md flex-shrink-0 flex items-center justify-center transition-all duration-200 mt-0.5 cursor-pointer
+                          ${task.completed 
+                            ? 'bg-gradient-to-br from-yellow-400 to-orange-400' 
+                            : 'bg-white border-2 border-gray-300 group-hover:border-yellow-400'
+                          }
+                        `}
+                      >
+                        {task.completed && (
+                          <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                        )}
+                      </div>
+
+                      {/* Текст и метаданные */}
+                      <div className="flex-1 min-w-0">
+                        <span 
+                          className={`
+                            block text-sm leading-tight transition-all duration-200
+                            ${task.completed 
+                              ? 'text-gray-400 line-through' 
+                              : 'text-gray-800'
+                            }
+                          `}
+                        >
+                          {task.text}
+                        </span>
+                        
+                        {/* Метки */}
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          {task.category && (
+                            <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full">
+                              {getCategoryEmoji(task.category)}
+                            </span>
+                          )}
+                          {task.priority && task.priority !== 'medium' && (
+                            <Flag className={`w-3 h-3 ${getPriorityColor(task.priority)}`} />
+                          )}
+                          {task.subject && (
+                            <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                              📖 {task.subject}
+                            </span>
+                          )}
+                          {task.deadline && (() => {
+                            const deadlineStatus = getDeadlineStatus(task.deadline);
+                            return deadlineStatus && (
+                              <div className={`flex items-center gap-1 text-xs ${deadlineStatus.color} ${deadlineStatus.bgColor} px-2 py-0.5 rounded-full`}>
+                                <Calendar className="w-3 h-3" />
+                                <span>{deadlineStatus.text}</span>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                      
+                      {/* Кнопки редактирования (десктоп) */}
+                      <div className="hidden md:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => onEdit(task)}
+                          className="p-1.5 text-yellow-600 hover:bg-yellow-100 rounded"
+                          title="Редактировать"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => onDelete(task.id)}
+                          className="p-1.5 text-red-600 hover:bg-red-100 rounded"
+                          title="Удалить"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
     </motion.div>
   );
 };
