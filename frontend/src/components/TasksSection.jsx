@@ -853,9 +853,16 @@ const TaskGroup = ({
   getCategoryEmoji,
   getPriorityColor,
   getDeadlineStatus,
-  hapticFeedback
+  hapticFeedback,
+  onReorder
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [localTasks, setLocalTasks] = useState(tasks);
+
+  // Обновляем локальный стейт при изменении пропсов
+  useEffect(() => {
+    setLocalTasks(tasks);
+  }, [tasks]);
 
   const accentColors = {
     red: { bg: 'from-red-50 to-red-100', border: 'border-red-200', text: 'text-red-600' },
@@ -866,6 +873,13 @@ const TaskGroup = ({
   };
 
   const colors = accentColors[accentColor] || accentColors.gray;
+
+  const handleReorder = (newOrder) => {
+    setLocalTasks(newOrder);
+    if (onReorder) {
+      onReorder(newOrder);
+    }
+  };
 
   return (
     <motion.div
