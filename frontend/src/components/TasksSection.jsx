@@ -254,52 +254,85 @@ export const TasksSection = () => {
                         </div>
                       ) : (
                         // Обычный режим
-                        <div className="flex items-start gap-2">
-                          {/* Checkbox */}
-                          <div 
-                            onClick={() => toggleTask(task.id)}
-                            className={`
-                              w-4 h-4 rounded-md flex-shrink-0 flex items-center justify-center transition-all duration-200 mt-0.5 cursor-pointer
-                              ${task.completed 
-                                ? 'bg-gradient-to-br from-yellow-400 to-orange-400' 
-                                : 'bg-white border-2 border-[#E5E5E5] group-hover:border-yellow-400'
-                              }
-                            `}
-                          >
-                            {task.completed && (
-                              <Check className="w-3 h-3 text-white" strokeWidth={3} />
-                            )}
-                          </div>
+                        <div className="flex flex-col gap-1.5">
+                          <div className="flex items-start gap-2">
+                            {/* Checkbox */}
+                            <div 
+                              onClick={() => toggleTask(task.id)}
+                              className={`
+                                w-4 h-4 rounded-md flex-shrink-0 flex items-center justify-center transition-all duration-200 mt-0.5 cursor-pointer
+                                ${task.completed 
+                                  ? 'bg-gradient-to-br from-yellow-400 to-orange-400' 
+                                  : 'bg-white border-2 border-[#E5E5E5] group-hover:border-yellow-400'
+                                }
+                              `}
+                            >
+                              {task.completed && (
+                                <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                              )}
+                            </div>
 
-                          {/* Текст задачи */}
-                          <span 
-                            className={`
-                              flex-1 text-xs leading-tight transition-all duration-200
-                              ${task.completed 
-                                ? 'text-[#999999] line-through' 
-                                : 'text-[#1C1C1E]'
-                              }
-                            `}
-                          >
-                            {task.text}
-                          </span>
-                          
-                          {/* Кнопки редактирования/удаления (десктоп) */}
-                          <div className="hidden md:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => handleStartEdit(task)}
-                              className="p-1 text-yellow-600 hover:bg-yellow-100 rounded"
-                              title="Редактировать"
-                            >
-                              <Edit2 className="w-3 h-3" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteTask(task.id)}
-                              className="p-1 text-red-600 hover:bg-red-100 rounded"
-                              title="Удалить"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
+                            {/* Текст задачи */}
+                            <div className="flex-1 min-w-0">
+                              <span 
+                                className={`
+                                  block text-xs leading-tight transition-all duration-200
+                                  ${task.completed 
+                                    ? 'text-[#999999] line-through' 
+                                    : 'text-[#1C1C1E]'
+                                  }
+                                `}
+                              >
+                                {task.text}
+                              </span>
+                              
+                              {/* Метки: категория, приоритет, предмет */}
+                              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                {task.category && (
+                                  <span className="text-xs">
+                                    {getCategoryEmoji(task.category)}
+                                  </span>
+                                )}
+                                {task.priority && task.priority !== 'medium' && (
+                                  <Flag className={`w-2.5 h-2.5 ${getPriorityColor(task.priority)}`} />
+                                )}
+                                {task.subject && (
+                                  <span className="text-[9px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                                    {task.subject}
+                                  </span>
+                                )}
+                              </div>
+                              
+                              {/* Дедлайн */}
+                              {task.deadline && (() => {
+                                const deadlineStatus = getDeadlineStatus(task.deadline);
+                                return deadlineStatus && (
+                                  <div className={`flex items-center gap-1 mt-1 text-[9px] ${deadlineStatus.color} ${deadlineStatus.bgColor} px-1.5 py-0.5 rounded w-fit`}>
+                                    {deadlineStatus.text === 'Просрочено' && <AlertCircle className="w-2.5 h-2.5" />}
+                                    <Calendar className="w-2.5 h-2.5" />
+                                    <span>{deadlineStatus.text}</span>
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                            
+                            {/* Кнопки редактирования/удаления (десктоп) */}
+                            <div className="hidden md:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => handleStartEdit(task)}
+                                className="p-1 text-yellow-600 hover:bg-yellow-100 rounded"
+                                title="Редактировать"
+                              >
+                                <Edit2 className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteTask(task.id)}
+                                className="p-1 text-red-600 hover:bg-red-100 rounded"
+                                title="Удалить"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       )}
