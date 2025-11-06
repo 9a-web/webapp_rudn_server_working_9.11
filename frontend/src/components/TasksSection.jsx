@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, PanInfo } from 'framer-motion';
-import { ClipboardList, Check, Plus, Edit2, Trash2, X, Flag, Calendar, AlertCircle } from 'lucide-react';
-import { tasksAPI } from '../services/api';
+import { ClipboardList, Check, Plus, Edit2, Trash2, X, Flag, Calendar, AlertCircle, Filter, SortAsc, Zap, Bell, Star, Clock, ChevronDown } from 'lucide-react';
+import { tasksAPI, scheduleAPI } from '../services/api';
 import { useTelegram } from '../contexts/TelegramContext';
 import { AddTaskModal } from './AddTaskModal';
 
-export const TasksSection = () => {
+export const TasksSection = ({ userSettings, selectedDate, weekNumber }) => {
   const { user, hapticFeedback } = useTelegram();
   
   const [tasks, setTasks] = useState([]);
@@ -14,6 +14,15 @@ export const TasksSection = () => {
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editingText, setEditingText] = useState('');
   const [scheduleSubjects, setScheduleSubjects] = useState([]);
+  
+  // Фильтры и сортировка
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedPriority, setSelectedPriority] = useState(null);
+  const [sortBy, setSortBy] = useState('created'); // created, priority, deadline
+  const [showFilters, setShowFilters] = useState(false);
+  
+  // Шаблоны быстрых действий
+  const [showQuickActions, setShowQuickActions] = useState(false);
   
   // Категории задач с эмодзи
   const getCategoryEmoji = (category) => {
