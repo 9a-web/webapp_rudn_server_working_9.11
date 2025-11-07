@@ -226,9 +226,7 @@ export const LiveScheduleSection = ({
           <button
             className="flex items-center gap-2 px-4 md:px-5 py-2.5 md:py-3 rounded-[30px] transition-all duration-300 hover:opacity-80 border border-white/10"
             style={{ 
-              backgroundColor: 'rgba(28, 28, 28, 0.7)',
-              backdropFilter: 'blur(20px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(180%)'
+              backgroundColor: '#1c1c1c'
             }}
           >
             <Calendar className="w-4 h-4 md:w-5 md:h-5 text-white" />
