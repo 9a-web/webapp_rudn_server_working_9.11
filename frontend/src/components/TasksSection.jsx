@@ -771,7 +771,8 @@ const TodayTaskItem = ({
       value={task}
       dragListener={false}
       dragControls={dragControls}
-      className="relative mb-2"
+      className="mb-2"
+      style={{ listStyle: 'none' }}
     >
       {/* Контент задачи */}
       <div className="relative bg-white rounded-lg p-2 group shadow-sm"
