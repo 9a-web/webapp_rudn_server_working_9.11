@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, PanInfo, Reorder } from 'framer-motion';
+import { motion, PanInfo, Reorder, useDragControls } from 'framer-motion';
 import { ClipboardList, Check, Plus, Edit2, Trash2, X, Flag, Calendar, AlertCircle, Filter, SortAsc, Zap, Bell, Star, Clock, ChevronDown, GripVertical } from 'lucide-react';
 import { tasksAPI, scheduleAPI } from '../services/api';
 import { useTelegram } from '../contexts/TelegramContext';
