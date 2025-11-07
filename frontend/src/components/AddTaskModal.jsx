@@ -242,20 +242,20 @@ export const AddTaskModal = ({
                 </div>
               </div>
 
-            {/* Дедлайн */}
-            <div>
-              <label className="block text-sm font-medium text-[#1C1C1E] mb-2 flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Дедлайн
-              </label>
-              <input
-                type="datetime-local"
-                value={deadline}
-                onChange={(e) => setDeadline(e.target.value)}
-                disabled={saving}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-[#1C1C1E] disabled:opacity-50"
-              />
-            </div>
+              {/* Дедлайн */}
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-[#1C1C1E] mb-2 flex items-center gap-1.5 sm:gap-2">
+                  <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  Дедлайн
+                </label>
+                <input
+                  type="datetime-local"
+                  value={deadline}
+                  onChange={(e) => setDeadline(e.target.value)}
+                  disabled={saving}
+                  className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl sm:rounded-2xl focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-[#1C1C1E] text-sm sm:text-base disabled:opacity-50"
+                />
+              </div>
 
             {/* Привязка к предмету */}
             {scheduleSubjects.length > 0 && (
