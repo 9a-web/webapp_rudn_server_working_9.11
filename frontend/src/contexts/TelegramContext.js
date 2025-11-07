@@ -28,59 +28,76 @@ export const TelegramProvider = ({ children }) => {
       // 1. Сначала готовим WebApp
       tg.ready();
       
-      // 2. ПОЛНОЭКРАННЫЙ РЕЖИМ - расширяем на весь экран
+      // 2. ⭐️ ПОЛНОЭКРАННЫЙ РЕЖИМ - расширяем на весь экран
+      // Это основной метод для Full Screen в Telegram Web App
       tg.expand();
       
-      // 3. Принудительно устанавливаем viewport height
-      if (tg.isExpanded === false) {
-        // Если expand не сработал, пробуем еще раз через setTimeout
-        setTimeout(() => {
+      // 3. Проверяем, что expand сработал и повторяем при необходимости
+      const ensureExpanded = () => {
+        if (!tg.isExpanded) {
+          console.log('⚠️ WebApp не развернут, повторная попытка expand()...');
           tg.expand();
-        }, 100);
-      }
-      
-      // 4. Отключаем вертикальные свайпы (чтобы не закрывалось случайно)
-      if (tg.disableVerticalSwipes) {
-        tg.disableVerticalSwipes();
-      }
-      
-      // 5. Включаем подтверждение закрытия (защита от случайного выхода)
-      if (tg.enableClosingConfirmation) {
-        tg.enableClosingConfirmation();
-      }
-      
-      // 6. Устанавливаем полноэкранный режим через requestFullscreen (для web версии)
-      if (tg.requestFullscreen && !tg.isFullscreen) {
-        try {
-          tg.requestFullscreen();
-        } catch (e) {
-          console.log('Fullscreen request failed:', e);
+        } else {
+          console.log('✅ WebApp успешно развернут на весь экран');
         }
+      };
+      
+      // Проверяем после небольшой задержки (Telegram API может работать асинхронно)
+      setTimeout(ensureExpanded, 50);
+      setTimeout(ensureExpanded, 200);
+      setTimeout(ensureExpanded, 500);
+      
+      // 4. Отключаем вертикальные свайпы (предотвращает случайное закрытие)
+      if (typeof tg.disableVerticalSwipes === 'function') {
+        tg.disableVerticalSwipes();
+        console.log('✅ Вертикальные свайпы отключены');
       }
       
-      // 7. Устанавливаем цвета темы для нативного вида
-      if (tg.setHeaderColor) {
+      // 5. Включаем подтверждение закрытия (дополнительная защита)
+      if (typeof tg.enableClosingConfirmation === 'function') {
+        tg.enableClosingConfirmation();
+        console.log('✅ Подтверждение закрытия включено');
+      }
+      
+      // 6. Устанавливаем цвета темы для нативного вида
+      if (typeof tg.setHeaderColor === 'function') {
         tg.setHeaderColor('#1C1C1E');
       }
-      if (tg.setBackgroundColor) {
+      if (typeof tg.setBackgroundColor === 'function') {
         tg.setBackgroundColor('#1C1C1E');
       }
       
-      // 8. Устанавливаем цвет bottom bar (если поддерживается)
-      if (tg.setBottomBarColor) {
+      // 7. Устанавливаем цвет bottom bar (если поддерживается)
+      if (typeof tg.setBottomBarColor === 'function') {
         tg.setBottomBarColor('#1C1C1E');
       }
       
-      // 9. Убираем системные отступы (safe area) если нужно
-      // tg.safeAreaInset можно использовать для проверки отступов
-      
-      // 10. Устанавливаем viewport meta для мобильных устройств
+      // 8. Устанавливаем viewport meta для мобильных устройств
       const viewportMeta = document.querySelector('meta[name="viewport"]');
       if (viewportMeta) {
         viewportMeta.setAttribute('content', 
           'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
         );
       }
+      
+      // 9. Устанавливаем CSS переменные для полной высоты (учитывая Telegram UI)
+      // Telegram Web App предоставляет viewportHeight для корректной работы
+      if (tg.viewportHeight) {
+        document.documentElement.style.setProperty('--tg-viewport-height', `${tg.viewportHeight}px`);
+        document.documentElement.style.setProperty('--tg-viewport-stable-height', `${tg.viewportStableHeight || tg.viewportHeight}px`);
+      }
+      
+      // 10. Слушаем изменения viewport (при открытии клавиатуры и т.д.)
+      const handleViewportChanged = () => {
+        if (tg.viewportHeight) {
+          document.documentElement.style.setProperty('--tg-viewport-height', `${tg.viewportHeight}px`);
+          document.documentElement.style.setProperty('--tg-viewport-stable-height', `${tg.viewportStableHeight || tg.viewportHeight}px`);
+          console.log(`📐 Viewport изменен: ${tg.viewportHeight}px`);
+        }
+      };
+      
+      // Подписываемся на события изменения viewport
+      tg.onEvent('viewportChanged', handleViewportChanged);
       
       // Получаем данные пользователя
       const userData = tg.initDataUnsafe?.user;
@@ -92,7 +109,7 @@ export const TelegramProvider = ({ children }) => {
         setUser(userData);
       } else {
         // Mock данные для разработки вне Telegram
-        console.warn('Telegram user not found. Using mock data for development.');
+        console.warn('⚠️ Telegram user not found. Using mock data for development.');
         setUser({
           id: 123456789,
           first_name: 'Test',
@@ -103,14 +120,22 @@ export const TelegramProvider = ({ children }) => {
       
       setIsReady(true);
 
-      console.log('Telegram WebApp initialized:', {
+      console.log('🚀 Telegram WebApp initialized:', {
         platform: tg.platform,
         version: tg.version,
+        isExpanded: tg.isExpanded,
+        viewportHeight: tg.viewportHeight,
+        viewportStableHeight: tg.viewportStableHeight,
         user: userData || 'mock',
       });
+      
+      // Cleanup при размонтировании
+      return () => {
+        tg.offEvent('viewportChanged', handleViewportChanged);
+      };
     } else {
       // Для разработки вне Telegram - используем mock данные
-      console.warn('Telegram WebApp не доступен. Используются mock данные для разработки.');
+      console.warn('⚠️ Telegram WebApp не доступен. Используются mock данные для разработки.');
       setUser({
         id: 123456789,
         first_name: 'Test',
