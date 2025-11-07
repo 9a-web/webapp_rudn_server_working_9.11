@@ -572,7 +572,7 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
           </div>
 
           {/* Список задач */}
-          <div className="flex-1 overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-yellow-300 scrollbar-track-transparent">
+          <div className="flex-1 space-y-2">
             {loading ? (
               <div className="text-xs text-[#999999] text-center py-4">Загрузка...</div>
             ) : todayTasks.length === 0 ? (
@@ -582,7 +582,8 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
                 axis="y" 
                 values={todayTasks} 
                 onReorder={handleReorderTasks}
-                className="space-y-2"
+                className="space-y-2 min-h-[100px]"
+                as="div"
               >
                 {todayTasks.map((task) => (
                   <TodayTaskItem
