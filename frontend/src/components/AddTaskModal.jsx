@@ -107,7 +107,7 @@ export const AddTaskModal = ({
   return (
     <AnimatePresence>
       <motion.div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-end sm:items-center justify-center"
         initial="initial"
         animate="animate"
         exit="exit"
@@ -115,11 +115,19 @@ export const AddTaskModal = ({
         onClick={handleClose}
       >
         <motion.div 
-          className="bg-white rounded-3xl p-6 w-full max-w-lg shadow-2xl relative z-[10000]"
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          variants={modalVariants}
+          ref={modalRef}
+          className="bg-white w-full max-w-lg shadow-2xl relative z-[10000] overflow-hidden
+                     rounded-t-[32px] sm:rounded-3xl
+                     max-h-[92vh] sm:max-h-[85vh]
+                     flex flex-col"
+          initial={{ y: "100%" }}
+          animate={{ y: dragY }}
+          exit={{ y: "100%" }}
+          transition={{ type: "spring", damping: 30, stiffness: 300 }}
+          drag="y"
+          dragConstraints={{ top: 0, bottom: 0 }}
+          dragElastic={{ top: 0, bottom: 0.5 }}
+          onDragEnd={handleDragEnd}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
