@@ -92,6 +92,11 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
 
   // Обновление порядка задач после перетаскивания в карточке "Сегодня"
   const handleReorderTasks = (newOrder) => {
+    console.log('🔄 Reorder triggered!', {
+      oldOrder: todayTasks.map(t => ({ id: t.id, text: t.text })),
+      newOrder: newOrder.map(t => ({ id: t.id, text: t.text }))
+    });
+    
     // newOrder содержит только задачи из todayTasks (первые 10)
     // Нужно обновить порядок в полном массиве tasks
     
@@ -119,6 +124,8 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
     });
     
     setTasks(updatedTasks);
+    
+    console.log('✅ Tasks reordered successfully');
     
     // Здесь можно добавить сохранение порядка на сервер при необходимости
     hapticFeedback && hapticFeedback('impact', 'light');
