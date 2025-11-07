@@ -257,28 +257,28 @@ export const AddTaskModal = ({
                 />
               </div>
 
-            {/* Привязка к предмету */}
-            {scheduleSubjects.length > 0 && (
-              <div>
-                <label className="block text-sm font-medium text-[#1C1C1E] mb-2 flex items-center gap-2">
-                  <BookOpen className="w-4 h-4" />
-                  Предмет из расписания
-                </label>
-                <select
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  disabled={saving}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-[#1C1C1E] disabled:opacity-50"
-                >
-                  <option value="">Без привязки</option>
-                  {scheduleSubjects.map((subj, idx) => (
-                    <option key={idx} value={subj}>
-                      {subj}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+              {/* Привязка к предмету */}
+              {scheduleSubjects.length > 0 && (
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-[#1C1C1E] mb-2 flex items-center gap-1.5 sm:gap-2">
+                    <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    Предмет из расписания
+                  </label>
+                  <select
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    disabled={saving}
+                    className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl sm:rounded-2xl focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-[#1C1C1E] text-sm sm:text-base disabled:opacity-50"
+                  >
+                    <option value="">Без привязки</option>
+                    {scheduleSubjects.map((subj, idx) => (
+                      <option key={idx} value={subj}>
+                        {subj}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
             {/* Buttons */}
             <div className="flex gap-3">
