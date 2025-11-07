@@ -776,9 +776,7 @@ const TodayTaskItem = ({
       className="relative"
     >
       {/* Контент задачи */}
-      <motion.div
-        whileTap={{ scale: 0.98 }}
-        className="relative bg-white rounded-lg p-2 group shadow-sm"
+      <div className="relative bg-white rounded-lg p-2 group shadow-sm"
       >
         {isEditing ? (
           // Режим редактирования
