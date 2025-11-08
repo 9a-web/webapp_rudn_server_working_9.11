@@ -827,6 +827,7 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
         onAddTask={handleAddTask}
         hapticFeedback={hapticFeedback}
         scheduleSubjects={scheduleSubjects}
+        selectedDate={tasksSelectedDate}
       />
     </motion.div>
   );
