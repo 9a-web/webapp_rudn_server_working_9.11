@@ -337,10 +337,17 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
     return filtered;
   };
 
-  // Группировка задач по срокам
+  // Группировка задач по срокам относительно выбранной даты
   const groupTasksByDeadline = () => {
     const filteredTasks = getFilteredAndSortedTasks();
     const now = new Date();
+    
+    // Используем выбранную дату как точку отсчета для группировки
+    const selectedDateStart = new Date(tasksSelectedDate);
+    selectedDateStart.setHours(0, 0, 0, 0);
+    
+    const selectedDateEnd = new Date(tasksSelectedDate);
+    selectedDateEnd.setHours(23, 59, 59, 999);
     
     const overdue = [];
     const today = [];
@@ -355,17 +362,24 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
       }
       
       const deadline = new Date(task.deadline);
-      const diffHours = (deadline - now) / (1000 * 60 * 60);
-      const diffDays = diffHours / 24;
       
-      if (diffHours < 0) {
+      // Просроченные: дедлайн раньше выбранной даты И раньше текущего момента
+      if (deadline < selectedDateStart && deadline < now) {
         overdue.push(task);
-      } else if (diffHours < 24) {
+      } 
+      // Сегодня (на выбранную дату): дедлайн в пределах выбранного дня
+      else if (deadline >= selectedDateStart && deadline <= selectedDateEnd) {
         today.push(task);
-      } else if (diffDays < 7) {
-        thisWeek.push(task);
-      } else {
-        later.push(task);
+      } 
+      // На этой неделе: дедлайн в течение 7 дней от выбранной даты
+      else {
+        const diffDays = (deadline - selectedDateStart) / (1000 * 60 * 60 * 24);
+        
+        if (diffDays > 0 && diffDays <= 7) {
+          thisWeek.push(task);
+        } else if (diffDays > 7) {
+          later.push(task);
+        }
       }
     });
     
