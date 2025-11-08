@@ -5,6 +5,7 @@ import { tasksAPI, scheduleAPI } from '../services/api';
 import { useTelegram } from '../contexts/TelegramContext';
 import { AddTaskModal } from './AddTaskModal';
 import { WeekDateSelector } from './WeekDateSelector';
+import { tasksCompleteConfetti } from '../utils/confetti';
 
 export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalStateChange }) => {
   const { user, hapticFeedback } = useTelegram();
