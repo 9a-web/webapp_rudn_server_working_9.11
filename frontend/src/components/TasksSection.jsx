@@ -663,8 +663,8 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
             <p className="text-xs text-[#999999] mt-0.5">{currentDate}</p>
           </div>
 
-          {/* Список задач */}
-          <div className="flex-1 space-y-2">
+          {/* Список задач с прокруткой */}
+          <div className="flex-1 space-y-2 max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-yellow-400 scrollbar-track-yellow-100">
             {loading ? (
               <div className="text-xs text-[#999999] text-center py-4">Загрузка...</div>
             ) : todayTasks.length === 0 ? (
