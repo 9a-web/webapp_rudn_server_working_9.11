@@ -752,30 +752,8 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
           </div>
         </motion.div>
 
-        {/* Группы задач по дедлайнам */}
+        {/* Группы задач - показываем только задачи на выбранную дату */}
         <div className="space-y-4 max-w-2xl">
-          {/* Просроченные задачи */}
-          {groupedTasks.overdue.length > 0 && (
-            <TaskGroup
-              title="Просроченные"
-              icon={<AlertCircle className="w-5 h-5 text-red-600" />}
-              tasks={groupedTasks.overdue}
-              accentColor="red"
-              onToggle={toggleTask}
-              onEdit={handleStartEdit}
-              onDelete={handleDeleteTask}
-              editingTaskId={editingTaskId}
-              editingText={editingText}
-              setEditingText={setEditingText}
-              onSaveEdit={handleSaveEdit}
-              onCancelEdit={handleCancelEdit}
-              getCategoryEmoji={getCategoryEmoji}
-              getPriorityColor={getPriorityColor}
-              getDeadlineStatus={getDeadlineStatus}
-              hapticFeedback={hapticFeedback}
-            />
-          )}
-
           {/* Задачи на выбранную дату */}
           {groupedTasks.today.length > 0 && (
             <TaskGroup
@@ -798,35 +776,13 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
             />
           )}
 
-          {/* Задачи на этой неделе */}
-          {groupedTasks.thisWeek.length > 0 && (
+          {/* Задачи без срока */}
+          {groupedTasks.noDeadline.length > 0 && (
             <TaskGroup
-              title="На этой неделе"
-              icon={<Clock className="w-5 h-5 text-blue-600" />}
-              tasks={groupedTasks.thisWeek}
-              accentColor="blue"
-              onToggle={toggleTask}
-              onEdit={handleStartEdit}
-              onDelete={handleDeleteTask}
-              editingTaskId={editingTaskId}
-              editingText={editingText}
-              setEditingText={setEditingText}
-              onSaveEdit={handleSaveEdit}
-              onCancelEdit={handleCancelEdit}
-              getCategoryEmoji={getCategoryEmoji}
-              getPriorityColor={getPriorityColor}
-              getDeadlineStatus={getDeadlineStatus}
-              hapticFeedback={hapticFeedback}
-            />
-          )}
-
-          {/* Задачи позже */}
-          {groupedTasks.later.length > 0 && (
-            <TaskGroup
-              title="Позже"
-              icon={<Star className="w-5 h-5 text-purple-600" />}
-              tasks={groupedTasks.later}
-              accentColor="purple"
+              title="Без срока"
+              icon={<Clock className="w-5 h-5 text-gray-600" />}
+              tasks={groupedTasks.noDeadline}
+              accentColor="gray"
               onToggle={toggleTask}
               onEdit={handleStartEdit}
               onDelete={handleDeleteTask}
