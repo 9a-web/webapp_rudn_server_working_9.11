@@ -348,25 +348,33 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
     const selectedDateEnd = new Date(tasksSelectedDate);
     selectedDateEnd.setHours(23, 59, 59, 999);
     
-    const today = [];
-    const noDeadline = [];
+    const allTasks = [];
     
     filteredTasks.forEach(task => {
+      // Включаем задачи без дедлайна
       if (!task.deadline) {
-        noDeadline.push(task);
+        allTasks.push(task);
         return;
       }
       
       const deadline = new Date(task.deadline);
       
-      // Показываем только задачи с дедлайном на выбранную дату
+      // Показываем задачи с дедлайном на выбранную дату
       if (deadline >= selectedDateStart && deadline <= selectedDateEnd) {
-        today.push(task);
+        allTasks.push(task);
       }
     });
     
-    // Возвращаем только задачи на выбранную дату и без дедлайна
-    return { today, noDeadline };
+    // Сортируем все задачи по приоритету: high → medium → low
+    const priorityOrder = { high: 3, medium: 2, low: 1 };
+    allTasks.sort((a, b) => {
+      const priorityA = priorityOrder[a.priority] || 2;
+      const priorityB = priorityOrder[b.priority] || 2;
+      return priorityB - priorityA;
+    });
+    
+    // Возвращаем все задачи в одной группе
+    return { today: allTasks };
   };
 
   // Фильтруем задачи для выбранной даты
