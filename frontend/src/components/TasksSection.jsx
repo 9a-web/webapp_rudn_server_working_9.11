@@ -173,6 +173,12 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
         ? { text: taskData }
         : taskData;
       
+      console.log('📤 TasksSection - Sending to API:', {
+        target_date: requestData.target_date,
+        deadline: requestData.deadline,
+        text: requestData.text
+      });
+      
       const newTask = await tasksAPI.createTask(user.id, requestData.text, {
         category: requestData.category,
         priority: requestData.priority,
@@ -180,6 +186,14 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
         target_date: requestData.target_date,  // Передаем target_date
         subject: requestData.subject,
       });
+      
+      console.log('📥 TasksSection - Received from API:', {
+        id: newTask.id,
+        target_date: newTask.target_date,
+        deadline: newTask.deadline,
+        text: newTask.text
+      });
+      
       setTasks([newTask, ...tasks]);
     } catch (error) {
       console.error('Error creating task:', error);
