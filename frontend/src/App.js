@@ -518,6 +518,7 @@ const Home = () => {
                     onDateSelect={handleDateSelect}
                     hapticFeedback={hapticFeedback}
                     telegramId={user?.id}
+                    onShareModalStateChange={setIsShareModalOpen}
                   />
                 )}
               </div>
