@@ -764,6 +764,19 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
         scheduleSubjects={scheduleSubjects}
         selectedDate={tasksSelectedDate}
       />
+
+      {/* Модальное окно редактирования задачи */}
+      <EditTaskModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingTask(null);
+        }}
+        onEditTask={handleEditTask}
+        task={editingTask}
+        hapticFeedback={hapticFeedback}
+        scheduleSubjects={scheduleSubjects}
+      />
     </motion.div>
   );
 };
