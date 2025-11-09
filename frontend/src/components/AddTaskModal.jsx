@@ -91,13 +91,21 @@ export const AddTaskModal = ({
       hapticFeedback && hapticFeedback('impact', 'medium');
       
       // Создаем объект задачи с дополнительными полями
+      // Для target_date используем дату без времени (полночь UTC)
+      let targetDateISO = null;
+      if (selectedDate) {
+        const targetDate = new Date(selectedDate);
+        targetDate.setHours(0, 0, 0, 0);
+        targetDateISO = targetDate.toISOString();
+      }
+      
       const taskData = {
         text: taskText.trim(),
         category: category,
         priority: priority,
         deadline: deadline ? new Date(deadline).toISOString() : null,
         // target_date - дата, к которой привязана задача (всегда устанавливаем, если selectedDate передан)
-        target_date: selectedDate ? new Date(selectedDate).toISOString() : null,
+        target_date: targetDateISO,
         subject: subject || null,
       };
       
