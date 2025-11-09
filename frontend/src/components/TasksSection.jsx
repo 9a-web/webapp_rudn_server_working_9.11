@@ -79,12 +79,12 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
     }
   }, [user, userSettings, weekNumber]);
 
-  // Уведомляем родительский компонент об изменении состояния модального окна
+  // Уведомляем родительский компонент об изменении состояния модальных окон
   useEffect(() => {
     if (onModalStateChange) {
-      onModalStateChange(isAddModalOpen);
+      onModalStateChange(isAddModalOpen || isEditModalOpen);
     }
-  }, [isAddModalOpen, onModalStateChange]);
+  }, [isAddModalOpen, isEditModalOpen, onModalStateChange]);
 
   const loadTasks = async () => {
     try {
