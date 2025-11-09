@@ -766,16 +766,28 @@ async def reorder_tasks(request: TaskReorderRequest):
     Принимает объект с массивом: {"tasks": [{"id": "task_id", "order": 0}, ...]}
     """
     try:
+        logger.info(f"🔄 Reordering {len(request.tasks)} tasks...")
+        
         # Обновляем order для каждой задачи
+        updated_count = 0
         for task_order in request.tasks:
-            await db.tasks.update_one(
+            logger.info(f"  Updating task {task_order.id} to order {task_order.order}")
+            
+            result = await db.tasks.update_one(
                 {"id": task_order.id},
                 {"$set": {"order": task_order.order, "updated_at": datetime.utcnow()}}
             )
+            
+            if result.modified_count > 0:
+                updated_count += 1
+                logger.info(f"    ✅ Task {task_order.id} updated")
+            else:
+                logger.warning(f"    ⚠️ Task {task_order.id} not found or not modified")
         
-        return SuccessResponse(success=True, message=f"Обновлен порядок {len(request.tasks)} задач")
+        logger.info(f"✅ Successfully updated {updated_count} out of {len(request.tasks)} tasks")
+        return SuccessResponse(success=True, message=f"Обновлен порядок {updated_count} задач")
     except Exception as e:
-        logger.error(f"Ошибка при изменении порядка задач: {e}")
+        logger.error(f"❌ Ошибка при изменении порядка задач: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
