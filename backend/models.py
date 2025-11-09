@@ -433,6 +433,7 @@ class GroupTaskResponse(BaseModel):
     category: Optional[str] = None
     priority: str
     owner_id: int
+    room_id: Optional[str] = None  # ID комнаты
     created_at: datetime
     updated_at: datetime
     status: str
