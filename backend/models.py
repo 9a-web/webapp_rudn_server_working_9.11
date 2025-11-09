@@ -362,3 +362,14 @@ class TaskResponse(BaseModel):
     order: int = 0
     created_at: datetime
     updated_at: datetime
+
+
+class TaskReorderItem(BaseModel):
+    """Элемент для изменения порядка задач"""
+    id: str
+    order: int
+
+
+class TaskReorderRequest(BaseModel):
+    """Запрос на изменение порядка задач"""
+    tasks: List[TaskReorderItem]
