@@ -99,13 +99,13 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
   };
 
   // Обновление порядка задач после перетаскивания в карточке "Сегодня"
-  const handleReorderTasks = (newOrder) => {
+  const handleReorderTasks = async (newOrder) => {
     console.log('🔄 Reorder triggered!', {
       oldOrder: todayTasks.map(t => ({ id: t.id, text: t.text })),
       newOrder: newOrder.map(t => ({ id: t.id, text: t.text }))
     });
     
-    // newOrder содержит только задачи из todayTasks (первые 10)
+    // newOrder содержит только задачи из todayTasks
     // Нужно обновить порядок в полном массиве tasks
     
     // Создаем Map для быстрого поиска новых позиций
@@ -115,28 +115,33 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
     });
     
     // Обновляем tasks, сохраняя порядок из newOrder для задач в todayTasks
-    const updatedTasks = [...tasks].sort((a, b) => {
-      const orderA = orderMap.has(a.id) ? orderMap.get(a.id) : Infinity;
-      const orderB = orderMap.has(b.id) ? orderMap.get(b.id) : Infinity;
-      
-      // Если обе задачи из todayTasks - сортируем по новому порядку
-      if (orderA !== Infinity && orderB !== Infinity) {
-        return orderA - orderB;
+    const updatedTasks = [...tasks].map(task => {
+      if (orderMap.has(task.id)) {
+        return { ...task, order: orderMap.get(task.id) };
       }
-      // Если только одна задача из todayTasks - она идет первой
-      if (orderA !== Infinity) return -1;
-      if (orderB !== Infinity) return 1;
-      
-      // Для остальных задач сохраняем текущий порядок
-      return 0;
+      return task;
+    }).sort((a, b) => {
+      // Сортируем по order
+      return a.order - b.order;
     });
     
     setTasks(updatedTasks);
     
-    console.log('✅ Tasks reordered successfully');
-    
-    // Здесь можно добавить сохранение порядка на сервер при необходимости
-    hapticFeedback && hapticFeedback('impact', 'light');
+    // Сохраняем порядок на сервер
+    try {
+      const taskOrders = newOrder.map((task, index) => ({
+        id: task.id,
+        order: index
+      }));
+      
+      await tasksAPI.reorderTasks(taskOrders);
+      console.log('✅ Tasks reordered and saved to server');
+      hapticFeedback && hapticFeedback('impact', 'light');
+    } catch (error) {
+      console.error('Error saving task order:', error);
+      // В случае ошибки перезагружаем задачи
+      loadTasks();
+    }
   };
 
   // Загрузка предметов из расписания для интеграции
