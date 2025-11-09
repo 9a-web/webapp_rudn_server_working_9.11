@@ -132,9 +132,12 @@ export const WeekDateSelector = ({
             const dayName = dayNames[dayIndex];
             const dateNumber = date.getDate();
             
+            // Генерируем уникальный ключ с датой и количеством задач для форсирования обновления
+            const uniqueKey = `${date.toISOString().split('T')[0]}-${completion}`;
+            
             return (
               <motion.button
-                key={index}
+                key={uniqueKey}
                 onClick={() => handleDayClick(date)}
                 disabled={future}
                 whileTap={!future ? { scale: 0.95 } : {}}
