@@ -16,7 +16,8 @@ export const LiveScheduleSection = ({
   onChangeGroup,
   hapticFeedback,
   onDateSelect, // Добавляем коллбек для изменения даты
-  telegramId // Telegram ID для трекинга
+  telegramId, // Telegram ID для трекинга
+  onShareModalStateChange // Коллбек для уведомления родителя о состоянии ShareScheduleModal
 }) => {
   const [expandedIndex, setExpandedIndex] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
