@@ -269,6 +269,27 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
     }
   };
 
+  // Открыть модальное окно редактирования задачи
+  const handleOpenEditModal = (task) => {
+    setEditingTask(task);
+    setIsEditModalOpen(true);
+    hapticFeedback && hapticFeedback('impact', 'light');
+  };
+
+  // Редактирование задачи (все метаданные)
+  const handleEditTask = async (taskId, updates) => {
+    try {
+      hapticFeedback && hapticFeedback('impact', 'medium');
+      const updatedTask = await tasksAPI.updateTask(taskId, updates);
+      setTasks(tasks.map(t => t.id === taskId ? updatedTask : t));
+      setIsEditModalOpen(false);
+      setEditingTask(null);
+    } catch (error) {
+      console.error('Error editing task:', error);
+    }
+  };
+
+
   // Шаблоны быстрых задач
   const quickActionTemplates = [
     { 
