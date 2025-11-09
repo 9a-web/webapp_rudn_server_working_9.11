@@ -792,6 +792,513 @@ async def delete_task(task_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ============ API для групповых задач ============
+
+@api_router.post("/group-tasks", response_model=GroupTaskResponse)
+async def create_group_task(task_data: GroupTaskCreate):
+    """Создать новую групповую задачу"""
+    try:
+        # Получаем информацию о создателе
+        creator_settings = await db.user_settings.find_one({"telegram_id": task_data.telegram_id})
+        if not creator_settings:
+            raise HTTPException(status_code=404, detail="Пользователь не найден")
+        
+        # Создаём участника-владельца
+        owner_participant = GroupTaskParticipant(
+            telegram_id=task_data.telegram_id,
+            username=creator_settings.get('username'),
+            first_name=creator_settings.get('first_name', 'Пользователь'),
+            role='owner'
+        )
+        
+        # Создаём групповую задачу
+        group_task = GroupTask(
+            title=task_data.title,
+            description=task_data.description,
+            deadline=task_data.deadline,
+            category=task_data.category,
+            priority=task_data.priority,
+            owner_id=task_data.telegram_id,
+            participants=[owner_participant],
+            status='created'
+        )
+        
+        # Сохраняем в БД
+        await db.group_tasks.insert_one(group_task.model_dump())
+        
+        # Создаём приглашения для указанных пользователей
+        for invited_user_id in task_data.invited_users:
+            invite = GroupTaskInvite(
+                task_id=group_task.task_id,
+                invited_by=task_data.telegram_id,
+                invited_user=invited_user_id,
+                status='pending'
+            )
+            await db.group_task_invites.insert_one(invite.model_dump())
+        
+        # Формируем ответ
+        total_participants = len(group_task.participants)
+        completed_participants = sum(1 for p in group_task.participants if p.completed)
+        completion_percentage = int((completed_participants / total_participants * 100) if total_participants > 0 else 0)
+        
+        return GroupTaskResponse(
+            **group_task.model_dump(),
+            completion_percentage=completion_percentage,
+            total_participants=total_participants,
+            completed_participants=completed_participants
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Ошибка при создании групповой задачи: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/group-tasks/{telegram_id}", response_model=List[GroupTaskResponse])
+async def get_user_group_tasks(telegram_id: int):
+    """Получить все групповые задачи пользователя"""
+    try:
+        # Находим все задачи, где пользователь является участником
+        tasks_cursor = db.group_tasks.find({
+            "participants.telegram_id": telegram_id
+        })
+        
+        tasks = []
+        async for task_doc in tasks_cursor:
+            # Проверяем статус и обновляем при необходимости
+            task = GroupTask(**task_doc)
+            
+            # Обновляем статус на overdue если дедлайн прошёл
+            if task.deadline and task.deadline < datetime.utcnow() and task.status not in ['completed', 'overdue']:
+                task.status = 'overdue'
+                await db.group_tasks.update_one(
+                    {"task_id": task.task_id},
+                    {"$set": {"status": "overdue"}}
+                )
+            
+            # Проверяем, все ли выполнили задачу
+            total_participants = len(task.participants)
+            completed_participants = sum(1 for p in task.participants if p.completed)
+            
+            if total_participants > 0 and completed_participants == total_participants and task.status != 'completed':
+                task.status = 'completed'
+                await db.group_tasks.update_one(
+                    {"task_id": task.task_id},
+                    {"$set": {"status": "completed"}}
+                )
+            elif completed_participants > 0 and task.status == 'created':
+                task.status = 'in_progress'
+                await db.group_tasks.update_one(
+                    {"task_id": task.task_id},
+                    {"$set": {"status": "in_progress"}}
+                )
+            
+            completion_percentage = int((completed_participants / total_participants * 100) if total_participants > 0 else 0)
+            
+            tasks.append(GroupTaskResponse(
+                **task.model_dump(),
+                completion_percentage=completion_percentage,
+                total_participants=total_participants,
+                completed_participants=completed_participants
+            ))
+        
+        return tasks
+    except Exception as e:
+        logger.error(f"Ошибка при получении групповых задач: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/group-tasks/detail/{task_id}", response_model=GroupTaskResponse)
+async def get_group_task_detail(task_id: str):
+    """Получить детальную информацию о групповой задаче"""
+    try:
+        task_doc = await db.group_tasks.find_one({"task_id": task_id})
+        
+        if not task_doc:
+            raise HTTPException(status_code=404, detail="Групповая задача не найдена")
+        
+        task = GroupTask(**task_doc)
+        
+        total_participants = len(task.participants)
+        completed_participants = sum(1 for p in task.participants if p.completed)
+        completion_percentage = int((completed_participants / total_participants * 100) if total_participants > 0 else 0)
+        
+        return GroupTaskResponse(
+            **task.model_dump(),
+            completion_percentage=completion_percentage,
+            total_participants=total_participants,
+            completed_participants=completed_participants
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Ошибка при получении деталей групповой задачи: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/group-tasks/{task_id}/invite", response_model=SuccessResponse)
+async def invite_to_group_task(task_id: str, invite_data: GroupTaskInviteCreate):
+    """Пригласить пользователя в групповую задачу"""
+    try:
+        # Проверяем существование задачи
+        task_doc = await db.group_tasks.find_one({"task_id": task_id})
+        if not task_doc:
+            raise HTTPException(status_code=404, detail="Групповая задача не найдена")
+        
+        task = GroupTask(**task_doc)
+        
+        # Проверяем, что приглашающий является участником
+        is_participant = any(p.telegram_id == invite_data.telegram_id for p in task.participants)
+        if not is_participant:
+            raise HTTPException(status_code=403, detail="Только участники могут приглашать других")
+        
+        # Проверяем лимит участников
+        if len(task.participants) >= 10:
+            raise HTTPException(status_code=400, detail="Достигнут лимит участников (10)")
+        
+        # Проверяем, не приглашён ли уже пользователь
+        already_invited = await db.group_task_invites.find_one({
+            "task_id": task_id,
+            "invited_user": invite_data.invited_user,
+            "status": "pending"
+        })
+        if already_invited:
+            raise HTTPException(status_code=400, detail="Приглашение уже отправлено")
+        
+        # Проверяем, не является ли пользователь уже участником
+        is_already_participant = any(p.telegram_id == invite_data.invited_user for p in task.participants)
+        if is_already_participant:
+            raise HTTPException(status_code=400, detail="Пользователь уже является участником")
+        
+        # Создаём приглашение
+        invite = GroupTaskInvite(
+            task_id=task_id,
+            invited_by=invite_data.telegram_id,
+            invited_user=invite_data.invited_user,
+            status='pending'
+        )
+        
+        await db.group_task_invites.insert_one(invite.model_dump())
+        
+        return SuccessResponse(success=True, message="Приглашение отправлено")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Ошибка при приглашении в групповую задачу: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/group-tasks/invites/{telegram_id}", response_model=List[GroupTaskInviteResponse])
+async def get_user_invites(telegram_id: int):
+    """Получить все приглашения пользователя"""
+    try:
+        invites_cursor = db.group_task_invites.find({
+            "invited_user": telegram_id,
+            "status": "pending"
+        })
+        
+        invites = []
+        async for invite_doc in invites_cursor:
+            invite = GroupTaskInvite(**invite_doc)
+            
+            # Получаем информацию о задаче
+            task_doc = await db.group_tasks.find_one({"task_id": invite.task_id})
+            if not task_doc:
+                continue
+            
+            task = GroupTask(**task_doc)
+            
+            # Получаем информацию о пригласившем
+            inviter = next((p for p in task.participants if p.telegram_id == invite.invited_by), None)
+            inviter_name = inviter.first_name if inviter else "Пользователь"
+            
+            invites.append(GroupTaskInviteResponse(
+                invite_id=invite.invite_id,
+                task_id=invite.task_id,
+                task_title=task.title,
+                invited_by=invite.invited_by,
+                invited_by_name=inviter_name,
+                status=invite.status,
+                created_at=invite.created_at
+            ))
+        
+        return invites
+    except Exception as e:
+        logger.error(f"Ошибка при получении приглашений: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/group-tasks/{task_id}/accept", response_model=SuccessResponse)
+async def accept_group_task_invite(task_id: str, telegram_id: int = Body(..., embed=True)):
+    """Принять приглашение в групповую задачу"""
+    try:
+        # Находим приглашение
+        invite_doc = await db.group_task_invites.find_one({
+            "task_id": task_id,
+            "invited_user": telegram_id,
+            "status": "pending"
+        })
+        
+        if not invite_doc:
+            raise HTTPException(status_code=404, detail="Приглашение не найдено")
+        
+        # Получаем задачу
+        task_doc = await db.group_tasks.find_one({"task_id": task_id})
+        if not task_doc:
+            raise HTTPException(status_code=404, detail="Групповая задача не найдена")
+        
+        # Получаем информацию о пользователе
+        user_settings = await db.user_settings.find_one({"telegram_id": telegram_id})
+        if not user_settings:
+            raise HTTPException(status_code=404, detail="Пользователь не найден")
+        
+        # Создаём участника
+        new_participant = GroupTaskParticipant(
+            telegram_id=telegram_id,
+            username=user_settings.get('username'),
+            first_name=user_settings.get('first_name', 'Пользователь'),
+            role='member'
+        )
+        
+        # Добавляем участника в задачу
+        await db.group_tasks.update_one(
+            {"task_id": task_id},
+            {"$push": {"participants": new_participant.model_dump()}}
+        )
+        
+        # Обновляем статус приглашения
+        await db.group_task_invites.update_one(
+            {"_id": invite_doc["_id"]},
+            {
+                "$set": {
+                    "status": "accepted",
+                    "responded_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        return SuccessResponse(success=True, message="Вы присоединились к групповой задаче")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Ошибка при принятии приглашения: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/group-tasks/{task_id}/decline", response_model=SuccessResponse)
+async def decline_group_task_invite(task_id: str, telegram_id: int = Body(..., embed=True)):
+    """Отклонить приглашение в групповую задачу"""
+    try:
+        # Находим приглашение
+        invite_doc = await db.group_task_invites.find_one({
+            "task_id": task_id,
+            "invited_user": telegram_id,
+            "status": "pending"
+        })
+        
+        if not invite_doc:
+            raise HTTPException(status_code=404, detail="Приглашение не найдено")
+        
+        # Обновляем статус приглашения
+        await db.group_task_invites.update_one(
+            {"_id": invite_doc["_id"]},
+            {
+                "$set": {
+                    "status": "declined",
+                    "responded_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        return SuccessResponse(success=True, message="Приглашение отклонено")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Ошибка при отклонении приглашения: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.put("/group-tasks/{task_id}/complete", response_model=GroupTaskResponse)
+async def complete_group_task(task_id: str, complete_data: GroupTaskCompleteRequest):
+    """Отметить задачу выполненной/невыполненной"""
+    try:
+        task_doc = await db.group_tasks.find_one({"task_id": task_id})
+        
+        if not task_doc:
+            raise HTTPException(status_code=404, detail="Групповая задача не найдена")
+        
+        task = GroupTask(**task_doc)
+        
+        # Находим участника
+        participant_index = next((i for i, p in enumerate(task.participants) if p.telegram_id == complete_data.telegram_id), None)
+        
+        if participant_index is None:
+            raise HTTPException(status_code=403, detail="Вы не являетесь участником этой задачи")
+        
+        # Обновляем статус выполнения
+        update_data = {
+            f"participants.{participant_index}.completed": complete_data.completed,
+        }
+        
+        if complete_data.completed:
+            update_data[f"participants.{participant_index}.completed_at"] = datetime.utcnow()
+        else:
+            update_data[f"participants.{participant_index}.completed_at"] = None
+        
+        await db.group_tasks.update_one(
+            {"task_id": task_id},
+            {"$set": update_data}
+        )
+        
+        # Получаем обновлённую задачу
+        updated_task_doc = await db.group_tasks.find_one({"task_id": task_id})
+        updated_task = GroupTask(**updated_task_doc)
+        
+        # Проверяем, все ли выполнили
+        total_participants = len(updated_task.participants)
+        completed_participants = sum(1 for p in updated_task.participants if p.completed)
+        
+        # Обновляем статус задачи
+        if completed_participants == total_participants:
+            await db.group_tasks.update_one(
+                {"task_id": task_id},
+                {"$set": {"status": "completed"}}
+            )
+            updated_task.status = "completed"
+        elif completed_participants > 0:
+            await db.group_tasks.update_one(
+                {"task_id": task_id},
+                {"$set": {"status": "in_progress"}}
+            )
+            updated_task.status = "in_progress"
+        
+        completion_percentage = int((completed_participants / total_participants * 100) if total_participants > 0 else 0)
+        
+        return GroupTaskResponse(
+            **updated_task.model_dump(),
+            completion_percentage=completion_percentage,
+            total_participants=total_participants,
+            completed_participants=completed_participants
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Ошибка при обновлении статуса выполнения: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.delete("/group-tasks/{task_id}/leave", response_model=SuccessResponse)
+async def leave_group_task(task_id: str, telegram_id: int = Body(..., embed=True)):
+    """Покинуть групповую задачу"""
+    try:
+        task_doc = await db.group_tasks.find_one({"task_id": task_id})
+        
+        if not task_doc:
+            raise HTTPException(status_code=404, detail="Групповая задача не найдена")
+        
+        task = GroupTask(**task_doc)
+        
+        # Проверяем, что пользователь не владелец
+        if task.owner_id == telegram_id:
+            raise HTTPException(status_code=400, detail="Владелец не может покинуть задачу. Удалите задачу или передайте права другому участнику.")
+        
+        # Удаляем участника
+        await db.group_tasks.update_one(
+            {"task_id": task_id},
+            {"$pull": {"participants": {"telegram_id": telegram_id}}}
+        )
+        
+        return SuccessResponse(success=True, message="Вы покинули групповую задачу")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Ошибка при выходе из групповой задачи: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.delete("/group-tasks/{task_id}", response_model=SuccessResponse)
+async def delete_group_task(task_id: str, telegram_id: int = Body(..., embed=True)):
+    """Удалить групповую задачу (только владелец)"""
+    try:
+        task_doc = await db.group_tasks.find_one({"task_id": task_id})
+        
+        if not task_doc:
+            raise HTTPException(status_code=404, detail="Групповая задача не найдена")
+        
+        task = GroupTask(**task_doc)
+        
+        # Проверяем, что пользователь является владельцем
+        if task.owner_id != telegram_id:
+            raise HTTPException(status_code=403, detail="Только владелец может удалить задачу")
+        
+        # Удаляем задачу
+        await db.group_tasks.delete_one({"task_id": task_id})
+        
+        # Удаляем все приглашения
+        await db.group_task_invites.delete_many({"task_id": task_id})
+        
+        # Удаляем все комментарии
+        await db.group_task_comments.delete_many({"task_id": task_id})
+        
+        return SuccessResponse(success=True, message="Групповая задача удалена")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Ошибка при удалении групповой задачи: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/group-tasks/{task_id}/comments", response_model=GroupTaskCommentResponse)
+async def create_group_task_comment(task_id: str, comment_data: GroupTaskCommentCreate):
+    """Добавить комментарий к групповой задаче"""
+    try:
+        # Проверяем существование задачи
+        task_doc = await db.group_tasks.find_one({"task_id": task_id})
+        if not task_doc:
+            raise HTTPException(status_code=404, detail="Групповая задача не найдена")
+        
+        task = GroupTask(**task_doc)
+        
+        # Проверяем, что пользователь является участником
+        participant = next((p for p in task.participants if p.telegram_id == comment_data.telegram_id), None)
+        if not participant:
+            raise HTTPException(status_code=403, detail="Только участники могут комментировать")
+        
+        # Создаём комментарий
+        comment = GroupTaskComment(
+            task_id=task_id,
+            telegram_id=comment_data.telegram_id,
+            username=participant.username,
+            first_name=participant.first_name,
+            text=comment_data.text
+        )
+        
+        await db.group_task_comments.insert_one(comment.model_dump())
+        
+        return GroupTaskCommentResponse(**comment.model_dump())
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Ошибка при создании комментария: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/group-tasks/{task_id}/comments", response_model=List[GroupTaskCommentResponse])
+async def get_group_task_comments(task_id: str):
+    """Получить все комментарии групповой задачи"""
+    try:
+        comments_cursor = db.group_task_comments.find({"task_id": task_id}).sort("created_at", 1)
+        
+        comments = []
+        async for comment_doc in comments_cursor:
+            comments.append(GroupTaskCommentResponse(**comment_doc))
+        
+        return comments
+    except Exception as e:
+        logger.error(f"Ошибка при получении комментариев: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 # Include the router in the main app
 app.include_router(api_router)
