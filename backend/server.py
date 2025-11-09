@@ -713,6 +713,8 @@ async def update_task(task_id: str, task_update: TaskUpdate):
             update_data["priority"] = task_update.priority
         if task_update.deadline is not None:
             update_data["deadline"] = task_update.deadline
+        if task_update.target_date is not None:
+            update_data["target_date"] = task_update.target_date
         if task_update.subject is not None:
             update_data["subject"] = task_update.subject
         if task_update.discipline_id is not None:
