@@ -425,7 +425,7 @@ export const tasksAPI = {
    */
   reorderTasks: async (taskOrders) => {
     try {
-      const response = await api.put('/tasks/reorder', taskOrders);
+      const response = await api.put('/tasks/reorder', { tasks: taskOrders });
       return response.data;
     } catch (error) {
       handleError(error);
