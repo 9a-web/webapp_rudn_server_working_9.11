@@ -105,29 +105,21 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
   // Обновление порядка задач после перетаскивания в карточке "Сегодня"
   const handleReorderTasks = async (newOrder) => {
     console.log('🔄 Reorder triggered!', {
-      oldOrder: todayTasks.map(t => ({ id: t.id, text: t.text })),
+      oldOrder: todayTasks.map(t => ({ id: t.id, text: t.text, order: t.order })),
       newOrder: newOrder.map(t => ({ id: t.id, text: t.text }))
     });
     
-    // newOrder содержит только задачи из todayTasks
-    // Нужно обновить порядок в полном массиве tasks
+    // Немедленно обновляем UI для плавности
+    const reorderedTaskIds = newOrder.map(t => t.id);
     
-    // Создаем Map для быстрого поиска новых позиций
-    const orderMap = new Map();
-    newOrder.forEach((task, index) => {
-      orderMap.set(task.id, index);
-    });
+    // Создаем Map для быстрого поиска
+    const taskMap = new Map(tasks.map(t => [t.id, t]));
     
-    // Обновляем tasks, сохраняя порядок из newOrder для задач в todayTasks
-    const updatedTasks = [...tasks].map(task => {
-      if (orderMap.has(task.id)) {
-        return { ...task, order: orderMap.get(task.id) };
-      }
-      return task;
-    }).sort((a, b) => {
-      // Сортируем по order
-      return a.order - b.order;
-    });
+    // Собираем новый порядок: сначала перетянутые задачи, потом остальные
+    const updatedTasks = [
+      ...newOrder.map((task, index) => ({ ...task, order: index })),
+      ...tasks.filter(t => !reorderedTaskIds.includes(t.id))
+    ];
     
     setTasks(updatedTasks);
     
@@ -138,11 +130,12 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
         order: index
       }));
       
+      console.log('💾 Saving order to server:', taskOrders);
       await tasksAPI.reorderTasks(taskOrders);
       console.log('✅ Tasks reordered and saved to server');
       hapticFeedback && hapticFeedback('impact', 'light');
     } catch (error) {
-      console.error('Error saving task order:', error);
+      console.error('❌ Error saving task order:', error);
       // В случае ошибки перезагружаем задачи
       loadTasks();
     }
