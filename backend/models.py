@@ -125,26 +125,26 @@ class UserSettingsCreate(BaseModel):
 
 class UserSettingsResponse(BaseModel):
     """Ответ с настройками пользователя"""
-    id: str
+    id: Optional[str] = None
     telegram_id: int
     username: Optional[str] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     
-    group_id: str
-    group_name: str
-    facultet_id: str
+    group_id: Optional[str] = None
+    group_name: Optional[str] = None
+    facultet_id: Optional[str] = None
     facultet_name: Optional[str] = None
-    level_id: str
-    kurs: str
-    form_code: str
+    level_id: Optional[str] = None
+    kurs: Optional[str] = None
+    form_code: Optional[str] = None
     
     # Настройки уведомлений
     notifications_enabled: bool = False
     notification_time: int = 10
     
-    created_at: datetime
-    updated_at: datetime
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     last_activity: Optional[datetime] = None
 
 
