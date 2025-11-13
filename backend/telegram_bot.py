@@ -61,12 +61,15 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         
         if not existing_user:
             # Создаем нового пользователя
+            import uuid
             new_user = {
+                "id": str(uuid.uuid4()),
                 "telegram_id": telegram_id,
                 "username": username,
                 "first_name": first_name,
                 "last_name": last_name,
                 "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow(),
                 "last_activity": datetime.utcnow(),
                 "notifications_enabled": False,
                 "notification_time": 10
