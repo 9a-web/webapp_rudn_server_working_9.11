@@ -128,71 +128,87 @@ const AdminPanel = ({ isOpen, onClose }) => {
 
           {/* Header */}
           <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-xl border-b border-white/10 px-4 py-3 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
-                  <BarChart3 className="w-6 h-6 text-white" />
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg sm:rounded-xl">
+                    <BarChart3 className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg sm:text-2xl font-bold text-white">Админ Панель</h2>
+                    <p className="text-xs sm:text-sm text-gray-400 hidden sm:block">
+                      Статистика и аналитика
+                      {lastUpdate && (
+                        <span className="ml-2 text-xs text-gray-500">
+                          • {lastUpdate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      )}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-white">Админ Панель</h2>
-                  <p className="text-sm text-gray-400">
-                    Статистика и аналитика
-                    {lastUpdate && (
-                      <span className="ml-2 text-xs text-gray-500">
-                        • Обновлено: {lastUpdate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    )}
-                  </p>
-                </div>
+
+                {/* Close Button (Mobile) */}
+                <button
+                  onClick={onClose}
+                  className="sm:hidden p-2 active:bg-white/10 rounded-xl transition-all"
+                  style={{ touchAction: 'manipulation' }}
+                >
+                  <X className="w-5 h-5 text-gray-400" />
+                </button>
               </div>
 
               {/* Period Selector and Refresh Button */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
                 {/* Refresh Button */}
                 <button
                   onClick={() => fetchData()}
                   disabled={loading}
-                  className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-shrink-0 p-2 bg-white/5 active:bg-white/10 sm:hover:bg-white/10 rounded-lg sm:rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Обновить данные"
+                  style={{ touchAction: 'manipulation' }}
                 >
-                  <RefreshCw className={`w-5 h-5 text-gray-400 ${loading ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-400 ${loading ? 'animate-spin' : ''}`} />
                 </button>
                 
                 <button
                   onClick={() => setSelectedPeriod(7)}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                  className={`flex-shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all ${
                     selectedPeriod === 7
                       ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                      : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                      : 'bg-white/5 text-gray-400 active:bg-white/10 sm:hover:bg-white/10'
                   }`}
+                  style={{ touchAction: 'manipulation' }}
                 >
                   7 дней
                 </button>
                 <button
                   onClick={() => setSelectedPeriod(30)}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                  className={`flex-shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all ${
                     selectedPeriod === 30
                       ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                      : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                      : 'bg-white/5 text-gray-400 active:bg-white/10 sm:hover:bg-white/10'
                   }`}
+                  style={{ touchAction: 'manipulation' }}
                 >
                   30 дней
                 </button>
                 <button
                   onClick={() => setSelectedPeriod(null)}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                  className={`flex-shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all ${
                     selectedPeriod === null
                       ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                      : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                      : 'bg-white/5 text-gray-400 active:bg-white/10 sm:hover:bg-white/10'
                   }`}
+                  style={{ touchAction: 'manipulation' }}
                 >
                   Все время
                 </button>
               </div>
 
+              {/* Close Button (Desktop) */}
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-white/10 rounded-xl transition-all"
+                className="hidden sm:block p-2 hover:bg-white/10 rounded-xl transition-all"
               >
                 <X className="w-6 h-6 text-gray-400" />
               </button>
@@ -200,7 +216,7 @@ const AdminPanel = ({ isOpen, onClose }) => {
           </div>
 
           {/* Content */}
-          <div className="overflow-y-auto max-h-[calc(90vh-100px)] p-6 space-y-6">
+          <div className="overflow-y-auto h-[calc(92vh-120px)] sm:max-h-[calc(90vh-120px)] px-4 py-4 sm:p-6 space-y-4 sm:space-y-6 overscroll-contain">
             {loading ? (
               <div className="flex items-center justify-center py-20">
                 <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
