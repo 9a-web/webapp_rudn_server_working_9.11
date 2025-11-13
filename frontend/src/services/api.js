@@ -54,7 +54,21 @@ const handleError = (error) => {
   if (error.response) {
     // Сервер ответил с ошибкой
     console.error('API Error:', error.response.data);
-    throw new Error(error.response.data.detail || error.response.data.error || 'Ошибка сервера');
+    
+    const detail = error.response.data.detail;
+    
+    // Если detail - это массив ошибок валидации Pydantic
+    if (Array.isArray(detail)) {
+      const errorMessages = detail.map(err => {
+        const field = err.loc ? err.loc.join('.') : 'unknown';
+        const message = err.msg || 'validation error';
+        return `${field}: ${message}`;
+      });
+      throw new Error(errorMessages.join('; '));
+    }
+    
+    // Если detail - это строка или объект
+    throw new Error(detail || error.response.data.error || 'Ошибка сервера');
   } else if (error.request) {
     // Запрос был отправлен, но ответа нет
     console.error('Network Error:', error.request);
