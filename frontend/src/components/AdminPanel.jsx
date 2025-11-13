@@ -110,7 +110,14 @@ const AdminPanel = ({ isOpen, onClose }) => {
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-white">Админ Панель</h2>
-                  <p className="text-sm text-gray-400">Статистика и аналитика</p>
+                  <p className="text-sm text-gray-400">
+                    Статистика и аналитика
+                    {lastUpdate && (
+                      <span className="ml-2 text-xs text-gray-500">
+                        • Обновлено: {lastUpdate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
+                  </p>
                 </div>
               </div>
 
