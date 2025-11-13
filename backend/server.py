@@ -2268,6 +2268,18 @@ async def shutdown_db_client():
     """Очистка ресурсов при остановке"""
     logger.info("Shutting down RUDN Schedule API...")
     
+    # Останавливаем Telegram бота
+    global bot_application
+    if bot_application:
+        try:
+            logger.info("Stopping Telegram bot...")
+            await bot_application.updater.stop()
+            await bot_application.stop()
+            await bot_application.shutdown()
+            logger.info("Telegram bot stopped")
+        except Exception as e:
+            logger.error(f"Error stopping Telegram bot: {e}")
+    
     # Останавливаем планировщик
     try:
         scheduler = get_scheduler(db)
