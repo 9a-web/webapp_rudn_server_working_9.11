@@ -244,6 +244,119 @@ async def users_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         )
 
 
+async def clear_db_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """
+    Обработчик команды /clear_db
+    Очищает всю базу данных (только для администраторов с паролем)
+    Использование: /clear_db <пароль>
+    """
+    user = update.effective_user
+    
+    if not user:
+        logger.warning("Не удалось получить информацию о пользователе")
+        return
+    
+    telegram_id = user.id
+    
+    # Проверка прав администратора
+    if telegram_id not in ADMIN_IDS:
+        logger.warning(f"⛔️ Неавторизованная попытка использовать /clear_db от {telegram_id} (@{user.username})")
+        await update.message.reply_text(
+            "❌ У вас нет прав для использования этой команды."
+        )
+        return
+    
+    # Проверяем наличие пароля в аргументах
+    if not context.args or len(context.args) == 0:
+        await update.message.reply_text(
+            "⚠️ <b>ВНИМАНИЕ: Опасная операция!</b>\n\n"
+            "Команда /clear_db очистит <b>ВСЮ</b> базу данных.\n\n"
+            "Для подтверждения используйте:\n"
+            "<code>/clear_db &lt;пароль&gt;</code>\n\n"
+            "🔐 Пароль должен быть известен только администратору.",
+            parse_mode='HTML'
+        )
+        return
+    
+    # Получаем пароль из аргументов
+    provided_password = " ".join(context.args)
+    
+    # Проверка пароля
+    if provided_password != DB_CLEAR_PASSWORD:
+        logger.warning(f"⛔️ Неверный пароль для /clear_db от {telegram_id} (@{user.username})")
+        await update.message.reply_text(
+            "❌ <b>Неверный пароль!</b>\n\n"
+            "Доступ запрещён.",
+            parse_mode='HTML'
+        )
+        return
+    
+    logger.warning(f"🚨 КРИТИЧЕСКАЯ ОПЕРАЦИЯ: Администратор {telegram_id} (@{user.username}) запросил очистку БД")
+    
+    try:
+        await update.message.reply_text(
+            "⏳ <b>Начинаю очистку базы данных...</b>",
+            parse_mode='HTML'
+        )
+        
+        # Список всех коллекций для очистки
+        collections = [
+            "user_settings",
+            "user_stats",
+            "user_achievements",
+            "tasks",
+            "rooms",
+            "group_tasks",
+            "group_task_invites",
+            "group_task_comments",
+            "schedule_cache",
+            "sent_notifications",
+            "status_checks"
+        ]
+        
+        deleted_counts = {}
+        total_deleted = 0
+        
+        # Очищаем каждую коллекцию
+        for collection_name in collections:
+            try:
+                collection = db[collection_name]
+                result = await collection.delete_many({})
+                deleted_count = result.deleted_count
+                deleted_counts[collection_name] = deleted_count
+                total_deleted += deleted_count
+                logger.info(f"✅ Коллекция '{collection_name}': удалено {deleted_count} документов")
+            except Exception as e:
+                logger.error(f"❌ Ошибка при очистке коллекции '{collection_name}': {e}")
+                deleted_counts[collection_name] = f"Ошибка: {str(e)}"
+        
+        # Формируем отчёт
+        report_lines = ["🗑 <b>База данных очищена!</b>\n"]
+        report_lines.append(f"<b>Всего удалено:</b> {total_deleted} документов\n")
+        report_lines.append("<b>Детали по коллекциям:</b>")
+        
+        for collection_name, count in deleted_counts.items():
+            if isinstance(count, int):
+                report_lines.append(f"  • {collection_name}: {count}")
+            else:
+                report_lines.append(f"  • {collection_name}: {count}")
+        
+        report = "\n".join(report_lines)
+        
+        await update.message.reply_text(report, parse_mode='HTML')
+        
+        logger.warning(f"🚨 БАЗА ДАННЫХ ОЧИЩЕНА администратором {telegram_id} (@{user.username})")
+        logger.warning(f"📊 Удалено {total_deleted} документов из {len(collections)} коллекций")
+        
+    except Exception as e:
+        logger.error(f"❌ Критическая ошибка при очистке БД: {e}", exc_info=True)
+        await update.message.reply_text(
+            "❌ <b>Произошла критическая ошибка при очистке базы данных!</b>\n\n"
+            f"Ошибка: {str(e)}",
+            parse_mode='HTML'
+        )
+
+
 def main() -> None:
     """Запуск бота"""
     
