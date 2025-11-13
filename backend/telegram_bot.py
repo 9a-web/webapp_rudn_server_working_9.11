@@ -5,6 +5,8 @@ Telegram Bot для RUDN Schedule
 
 import os
 import logging
+import asyncio
+import signal
 from telegram import Update, WebAppInfo, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes
 from dotenv import load_dotenv
