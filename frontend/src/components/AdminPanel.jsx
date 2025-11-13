@@ -198,8 +198,8 @@ const AdminPanel = ({ isOpen, onClose }) => {
                 )}
 
                 {/* User Registration Chart */}
-                {usersActivity.length > 0 && (
-                  <ChartCard title="Регистрации пользователей" icon={<Users />}>
+                <ChartCard title="Регистрации пользователей" icon={<Users />}>
+                  {usersActivity.length > 0 ? (
                     <ResponsiveContainer width="100%" height={300}>
                       <LineChart data={usersActivity}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
@@ -221,8 +221,12 @@ const AdminPanel = ({ isOpen, onClose }) => {
                         />
                       </LineChart>
                     </ResponsiveContainer>
-                  </ChartCard>
-                )}
+                  ) : (
+                    <div className="h-[300px] flex items-center justify-center text-gray-500">
+                      Нет данных о регистрациях за выбранный период
+                    </div>
+                  )}
+                </ChartCard>
 
                 {/* Hourly and Weekly Activity */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
