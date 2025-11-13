@@ -32,9 +32,15 @@ WEB_APP_URL = "https://rudn-schedule.ru"
 # ID администраторов (могут использовать команду /users)
 ADMIN_IDS = [765963392]
 
+# Пароль для очистки базы данных (храним в переменной окружения или здесь)
+DB_CLEAR_PASSWORD = os.getenv("DB_CLEAR_PASSWORD", "RUDN_CLEAR_2025")
+
 # Подключение к MongoDB
 mongo_client = AsyncIOMotorClient(MONGO_URL)
 db = mongo_client[DB_NAME]
+
+# Словарь для хранения состояния ожидания подтверждения
+clear_db_pending = {}
 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
