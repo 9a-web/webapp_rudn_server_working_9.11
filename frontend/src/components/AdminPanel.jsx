@@ -397,8 +397,8 @@ const AdminPanel = ({ isOpen, onClose }) => {
                 </div>
 
                 {/* Course Distribution */}
-                {courseStats.length > 0 && (
-                  <ChartCard title="Распределение по курсам" icon={<TrendingUp />}>
+                <ChartCard title="Распределение по курсам" icon={<TrendingUp />}>
+                  {courseStats.length > 0 ? (
                     <ResponsiveContainer width="100%" height={250}>
                       <BarChart data={courseStats}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
@@ -414,8 +414,12 @@ const AdminPanel = ({ isOpen, onClose }) => {
                         <Bar dataKey="users_count" fill="#3B82F6" radius={[8, 8, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
-                  </ChartCard>
-                )}
+                  ) : (
+                    <div className="h-[250px] flex items-center justify-center text-gray-500">
+                      Нет данных о курсах
+                    </div>
+                  )}
+                </ChartCard>
               </>
             )}
           </div>
