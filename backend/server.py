@@ -2224,8 +2224,17 @@ async def startup_event():
     # Запускаем Telegram бота в отдельном потоке
     try:
         def run_bot():
+            import asyncio
             from telegram_bot import main as bot_main
-            bot_main()
+            # Создаем новый event loop для потока
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                bot_main()
+            except Exception as e:
+                logger.error(f"Bot thread error: {e}")
+            finally:
+                loop.close()
         
         bot_thread = threading.Thread(target=run_bot, daemon=True)
         bot_thread.start()
