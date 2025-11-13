@@ -38,6 +38,7 @@ const Home = () => {
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
   const [isNotificationSettingsOpen, setIsNotificationSettingsOpen] = useState(false);
+  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentClass, setCurrentClass] = useState(null);
   const [minutesLeft, setMinutesLeft] = useState(0);
