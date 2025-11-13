@@ -2181,7 +2181,7 @@ class RUDNScheduleAPITester:
             # Bot info endpoint test
             self.test_bot_info_endpoint,
             # Tasks API comprehensive test (as requested)
-            self.test_comprehensive_task_completion_functionality,
+            self.test_tasks_api_comprehensive,
             # New Admin Panel Tests
             self.test_admin_stats_endpoint,
             self.test_admin_users_activity_endpoint,
