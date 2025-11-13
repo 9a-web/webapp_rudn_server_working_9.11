@@ -112,8 +112,18 @@ const AdminPanel = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
-              {/* Period Selector */}
+              {/* Period Selector and Refresh Button */}
               <div className="flex items-center gap-2">
+                {/* Refresh Button */}
+                <button
+                  onClick={() => fetchData()}
+                  disabled={loading}
+                  className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Обновить данные"
+                >
+                  <RefreshCw className={`w-5 h-5 text-gray-400 ${loading ? 'animate-spin' : ''}`} />
+                </button>
+                
                 <button
                   onClick={() => setSelectedPeriod(7)}
                   className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
