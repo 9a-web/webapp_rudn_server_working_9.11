@@ -244,8 +244,12 @@ class NotificationScheduler:
                         "expires_at": now.replace(tzinfo=None) + timedelta(days=2)
                     })
                     logger.debug(f"Created sent_notifications record for {notification_key}")
+                except DuplicateKeyError:
+                    # Другой процесс/поток уже создал эту запись (защита от race condition)
+                    logger.debug(f"Notification {notification_key} already being processed by another instance")
+                    return
                 except Exception as db_error:
-                    # Если не можем создать запись - логируем, но продолжаем
+                    # Если не можем создать запись - логируем и не продолжаем
                     logger.error(f"Failed to create sent_notifications record: {db_error}")
                     # Не продолжаем отправку, чтобы не было спама
                     return
