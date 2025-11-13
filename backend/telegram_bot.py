@@ -29,6 +29,9 @@ MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
 DB_NAME = os.getenv("DB_NAME", "test_database")
 WEB_APP_URL = "https://rudn-schedule.ru"
 
+# ID администраторов (могут использовать команду /users)
+ADMIN_IDS = [765963392]
+
 # Подключение к MongoDB
 mongo_client = AsyncIOMotorClient(MONGO_URL)
 db = mongo_client[DB_NAME]
