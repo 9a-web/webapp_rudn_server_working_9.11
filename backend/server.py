@@ -1637,6 +1637,14 @@ async def create_task_in_room(room_id: str, task_data: RoomTaskCreate):
                 )
                 participants.append(task_participant)
         
+        # Создаем подзадачи из списка строк
+        subtasks = []
+        for i, subtask_title in enumerate(task_data.subtasks):
+            subtasks.append(Subtask(
+                title=subtask_title,
+                order=i
+            ))
+        
         # Создаем групповую задачу
         group_task = GroupTask(
             title=task_data.title,
@@ -1646,10 +1654,23 @@ async def create_task_in_room(room_id: str, task_data: RoomTaskCreate):
             priority=task_data.priority,
             owner_id=task_data.telegram_id,
             room_id=room_id,
-            participants=participants
+            participants=participants,
+            tags=task_data.tags,
+            subtasks=subtasks
         )
         
         await db.group_tasks.insert_one(group_task.model_dump())
+        
+        # Логируем активность
+        activity = RoomActivity(
+            room_id=room_id,
+            user_id=task_data.telegram_id,
+            username=creator_info.get("username") if creator_info else "",
+            first_name=creator_info.get("first_name", "User") if creator_info else "User",
+            action_type="task_created",
+            action_details={"task_title": task_data.title, "task_id": group_task.task_id}
+        )
+        await db.room_activities.insert_one(activity.model_dump())
         
         # Подсчитываем процент выполнения
         total_participants = len(group_task.participants)
@@ -1658,11 +1679,14 @@ async def create_task_in_room(room_id: str, task_data: RoomTaskCreate):
         if total_participants > 0:
             completion_percentage = int((completed_participants / total_participants) * 100)
         
+        comments_count = 0
+        
         return GroupTaskResponse(
             **group_task.model_dump(),
             completion_percentage=completion_percentage,
             total_participants=total_participants,
-            completed_participants=completed_participants
+            completed_participants=completed_participants,
+            comments_count=comments_count
         )
     except HTTPException:
         raise
