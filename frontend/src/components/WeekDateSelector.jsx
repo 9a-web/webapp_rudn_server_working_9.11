@@ -110,8 +110,7 @@ export const WeekDateSelector = ({
   
   // Обработчик клика на день
   const handleDayClick = (date) => {
-    if (isFutureDay(date)) return; // Будущие дни неактивны
-    
+    // Разрешаем клики на все дни (включая будущие)
     if (hapticFeedback) hapticFeedback('impact', 'light');
     if (onDateSelect) onDateSelect(date);
   };
