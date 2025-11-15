@@ -146,3 +146,166 @@ export const deleteRoom = async (roomId, telegramId) => {
     throw error;
   }
 };
+
+// Обновить комнату (название, описание, цвет)
+export const updateRoom = async (roomId, updateData, telegramId) => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/api/rooms/${roomId}`,
+      { ...updateData, telegram_id: telegramId }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error updating room:', error);
+    throw error;
+  }
+};
+
+// Получить историю активности комнаты
+export const getRoomActivity = async (roomId, limit = 50) => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/api/rooms/${roomId}/activity`,
+      { params: { limit } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching room activity:', error);
+    throw error;
+  }
+};
+
+// Получить статистику комнаты
+export const getRoomStats = async (roomId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/rooms/${roomId}/stats`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching room stats:', error);
+    throw error;
+  }
+};
+
+// Изменить роль участника
+export const updateParticipantRole = async (roomId, telegramId, newRole, changedBy) => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/api/rooms/${roomId}/participant-role`,
+      {
+        room_id: roomId,
+        telegram_id: telegramId,
+        new_role: newRole,
+        changed_by: changedBy
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error updating participant role:', error);
+    throw error;
+  }
+};
+
+// Обновить групповую задачу
+export const updateGroupTask = async (taskId, updateData) => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/api/group-tasks/${taskId}/update`,
+      updateData
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error updating group task:', error);
+    throw error;
+  }
+};
+
+// Удалить групповую задачу
+export const deleteGroupTask = async (taskId, telegramId) => {
+  try {
+    const response = await axios.delete(
+      `${API_BASE_URL}/api/group-tasks/${taskId}`,
+      { data: { telegram_id: telegramId } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting group task:', error);
+    throw error;
+  }
+};
+
+// Отметить задачу как выполненную/невыполненную
+export const toggleTaskComplete = async (taskId, telegramId, completed) => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/api/group-tasks/${taskId}/complete`,
+      {
+        task_id: taskId,
+        telegram_id: telegramId,
+        completed: completed
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error toggling task completion:', error);
+    throw error;
+  }
+};
+
+// Добавить подзадачу
+export const addSubtask = async (taskId, title) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/api/group-tasks/${taskId}/subtasks`,
+      { title }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error adding subtask:', error);
+    throw error;
+  }
+};
+
+// Обновить подзадачу
+export const updateSubtask = async (taskId, subtaskId, updateData) => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/api/group-tasks/${taskId}/subtasks/${subtaskId}`,
+      { subtask_id: subtaskId, ...updateData }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error updating subtask:', error);
+    throw error;
+  }
+};
+
+// Удалить подзадачу
+export const deleteSubtask = async (taskId, subtaskId) => {
+  try {
+    const response = await axios.delete(
+      `${API_BASE_URL}/api/group-tasks/${taskId}/subtasks/${subtaskId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting subtask:', error);
+    throw error;
+  }
+};
+
+// Изменить порядок задач (drag & drop)
+export const reorderRoomTasks = async (roomId, tasks) => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/api/rooms/${roomId}/tasks-reorder`,
+      {
+        room_id: roomId,
+        tasks: tasks
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error reordering tasks:', error);
+    throw error;
+  }
+};
+
