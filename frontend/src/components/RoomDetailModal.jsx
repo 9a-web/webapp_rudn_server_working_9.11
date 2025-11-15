@@ -121,39 +121,43 @@ const RoomDetailModal = ({ isOpen, onClose, room, userSettings, onRoomDeleted, o
   const handleDeleteRoom = async () => {
     if (!room || !userSettings || !isOwner) return;
 
-    if (webApp?.showPopup) {
-      webApp.showPopup(
-        {
-          title: 'Удалить комнату?',
-          message: 'Все задачи будут удалены. Это действие нельзя отменить.',
-          buttons: [
-            { id: 'delete', type: 'destructive', text: 'Удалить' },
-            { type: 'cancel' }
-          ]
-        },
-        async (buttonId) => {
-          if (buttonId === 'delete') {
-            try {
-              await deleteRoom(room.room_id, userSettings.telegram_id);
-              
-              if (webApp?.HapticFeedback) {
-                webApp.HapticFeedback.notificationOccurred('success');
-              }
+    // Используем window.confirm как фоллбэк если webApp.showPopup не доступен
+    const confirmDelete = webApp?.showPopup 
+      ? await new Promise((resolve) => {
+          webApp.showPopup(
+            {
+              title: 'Удалить комнату?',
+              message: 'Все задачи будут удалены. Это действие нельзя отменить.',
+              buttons: [
+                { id: 'delete', type: 'destructive', text: 'Удалить' },
+                { type: 'cancel' }
+              ]
+            },
+            (buttonId) => resolve(buttonId === 'delete')
+          );
+        })
+      : window.confirm('Удалить комнату? Все задачи будут удалены. Это действие нельзя отменить.');
 
-              if (onRoomDeleted) {
-                onRoomDeleted(room.room_id);
-              }
-              
-              onClose();
-            } catch (error) {
-              console.error('Error deleting room:', error);
-              if (webApp?.HapticFeedback) {
-                webApp.HapticFeedback.notificationOccurred('error');
-              }
-            }
-          }
+    if (confirmDelete) {
+      try {
+        await deleteRoom(room.room_id, userSettings.telegram_id);
+        
+        if (webApp?.HapticFeedback) {
+          webApp.HapticFeedback.notificationOccurred('success');
         }
-      );
+
+        if (onRoomDeleted) {
+          onRoomDeleted(room.room_id);
+        }
+        
+        onClose();
+      } catch (error) {
+        console.error('Error deleting room:', error);
+        if (webApp?.HapticFeedback) {
+          webApp.HapticFeedback.notificationOccurred('error');
+        }
+        alert('Ошибка при удалении комнаты: ' + error.message);
+      }
     }
   };
 
