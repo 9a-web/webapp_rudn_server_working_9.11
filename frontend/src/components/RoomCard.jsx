@@ -29,7 +29,7 @@ const RoomCard = ({ room, onClick }) => {
       onClick={onClick}
       className={`relative flex-shrink-0 w-[160px] min-w-[160px] h-[200px] bg-gradient-to-br ${colorScheme.cardGradient} 
                  rounded-[24px] p-4 cursor-pointer shadow-lg ${colorScheme.shadowColor} 
-                 border ${colorScheme.borderColor} overflow-hidden flex flex-col
+                 border ${colorScheme.borderColor} flex flex-col
                  ${colorScheme.hoverShadow} transition-shadow snap-start`}
     >
       {/* Заголовок с иконкой */}
