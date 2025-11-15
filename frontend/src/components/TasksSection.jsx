@@ -1122,14 +1122,18 @@ const TodayTaskItem = ({
               
               {/* Кнопки действий */}
               <div className="flex items-center gap-1 flex-shrink-0">
-                {/* Кнопка редактирования */}
+                {/* Кнопка редактирования - открывает модальное окно для изменения метаданных */}
                 <button
                   onClick={() => {
                     hapticFeedback && hapticFeedback('impact', 'light');
-                    onEdit && onEdit(task);
+                    // Открываем модальное окно EditTaskModal для редактирования метаданных
+                    if (onEdit) {
+                      // Если onEdit принимает task, значит это handleOpenEditModal
+                      onEdit(task);
+                    }
                   }}
                   className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                  title="Редактировать задачу"
+                  title="Редактировать метаданные (категория, приоритет, дедлайн)"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
                 </button>
