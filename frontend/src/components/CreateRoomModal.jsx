@@ -24,6 +24,7 @@ const CreateRoomModal = ({ isOpen, onClose, onCreateRoom }) => {
       // Сбрасываем форму при закрытии
       setName('');
       setDescription('');
+      setSelectedColor('blue');
       setIsSaving(false);
     }
 
