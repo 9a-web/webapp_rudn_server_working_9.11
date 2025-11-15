@@ -133,16 +133,35 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
   };
 
   const handleCreateRoom = async (roomData) => {
+    console.log('handleCreateRoom called', { roomData, userSettings });
+    
+    if (!userSettings?.telegram_id) {
+      const errorMsg = 'Не удалось получить данные пользователя. Перезагрузите страницу.';
+      alert(errorMsg);
+      throw new Error(errorMsg);
+    }
+    
     try {
-      const newRoom = await roomsAPI.createRoom({
+      const requestData = {
         ...roomData,
         telegram_id: userSettings.telegram_id
-      });
+      };
+      console.log('Creating room with data:', requestData);
+      
+      const newRoom = await roomsAPI.createRoom(requestData);
+      console.log('Room created successfully:', newRoom);
+      
       setRooms(prev => [...prev, newRoom]);
       setIsCreateRoomModalOpen(false);
       hapticFeedback && hapticFeedback('notification', 'success');
     } catch (error) {
       console.error('Error creating room:', error);
+      console.error('Error details:', {
+        response: error.response,
+        message: error.message,
+        stack: error.stack
+      });
+      
       hapticFeedback && hapticFeedback('notification', 'error');
       
       // Показываем понятное сообщение об ошибке
