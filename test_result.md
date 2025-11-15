@@ -754,7 +754,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "WeekDateSelector - Future Date Task Creation"
+    - "Language Switching - i18n Integration"
   stuck_tasks:
     - "Language Switching - i18n Integration"
   test_all: false
