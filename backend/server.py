@@ -84,6 +84,7 @@ from models import (
     RoomActivityResponse,
     RoomStatsResponse,
     ParticipantRoleUpdate,
+    RoomUpdate,
     TaskReorderRequest as RoomTaskReorderRequest
 )
 from notifications import get_notification_service
