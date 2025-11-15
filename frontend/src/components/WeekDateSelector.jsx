@@ -158,7 +158,7 @@ export const WeekDateSelector = ({
                 <span 
                   className={`
                     text-xs font-bold mb-1
-                    ${selected ? 'text-white' : future ? 'text-gray-400' : 'text-gray-600'}
+                    ${selected ? 'text-white' : future ? 'text-blue-500' : 'text-gray-600'}
                   `}
                 >
                   {dayName}
