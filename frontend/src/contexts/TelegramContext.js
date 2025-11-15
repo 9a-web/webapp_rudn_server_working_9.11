@@ -149,7 +149,7 @@ export const TelegramProvider = ({ children }) => {
       } else {
         console.warn('⚠️ Telegram user не найден. Mock данные.');
         setUser({
-          id: 123456789,
+          id: 999888777,
           first_name: 'Test',
           last_name: 'User',
           username: 'testuser',
