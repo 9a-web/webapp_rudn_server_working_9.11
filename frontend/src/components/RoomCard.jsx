@@ -59,14 +59,14 @@ const RoomCard = ({ room, onClick }) => {
                 stroke="currentColor"
                 strokeWidth="4"
                 fill="none"
-                className="text-blue-200"
+                style={{ color: `${colorScheme.accentColor}33` }}
               />
               {/* Прогресс круг */}
               <circle
                 cx="32"
                 cy="32"
                 r="28"
-                stroke="url(#blueGradient)"
+                stroke={colorScheme.accentColor}
                 strokeWidth="4"
                 fill="none"
                 strokeDasharray={`${2 * Math.PI * 28}`}
@@ -74,12 +74,6 @@ const RoomCard = ({ room, onClick }) => {
                 strokeLinecap="round"
                 className="transition-all duration-500"
               />
-              <defs>
-                <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#3B82F6" />
-                  <stop offset="100%" stopColor="#6366F1" />
-                </linearGradient>
-              </defs>
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
               <span className="text-xs font-bold text-blue-600">
