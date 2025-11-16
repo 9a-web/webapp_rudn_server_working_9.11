@@ -483,49 +483,43 @@ const ScheduleImageCard = React.forwardRef(({ schedule, selectedDate, groupName,
 
       {/* Schedule Content */}
       {todaySchedule.length === 0 ? (
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-8 text-center shadow-lg">
+        <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
           <div className="text-6xl mb-4">🎉</div>
-          <p className="text-2xl font-bold text-gray-800 mb-2">Свободный день!</p>
+          <p className="text-2xl font-bold text-[#1C1C1E] mb-2">Свободный день!</p>
           <p className="text-gray-600">Пар нет</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {todaySchedule.map((classItem, index) => (
             <div 
               key={index}
-              className="bg-white/95 backdrop-blur-sm rounded-2xl p-5 shadow-lg hover:shadow-xl transition-shadow"
+              className="bg-white rounded-2xl p-5 shadow-sm"
             >
               <div className="flex items-start gap-4">
                 {/* Номер пары */}
-                <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md">
+                <div className="flex-shrink-0 w-12 h-12 bg-[#1C1C1E] rounded-xl flex items-center justify-center text-white font-bold text-xl">
                   {index + 1}
                 </div>
                 
                 {/* Информация о паре */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-start gap-2 mb-2">
-                    <span className="text-2xl flex-shrink-0">{getClassTypeEmoji(classItem.discipline)}</span>
-                    <h3 className="text-lg font-bold text-gray-900 leading-tight">
-                      {classItem.discipline}
-                    </h3>
-                  </div>
+                  <h3 className="text-lg font-bold text-[#1C1C1E] leading-tight mb-2">
+                    {classItem.discipline}
+                  </h3>
                   
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2 text-gray-700">
-                      <span className="text-base">⏰</span>
                       <span className="font-semibold">{classItem.time}</span>
                     </div>
                     
                     {classItem.auditory && (
                       <div className="flex items-center gap-2 text-gray-600">
-                        <span className="text-base">📍</span>
                         <span className="text-sm">{classItem.auditory}</span>
                       </div>
                     )}
                     
                     {classItem.teacher && (
                       <div className="flex items-center gap-2 text-gray-600">
-                        <span className="text-base">👨‍🏫</span>
                         <span className="text-sm">{classItem.teacher}</span>
                       </div>
                     )}
