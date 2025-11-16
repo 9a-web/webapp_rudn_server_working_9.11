@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
  * - Числом месяца
  * - Круговым progress bar для прошедших дней (показывает % выполненных задач)
  * - Неактивным состоянием для будущих дней
+ * - Кнопками переключения между неделями
  */
 export const WeekDateSelector = ({ 
   selectedDate, 
@@ -16,11 +17,12 @@ export const WeekDateSelector = ({
   hapticFeedback 
 }) => {
   const [weekDates, setWeekDates] = useState([]);
+  const [weekOffset, setWeekOffset] = useState(0); // 0 = текущая неделя, 1 = следующая, -1 = предыдущая
   
   // Короткие названия дней недели
   const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
   
-  // Генерируем 7 дней начиная с понедельника текущей недели
+  // Генерируем 7 дней начиная с понедельника нужной недели
   useEffect(() => {
     const today = new Date();
     const currentDay = today.getDay(); // 0 = Воскресенье, 1 = Понедельник, ...
@@ -31,6 +33,9 @@ export const WeekDateSelector = ({
     monday.setDate(today.getDate() + diff);
     monday.setHours(0, 0, 0, 0);
     
+    // Применяем смещение недели
+    monday.setDate(monday.getDate() + (weekOffset * 7));
+    
     // Создаем массив из 7 дней
     const dates = [];
     for (let i = 0; i < 7; i++) {
@@ -40,7 +45,7 @@ export const WeekDateSelector = ({
     }
     
     setWeekDates(dates);
-  }, []);
+  }, [weekOffset]);
   
   // Вычисляем процент выполненных задач для каждого дня
   // Используем useCallback для оптимизации и мemoization
