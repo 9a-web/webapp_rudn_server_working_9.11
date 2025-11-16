@@ -1722,6 +1722,13 @@ async def join_room_by_token(invite_token: str, join_data: RoomJoinRequest):
         if total_tasks > 0:
             completion_percentage = int((completed_tasks / total_tasks) * 100)
         
+        # Отправляем уведомления всем участникам комнаты о новом участнике
+        await send_room_join_notifications_api(
+            room_doc=updated_room,
+            new_user_name=join_data.first_name,
+            new_user_id=join_data.telegram_id
+        )
+        
         return RoomResponse(
             **updated_room,
             total_participants=len(updated_room.get("participants", [])),
