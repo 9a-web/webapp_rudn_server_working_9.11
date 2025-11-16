@@ -84,7 +84,7 @@ const WelcomeScreen = ({ onGetStarted }) => {
                 RUDN
               </span>
               <img 
-                src="https://customer-assets.emergentagent.com/job_d99a9a84-5ee1-4538-9525-dda2336cb57f/artifacts/p1fp8nep_elipse.svg"
+                src="/elipse.svg"
                 alt=""
                 className="absolute inset-0 w-full h-full"
                 style={{ 
