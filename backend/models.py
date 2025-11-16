@@ -256,6 +256,7 @@ class UserStatsResponse(BaseModel):
     groups_viewed: int
     friends_invited: int
     schedule_views: int
+    detailed_views: int
     night_usage_count: int
     early_usage_count: int
     total_points: int
