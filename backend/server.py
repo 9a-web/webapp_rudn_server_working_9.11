@@ -795,6 +795,10 @@ async def update_task(task_id: str, task_update: TaskUpdate):
         if not existing_task:
             raise HTTPException(status_code=404, detail="Задача не найдена")
         
+        # Проверяем, если задача отмечается как выполненная
+        was_incomplete = not existing_task.get("completed", False)
+        is_completing = task_update.completed is True and was_incomplete
+        
         # Обновляем только переданные поля
         update_data = {}
         if task_update.text is not None:
@@ -825,6 +829,31 @@ async def update_task(task_id: str, task_update: TaskUpdate):
         
         # Получаем обновленную задачу
         updated_task = await db.tasks.find_one({"id": task_id})
+        
+        # Если задача была выполнена, отслеживаем для достижений
+        if is_completing:
+            current_hour = datetime.utcnow().hour
+            
+            # Проверяем, выполнена ли в срок (до дедлайна или без дедлайна)
+            deadline = existing_task.get("deadline")
+            on_time = True  # По умолчанию считаем в срок
+            
+            if deadline:
+                # Если есть дедлайн, проверяем
+                if isinstance(deadline, str):
+                    deadline = datetime.fromisoformat(deadline.replace('Z', '+00:00'))
+                on_time = datetime.utcnow() <= deadline
+            
+            # Отслеживаем выполнение задачи
+            await achievements.track_user_action(
+                db,
+                existing_task["telegram_id"],
+                "complete_task",
+                metadata={
+                    "hour": current_hour,
+                    "on_time": on_time
+                }
+            )
         
         return TaskResponse(**updated_task)
     except HTTPException:
