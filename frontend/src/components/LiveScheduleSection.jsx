@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { fadeInUp, listItemVariants, buttonVariants, staggerContainer } from '../utils/animations';
 import { translateDiscipline, translateLessonType } from '../i18n/subjects';
 import { ShareScheduleModal } from './ShareScheduleModal';
+import { achievementsAPI } from '../services/api';
 
 export const LiveScheduleSection = ({ 
   selectedDate, 
