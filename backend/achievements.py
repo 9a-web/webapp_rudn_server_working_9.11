@@ -317,9 +317,26 @@ async def check_and_award_achievements(db, telegram_id: int, stats: UserStats) -
                 
                 if max_consecutive >= 7:
                     earned = True
+        # Достижения для раздела "Список дел"
+        elif achievement_id == "first_task" and stats.first_task_created:
+            earned = True
+        elif achievement_id == "productive_day" and stats.tasks_completed_today >= 5:
+            earned = True
+        elif achievement_id == "early_riser_tasks" and stats.tasks_completed_early >= 10:
+            earned = True
+        elif achievement_id == "task_specialist" and stats.tasks_created_total >= 50:
+            earned = True
+        elif achievement_id == "lightning_fast" and stats.tasks_completed_today >= 20:
+            earned = True
+        elif achievement_id == "flawless" and stats.tasks_completed_on_time >= 50:
+            earned = True
+        elif achievement_id == "marathon_runner" and stats.task_streak_current >= 30:
+            earned = True
+        elif achievement_id == "completion_master" and stats.tasks_completed_total >= 100:
+            earned = True
         elif achievement_id == "perfectionist":
             # Проверяем, что получены все остальные достижения
-            if len(existing_ids) >= 15:  # Все кроме самого перфекциониста (16 - 1)
+            if len(existing_ids) >= 23:  # Все кроме самого перфекциониста
                 earned = True
         
         # Если заработано, добавляем
