@@ -503,6 +503,7 @@ async def get_user_stats_endpoint(telegram_id: int):
             groups_viewed=stats.groups_viewed,
             friends_invited=stats.friends_invited,
             schedule_views=stats.schedule_views,
+            detailed_views=stats.detailed_views,
             night_usage_count=stats.night_usage_count,
             early_usage_count=stats.early_usage_count,
             total_points=stats.total_points,
