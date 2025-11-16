@@ -191,6 +191,35 @@ export const AnalyticsModal = ({ isOpen, onClose, schedule, userStats, hapticFee
                   )}
                 </div>
 
+                {/* Статистика взаимодействия */}
+                {userStats && (
+                  <div className="bg-[#1F1F1F] rounded-2xl p-4 border border-gray-700">
+                    <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-[#A3F7BF]" />
+                      Ваша активность
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Общие просмотры расписания */}
+                      <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl p-3 border border-blue-500/20">
+                        <div className="text-xs text-gray-400 mb-1">Просмотров</div>
+                        <div className="text-xl font-bold text-white">{userStats.schedule_views || 0}</div>
+                        <div className="text-xs text-blue-400">общих</div>
+                      </div>
+                      
+                      {/* Детальные просмотры */}
+                      <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl p-3 border border-purple-500/20">
+                        <div className="text-xs text-gray-400 mb-1">Детальных 🔍</div>
+                        <div className="text-xl font-bold text-white">{userStats.detailed_views || 0}</div>
+                        <div className="text-xs text-purple-400">развернуто</div>
+                      </div>
+                    </div>
+                    <div className="mt-3 text-xs text-gray-400 leading-relaxed">
+                      💡 <span className="text-[#A3F7BF]">Детальные просмотры</span> - это развернутые карточки предметов. 
+                      Наберите 50+ для достижения "Внимательный студент 🔍"
+                    </div>
+                  </div>
+                )}
+
                 {/* Дополнительная информация */}
                 <div className="bg-gradient-to-r from-[#A3F7BF]/5 to-[#80E8FF]/5 rounded-2xl p-4 border border-gray-700">
                   <p className="text-sm text-gray-300 leading-relaxed">
