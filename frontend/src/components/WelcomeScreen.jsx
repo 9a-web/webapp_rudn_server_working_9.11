@@ -51,14 +51,17 @@ const WelcomeScreen = ({ onGetStarted }) => {
       {/* Centered Content Container */}
       <div className="flex flex-col items-center justify-center gap-6 sm:gap-8 md:gap-10 w-full max-w-[490px] sm:max-w-md md:max-w-lg lg:max-w-xl z-10">
         
-        {/* Let's go logo - Fixed 470px on mobile, responsive on other devices */}
+        {/* Let's go logo - Fixed 470x470px on mobile, responsive on other devices */}
         <motion.div
-          className="w-full flex justify-center -mx-4 sm:mx-0"
+          className="w-full flex justify-center"
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          <div className="w-[470px] max-w-[calc(100vw-32px)] sm:w-[400px] md:w-[450px] lg:w-[500px] aspect-square">
+          <div 
+            className="aspect-square sm:w-[400px] md:w-[450px] lg:w-[500px]"
+            style={{ width: 'min(470px, calc(100vw - 32px))' }}
+          >
             <img 
               src="/letsgo.png"
               alt="Let's go"
