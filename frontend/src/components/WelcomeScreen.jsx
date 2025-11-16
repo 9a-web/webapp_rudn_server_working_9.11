@@ -18,11 +18,11 @@ const WelcomeScreen = ({ onGetStarted }) => {
   };
 
   return (
-    <div className="h-screen min-h-screen bg-[#1E1E1E] flex flex-col items-center justify-between overflow-hidden relative">
+    <div className="h-screen min-h-screen bg-[#1E1E1E] flex flex-col items-center justify-center overflow-hidden relative px-4 sm:px-6 md:px-8">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          className="absolute top-20 right-10 w-32 h-32 bg-[#A3F7BF]/10 rounded-full blur-3xl"
+          className="absolute top-1/4 right-5 sm:right-10 w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 bg-[#A3F7BF]/10 rounded-full blur-3xl"
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.3, 0.5, 0.3],
@@ -34,7 +34,7 @@ const WelcomeScreen = ({ onGetStarted }) => {
           }}
         />
         <motion.div
-          className="absolute bottom-40 left-10 w-40 h-40 bg-[#A3F7BF]/10 rounded-full blur-3xl"
+          className="absolute bottom-1/4 left-5 sm:left-10 w-28 h-28 sm:w-40 sm:h-40 md:w-48 md:h-48 bg-[#A3F7BF]/10 rounded-full blur-3xl"
           animate={{
             scale: [1, 1.3, 1],
             opacity: [0.2, 0.4, 0.2],
@@ -48,27 +48,30 @@ const WelcomeScreen = ({ onGetStarted }) => {
         />
       </div>
 
-      {/* Let's go logo - Full width */}
-      <motion.div
-        className="w-full mt-12 mb-8 z-10"
-        initial={{ opacity: 0, y: -30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-      >
-        <img 
-          src="/letsgo.png"
-          alt="Let's go"
-          className="w-full h-auto object-cover"
-          style={{ maxHeight: '300px' }}
-        />
-      </motion.div>
-
-      {/* Content Container */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md px-6 z-10">
+      {/* Centered Content Container */}
+      <div className="flex flex-col items-center justify-center gap-6 sm:gap-8 md:gap-10 w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl z-10">
+        
+        {/* Let's go logo - Responsive sizing */}
+        <motion.div
+          className="w-full"
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          <img 
+            src="/letsgo.png"
+            alt="Let's go"
+            className="w-full h-auto object-contain mx-auto"
+            style={{ 
+              maxHeight: 'clamp(150px, 25vh, 300px)',
+              maxWidth: '100%'
+            }}
+          />
+        </motion.div>
 
         {/* Ready text image - Manage your RUDN schedule */}
         <motion.div
-          className="w-full px-4"
+          className="w-full px-2 sm:px-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
@@ -76,17 +79,18 @@ const WelcomeScreen = ({ onGetStarted }) => {
           <img 
             src="/ready_text.png"
             alt="Manage your RUDN schedule - Store and view your schedule on your phone"
-            className="w-full h-auto object-contain"
-            style={{ maxWidth: '100%' }}
+            className="w-full h-auto object-contain mx-auto"
+            style={{ 
+              maxHeight: 'clamp(120px, 20vh, 250px)',
+              maxWidth: '100%'
+            }}
           />
         </motion.div>
-      </div>
 
-      {/* Get Started Button */}
-      <div className="w-full px-6 pb-12 z-10">
+        {/* Get Started Button - Responsive sizing */}
         <motion.button
           onClick={handleGetStarted}
-          className="relative w-full max-w-sm mx-auto block bg-[#A3F7BF] text-black font-semibold text-lg py-4 rounded-full shadow-lg overflow-hidden"
+          className="relative w-full max-w-xs sm:max-w-sm bg-[#A3F7BF] text-black font-semibold text-base sm:text-lg md:text-xl py-3 sm:py-4 md:py-5 px-6 rounded-full shadow-lg overflow-hidden"
           style={{
             boxShadow: '0 10px 30px rgba(163, 247, 191, 0.4), 0 0 20px rgba(163, 247, 191, 0.3)'
           }}
