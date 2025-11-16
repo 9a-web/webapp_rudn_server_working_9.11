@@ -11,7 +11,7 @@ import {
   calculateDayBusyPercentage,
 } from '../utils/analytics';
 
-export const AnalyticsModal = ({ isOpen, onClose, schedule, hapticFeedback }) => {
+export const AnalyticsModal = ({ isOpen, onClose, schedule, userStats, hapticFeedback }) => {
   // Рассчитываем статистику
   const stats = useMemo(() => {
     if (!schedule || schedule.length === 0) {
