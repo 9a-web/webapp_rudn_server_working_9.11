@@ -147,11 +147,12 @@ export const ProfileModal = ({
               y: -10,
               transition: { duration: 0.15 }
             }}
-            className="fixed z-[101] flex flex-col items-center"
+            className="fixed z-[101] flex flex-col items-center overflow-y-auto scrollbar-thin scrollbar-thumb-purple-500 scrollbar-track-gray-800/30"
             style={{
               top: '68px',
               right: '20px',
-              width: '260px',
+              width: '290px',
+              maxHeight: 'calc(100vh - 88px)',
               padding: '28px 20px',
               borderRadius: '28px',
               backgroundColor: 'rgba(42, 42, 42, 0.75)',
