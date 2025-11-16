@@ -15,6 +15,7 @@ import { BottomNavigation } from './components/BottomNavigation';
 import { TasksSection } from './components/TasksSection';
 import { JournalSection } from './components/JournalSection';
 import GroupSelector from './components/GroupSelector';
+import WelcomeScreen from './components/WelcomeScreen';
 import StatusTester from './StatusTester';
 import { TelegramProvider, useTelegram } from './contexts/TelegramContext';
 import { scheduleAPI, userAPI, achievementsAPI, tasksAPI } from './services/api';
