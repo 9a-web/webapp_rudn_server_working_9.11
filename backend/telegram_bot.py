@@ -138,12 +138,158 @@ async def award_referral_bonus(referrer_id: int, referred_id: int, points: int, 
         logger.error(f"❌ Ошибка при начислении бонуса: {e}", exc_info=True)
 
 
+async def join_user_to_room(telegram_id: int, username: str, first_name: str, invite_token: str, referrer_id: int) -> dict:
+    """
+    Добавляет пользователя в комнату по токену приглашения
+    Возвращает информацию о комнате и участниках для отправки уведомлений
+    """
+    import uuid
+    
+    # Находим комнату по токену
+    room_doc = await db.rooms.find_one({"invite_token": invite_token})
+    
+    if not room_doc:
+        logger.warning(f"⚠️ Комната с токеном {invite_token} не найдена")
+        return None
+    
+    # Проверяем, не является ли пользователь уже участником
+    is_already_participant = any(
+        p["telegram_id"] == telegram_id 
+        for p in room_doc.get("participants", [])
+    )
+    
+    if is_already_participant:
+        logger.info(f"ℹ️ Пользователь {telegram_id} уже является участником комнаты {room_doc['room_id']}")
+        return {
+            "room": room_doc,
+            "is_new_member": False,
+            "referrer_id": referrer_id
+        }
+    
+    # Добавляем нового участника
+    new_participant = {
+        "telegram_id": telegram_id,
+        "username": username,
+        "first_name": first_name,
+        "joined_at": datetime.utcnow(),
+        "role": "member",
+        "referral_code": str(referrer_id) if referrer_id else None,
+        "tasks_completed": 0,
+        "tasks_created": 0,
+        "last_activity": datetime.utcnow()
+    }
+    
+    await db.rooms.update_one(
+        {"invite_token": invite_token},
+        {
+            "$push": {"participants": new_participant},
+            "$set": {"updated_at": datetime.utcnow()}
+        }
+    )
+    
+    # Автоматически добавляем пользователя во все групповые задачи комнаты
+    tasks_cursor = db.group_tasks.find({"room_id": room_doc["room_id"]})
+    async for task_doc in tasks_cursor:
+        # Проверяем, не является ли уже участником задачи
+        is_task_participant = any(
+            p["telegram_id"] == telegram_id 
+            for p in task_doc.get("participants", [])
+        )
+        
+        if not is_task_participant:
+            task_participant = {
+                "telegram_id": telegram_id,
+                "username": username,
+                "first_name": first_name,
+                "role": "member"
+            }
+            
+            await db.group_tasks.update_one(
+                {"task_id": task_doc["task_id"]},
+                {
+                    "$push": {"participants": task_participant},
+                    "$set": {"updated_at": datetime.utcnow()}
+                }
+            )
+    
+    logger.info(f"✅ Пользователь {telegram_id} добавлен в комнату {room_doc['room_id']}")
+    
+    # Получаем обновленную комнату
+    updated_room = await db.rooms.find_one({"invite_token": invite_token})
+    
+    return {
+        "room": updated_room,
+        "is_new_member": True,
+        "referrer_id": referrer_id,
+        "new_participant": new_participant
+    }
+
+
+async def send_room_join_notifications(bot, room_data: dict, new_user_name: str, new_user_id: int):
+    """
+    Отправляет уведомления всем участникам комнаты и новому участнику о вступлении
+    """
+    if not room_data or not room_data.get("is_new_member"):
+        return
+    
+    room = room_data["room"]
+    room_name = room.get("name", "комнату")
+    participants = room.get("participants", [])
+    
+    # Отправляем уведомление новому участнику
+    try:
+        new_member_message = f"""🎉 <b>Добро пожаловать в комнату!</b>
+
+📋 Комната: <b>{room_name}</b>
+👥 Участников: {len(participants)}
+
+✅ Вы успешно присоединились к командной комнате для совместного выполнения задач!
+
+<i>Откройте приложение, чтобы увидеть задачи комнаты 👇</i>"""
+        
+        await bot.send_message(
+            chat_id=new_user_id,
+            text=new_member_message,
+            parse_mode='HTML'
+        )
+        logger.info(f"✅ Отправлено уведомление новому участнику {new_user_id}")
+    except Exception as e:
+        logger.warning(f"⚠️ Не удалось отправить уведомление новому участнику {new_user_id}: {e}")
+    
+    # Отправляем уведомления всем существующим участникам (кроме нового)
+    for participant in participants:
+        participant_id = participant.get("telegram_id")
+        
+        # Пропускаем нового участника
+        if participant_id == new_user_id:
+            continue
+        
+        try:
+            existing_member_message = f"""👋 <b>Новый участник в комнате!</b>
+
+📋 Комната: <b>{room_name}</b>
+✨ К команде присоединился: <b>{new_user_name}</b>
+👥 Всего участников: {len(participants)}
+
+<i>Продолжайте выполнять задачи вместе! 💪</i>"""
+            
+            await bot.send_message(
+                chat_id=participant_id,
+                text=existing_member_message,
+                parse_mode='HTML'
+            )
+            logger.info(f"✅ Отправлено уведомление участнику {participant_id}")
+        except Exception as e:
+            logger.warning(f"⚠️ Не удалось отправить уведомление участнику {participant_id}: {e}")
+
+
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     Обработчик команды /start
     - Проверяет наличие пользователя в БД
     - Создает нового пользователя при первом запуске
     - Обрабатывает реферальные ссылки (ref_CODE)
+    - Обрабатывает приглашения в комнаты (room_{token}_ref_{user_id})
     - Отправляет приветственное сообщение
     - Добавляет кнопку для открытия Web App
     """
@@ -158,11 +304,27 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     first_name = user.first_name or ""
     last_name = user.last_name or ""
     
-    # Проверяем наличие реферального кода в параметрах
+    # Проверяем наличие параметров в команде /start
     referral_code = None
+    room_invite_token = None
+    room_referrer_id = None
+    
     if context.args and len(context.args) > 0:
         arg = context.args[0]
-        if arg.startswith("ref_"):
+        
+        # Проверяем на приглашение в комнату: room_{invite_token}_ref_{user_id}
+        if arg.startswith("room_"):
+            parts = arg.split("_")
+            if len(parts) >= 4 and parts[2] == "ref":
+                room_invite_token = parts[1]
+                try:
+                    room_referrer_id = int(parts[3])
+                    logger.info(f"🏠 Обнаружено приглашение в комнату: token={room_invite_token}, referrer={room_referrer_id}")
+                except ValueError:
+                    logger.warning(f"⚠️ Некорректный ID пользователя в приглашении: {parts[3]}")
+        
+        # Проверяем на обычный реферальный код: ref_CODE
+        elif arg.startswith("ref_"):
             referral_code = arg[4:]  # Убираем префикс "ref_"
             logger.info(f"🔗 Обнаружен реферальный код: {referral_code}")
     
