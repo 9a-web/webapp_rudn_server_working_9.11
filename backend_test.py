@@ -3094,6 +3094,9 @@ class RUDNScheduleAPITester:
             self.test_lightning_fast_achievement,
             self.test_task_specialist_achievement,
             self.test_completion_master_achievement,
+            # Room Invitation Tests (as requested in review)
+            self.test_room_invitation_functionality,
+            self.test_room_notification_logs,
             # New Admin Panel Tests
             self.test_admin_stats_endpoint,
             self.test_admin_users_activity_endpoint,
