@@ -115,7 +115,7 @@ const WelcomeScreen = ({ onGetStarted }) => {
               repeatDelay: 1
             }}
           />
-          <span className="relative z-10">Get Started</span>
+          <span className="relative z-10">Погрузиться в RUDN GO</span>
         </motion.button>
       </div>
     </div>
