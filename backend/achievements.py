@@ -461,6 +461,67 @@ async def track_user_action(db, telegram_id: int, action_type: str, metadata: di
                 update_data["$push"] = {}
             update_data["$push"]["active_days"] = today
     
+    # Новые действия для раздела "Список дел"
+    elif action_type == "create_task":
+        # Первая задача
+        if not stats.first_task_created:
+            update_data["$set"]["first_task_created"] = True
+        # Увеличиваем счетчик созданных задач
+        update_data["$inc"] = {"tasks_created_total": 1}
+    
+    elif action_type == "complete_task":
+        # Получаем метаданные
+        current_hour = metadata.get("hour", 12)  # Час выполнения (0-23)
+        was_on_time = metadata.get("on_time", False)  # Выполнена в срок?
+        
+        # Обновляем общий счетчик
+        if "$inc" not in update_data:
+            update_data["$inc"] = {}
+        update_data["$inc"]["tasks_completed_total"] = 1
+        update_data["$inc"]["tasks_completed_today"] = 1
+        
+        # Проверяем выполнение до 9:00
+        if current_hour < 9:
+            update_data["$inc"]["tasks_completed_early"] = 1
+        
+        # Проверяем выполнение в срок
+        if was_on_time:
+            update_data["$inc"]["tasks_completed_on_time"] = 1
+        
+        # Обновляем streak (серию дней)
+        today = datetime.utcnow().strftime("%Y-%m-%d")
+        last_completion = stats.last_task_completion_date
+        
+        if last_completion is None:
+            # Первое выполнение
+            update_data["$set"]["task_streak_current"] = 1
+            update_data["$set"]["task_streak_days"] = 1
+            update_data["$set"]["last_task_completion_date"] = today
+        else:
+            # Проверяем, продолжается ли серия
+            last_date = datetime.strptime(last_completion, "%Y-%m-%d").date()
+            current_date = datetime.strptime(today, "%Y-%m-%d").date()
+            days_diff = (current_date - last_date).days
+            
+            if days_diff == 0:
+                # Сегодня уже выполняли задачи, ничего не меняем в streak
+                pass
+            elif days_diff == 1:
+                # Следующий день подряд - продолжаем серию
+                new_streak = stats.task_streak_current + 1
+                update_data["$set"]["task_streak_current"] = new_streak
+                update_data["$set"]["task_streak_days"] = max(stats.task_streak_days, new_streak)
+                update_data["$set"]["last_task_completion_date"] = today
+            else:
+                # Пропущены дни - сброс серии
+                update_data["$set"]["task_streak_current"] = 1
+                update_data["$set"]["last_task_completion_date"] = today
+    
+    elif action_type == "reset_daily_tasks":
+        # Сброс счетчика задач за день (вызывается в начале нового дня)
+        update_data["$set"]["tasks_completed_today"] = 0
+        update_data["$set"]["last_daily_reset"] = datetime.utcnow().strftime("%Y-%m-%d")
+    
     # Обновляем статистику в БД
     await db.user_stats.update_one(
         {"telegram_id": telegram_id},
