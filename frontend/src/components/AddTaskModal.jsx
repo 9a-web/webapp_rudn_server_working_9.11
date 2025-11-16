@@ -42,6 +42,22 @@ export const AddTaskModal = ({
     }
   }, [isOpen]);
   
+  // Предзаполнение данных из быстрого шаблона
+  useEffect(() => {
+    if (isOpen && quickTemplate) {
+      // Заполняем поля из шаблона
+      setTaskText(quickTemplate.text || '');
+      setCategory(quickTemplate.category || null);
+      setPriority(quickTemplate.priority || 'medium');
+      // Дедлайн и предмет оставляем пустыми - пользователь может заполнить сам
+    } else if (isOpen && !quickTemplate) {
+      // Если нет шаблона, сбрасываем в значения по умолчанию
+      setTaskText('');
+      setCategory(null);
+      setPriority('medium');
+    }
+  }, [isOpen, quickTemplate]);
+  
   // Категории задач
   const categories = [
     { id: 'study', label: 'Учеба', emoji: '📚', color: 'from-blue-400 to-blue-500' },
