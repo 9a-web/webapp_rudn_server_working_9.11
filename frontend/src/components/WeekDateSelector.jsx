@@ -268,7 +268,28 @@ export const WeekDateSelector = ({
               </motion.button>
             );
           })}
+          </div>
         </div>
+        
+        {/* Кнопка следующей недели */}
+        <motion.button
+          onClick={handleNextWeek}
+          whileTap={{ scale: 0.9 }}
+          className="flex-shrink-0 transition-transform hover:scale-105 active:scale-95"
+          aria-label="Следующая неделя"
+          style={{ touchAction: 'manipulation' }}
+        >
+          <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="17" cy="17" r="17" transform="rotate(-180 17 17)" fill="url(#paint0_linear_next)"/>
+            <path d="M15 13.4999L18.6582 16.7009C19.1135 17.0993 19.1135 17.8076 18.6582 18.206L15 21.4069" stroke="white" strokeWidth="1.6" strokeLinecap="round"/>
+            <defs>
+              <linearGradient id="paint0_linear_next" x1="-5.50005" y1="38" x2="34.4999" y2="5.5" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#FFE228"/>
+                <stop offset="1" stopColor="#FF7700"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </motion.button>
       </div>
     </div>
   );
