@@ -228,7 +228,8 @@ class UserStats(BaseModel):
     groups_viewed: int = 0  # Количество просмотренных групп
     unique_groups: List[str] = []  # Уникальные ID групп
     friends_invited: int = 0  # Количество приглашенных друзей
-    schedule_views: int = 0  # Количество просмотров расписания
+    schedule_views: int = 0  # Количество просмотров расписания (общий счетчик)
+    detailed_views: int = 0  # Количество детальных просмотров (развернутые карточки)
     night_usage_count: int = 0  # Использование после 00:00
     early_usage_count: int = 0  # Использование до 08:00
     first_group_selected: bool = False  # Выбрана ли первая группа
