@@ -58,11 +58,13 @@ const WelcomeScreen = ({ onGetStarted }) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          <img 
-            src="/letsgo.png"
-            alt="Let's go"
-            className="w-[470px] h-[470px] max-w-full sm:w-[400px] sm:h-[400px] md:w-[450px] md:h-[450px] lg:w-[500px] lg:h-[500px] object-contain aspect-square"
-          />
+          <div className="w-[470px] max-w-full sm:w-[400px] md:w-[450px] lg:w-[500px] aspect-square">
+            <img 
+              src="/letsgo.png"
+              alt="Let's go"
+              className="w-full h-full object-contain"
+            />
+          </div>
         </motion.div>
 
         {/* Ready text image - Manage your RUDN schedule */}
