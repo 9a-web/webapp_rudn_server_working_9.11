@@ -342,6 +342,31 @@ class NotificationScheduler:
         
         except Exception as e:
             logger.error(f"Error cleaning up old notifications: {e}", exc_info=True)
+    
+    async def reset_daily_task_counters(self):
+        """
+        Сбросить дневные счетчики выполненных задач для всех пользователей
+        Вызывается каждый день в 00:00
+        """
+        try:
+            today = datetime.now(MOSCOW_TZ).strftime("%Y-%m-%d")
+            
+            # Сбрасываем tasks_completed_today для всех пользователей
+            result = await self.db.user_stats.update_many(
+                {},  # Все пользователи
+                {
+                    "$set": {
+                        "tasks_completed_today": 0,
+                        "last_daily_reset": today,
+                        "updated_at": datetime.utcnow()
+                    }
+                }
+            )
+            
+            logger.info(f"Reset daily task counters for {result.modified_count} users at {today}")
+        
+        except Exception as e:
+            logger.error(f"Error resetting daily task counters: {e}", exc_info=True)
 
 
 # Глобальный экземпляр планировщика
