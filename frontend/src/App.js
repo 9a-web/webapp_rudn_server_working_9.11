@@ -614,6 +614,7 @@ const Home = () => {
             isOpen={isAnalyticsOpen}
             onClose={() => setIsAnalyticsOpen(false)}
             schedule={schedule}
+            userStats={userStats}
             hapticFeedback={hapticFeedback}
           />
         </Suspense>
