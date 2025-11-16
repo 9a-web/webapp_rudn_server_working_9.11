@@ -186,6 +186,7 @@ export const AchievementsModal = ({
                 {sortedAchievements.map((achievement) => {
                   const earned = earnedMap[achievement.id];
                   const isEarned = !!earned;
+                  const progress = !isEarned ? getAchievementProgress(achievement) : null;
 
                   return (
                     <motion.div
@@ -218,6 +219,28 @@ export const AchievementsModal = ({
                           <p className={`text-sm mb-2 ${isEarned ? 'text-gray-300' : 'text-gray-600'}`}>
                             {achievement.description}
                           </p>
+
+                          {/* Прогресс бар для незавершенных достижений */}
+                          {progress && (
+                            <div className="mb-2">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs text-gray-400">
+                                  {progress.current} / {progress.requirement}
+                                </span>
+                                <span className="text-xs text-gray-400">
+                                  {progress.percentage}%
+                                </span>
+                              </div>
+                              <div className="w-full h-2 bg-gray-700/50 rounded-full overflow-hidden">
+                                <motion.div
+                                  className="h-full bg-gradient-to-r from-[#A3F7BF] to-[#FFE66D]"
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${progress.percentage}%` }}
+                                  transition={{ duration: 0.8, ease: "easeOut" }}
+                                />
+                              </div>
+                            </div>
+                          )}
 
                           <div className="flex items-center justify-between">
                             <div className={`flex items-center gap-1 text-sm font-semibold ${
