@@ -9,7 +9,8 @@ export const AddTaskModal = ({
   onAddTask, 
   hapticFeedback,
   scheduleSubjects = [], // Список предметов из расписания
-  selectedDate // Выбранная дата из селектора
+  selectedDate, // Выбранная дата из селектора
+  quickTemplate = null // Данные быстрого шаблона для предзаполнения
 }) => {
   const [taskText, setTaskText] = useState('');
   const [category, setCategory] = useState(null);
