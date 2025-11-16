@@ -20,6 +20,75 @@ export const AchievementsModal = ({
     return map;
   }, [userAchievements]);
 
+  // Функция для получения текущего прогресса по типу достижения
+  const getAchievementProgress = (achievement) => {
+    if (!userStats || achievement.requirement <= 1) {
+      return null;
+    }
+
+    let current = 0;
+    const requirement = achievement.requirement;
+
+    switch (achievement.type) {
+      case 'group_explorer':
+        current = userStats.unique_groups?.length || 0;
+        break;
+      case 'social_butterfly':
+        current = userStats.friends_invited || 0;
+        break;
+      case 'schedule_gourmet':
+        current = userStats.schedule_views || 0;
+        break;
+      case 'attentive_student':
+        current = userStats.detailed_views || 0;
+        break;
+      case 'chart_lover':
+        current = userStats.analytics_views || 0;
+        break;
+      case 'ambassador':
+        current = userStats.schedule_shares || 0;
+        break;
+      case 'explorer':
+        current = userStats.menu_items_visited?.length || 0;
+        break;
+      case 'first_week':
+        current = userStats.active_days?.length || 0;
+        break;
+      case 'productive_day':
+        current = userStats.tasks_completed_today || 0;
+        break;
+      case 'early_riser_tasks':
+        current = userStats.tasks_completed_early || 0;
+        break;
+      case 'task_specialist':
+        current = userStats.tasks_created_total || 0;
+        break;
+      case 'lightning_fast':
+        current = userStats.tasks_completed_today || 0;
+        break;
+      case 'flawless':
+        current = userStats.tasks_completed_on_time || 0;
+        break;
+      case 'marathon_runner':
+        current = userStats.task_streak_current || 0;
+        break;
+      case 'completion_master':
+        current = userStats.tasks_completed_total || 0;
+        break;
+      case 'perfectionist':
+        current = userStats.achievements_count || 0;
+        break;
+      default:
+        return null;
+    }
+
+    // Ограничиваем текущее значение до requirement
+    current = Math.min(current, requirement);
+    const percentage = Math.round((current / requirement) * 100);
+
+    return { current, requirement, percentage };
+  };
+
   // Сортируем достижения: сначала полученные, потом заблокированные
   const sortedAchievements = useMemo(() => {
     return [...allAchievements].sort((a, b) => {
