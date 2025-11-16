@@ -11,8 +11,8 @@ import sys
 from typing import Dict, List, Optional
 
 # Configuration
-# Backend works on localhost:8001 as specified in the request
-BACKEND_URL = "http://localhost:8001/api"
+# Use the backend URL from frontend/.env
+BACKEND_URL = "https://hello-screen.preview.emergentagent.com/api"
 TIMEOUT = 30  # 30 seconds timeout for API calls
 
 class RUDNScheduleAPITester:
