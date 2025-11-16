@@ -1236,6 +1236,640 @@ class RUDNScheduleAPITester:
             self.log_test("GET /api/bot-info", False, f"Exception: {str(e)}")
             return False
 
+    def test_new_task_achievements_total_count(self) -> bool:
+        """Test that total achievements count is now 24 (was 16, added 8 new task achievements)"""
+        try:
+            print("🔍 Testing New Task Achievements - Total Count (should be 24)...")
+            
+            response = self.session.get(f"{self.base_url}/achievements")
+            
+            if response.status_code != 200:
+                self.log_test("New Task Achievements - Total Count", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+            
+            achievements = response.json()
+            
+            # Should now be 24 achievements (16 old + 8 new task achievements)
+            if len(achievements) != 24:
+                self.log_test("New Task Achievements - Total Count", False, 
+                            f"Expected 24 achievements (16 old + 8 new), got {len(achievements)}")
+                return False
+            
+            # Find the new "first_task" achievement to verify it exists
+            first_task_achievement = None
+            for achievement in achievements:
+                if achievement.get('id') == 'first_task':
+                    first_task_achievement = achievement
+                    break
+            
+            if not first_task_achievement:
+                self.log_test("New Task Achievements - Total Count", False, 
+                            "Could not find 'first_task' achievement in the list")
+                return False
+            
+            # Validate the first_task achievement structure
+            expected_first_task = {
+                'id': 'first_task',
+                'emoji': '📝',
+                'points': 5
+            }
+            
+            for key, expected_value in expected_first_task.items():
+                if first_task_achievement.get(key) != expected_value:
+                    self.log_test("New Task Achievements - Total Count", False, 
+                                f"first_task achievement {key}: expected {expected_value}, got {first_task_achievement.get(key)}")
+                    return False
+            
+            # Store achievements for later tests
+            self.test_data['all_achievements'] = achievements
+            
+            self.log_test("New Task Achievements - Total Count", True, 
+                        f"Successfully verified 24 total achievements including new task achievements",
+                        {
+                            "total_achievements": len(achievements),
+                            "first_task_achievement": first_task_achievement,
+                            "new_task_achievements_found": len([a for a in achievements if a.get('id') in [
+                                'first_task', 'productive_day', 'early_riser_tasks', 'task_specialist',
+                                'lightning_fast', 'flawless', 'marathon_runner', 'completion_master'
+                            ]])
+                        })
+            return True
+            
+        except Exception as e:
+            self.log_test("New Task Achievements - Total Count", False, f"Exception: {str(e)}")
+            return False
+
+    def test_first_task_achievement(self) -> bool:
+        """Test 'Первая задача' achievement - earned when creating first task"""
+        try:
+            print("🔍 Testing 'Первая задача' Achievement (first_task)...")
+            
+            # Create new test user
+            test_telegram_id = 999111222
+            
+            # Step 1: Create user settings
+            user_payload = {
+                "telegram_id": test_telegram_id,
+                "username": "first_task_user",
+                "first_name": "Первая",
+                "last_name": "Задача",
+                "group_id": "first-task-group",
+                "group_name": "Группа для первой задачи",
+                "facultet_id": "first-task-facultet",
+                "level_id": "first-task-level",
+                "kurs": "1",
+                "form_code": "д"
+            }
+            
+            user_response = self.session.post(
+                f"{self.base_url}/user-settings",
+                json=user_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if user_response.status_code != 200:
+                self.log_test("First Task Achievement - Create User", False, 
+                            f"Failed to create user: HTTP {user_response.status_code}: {user_response.text}")
+                return False
+            
+            # Step 2: Create first task
+            task_payload = {
+                "telegram_id": test_telegram_id,
+                "text": "Моя первая задача для получения достижения",
+                "completed": False,
+                "category": "Учеба",
+                "priority": "medium"
+            }
+            
+            task_response = self.session.post(
+                f"{self.base_url}/tasks",
+                json=task_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if task_response.status_code != 200:
+                self.log_test("First Task Achievement - Create Task", False, 
+                            f"Failed to create task: HTTP {task_response.status_code}: {task_response.text}")
+                return False
+            
+            # Step 3: Check user achievements - should now have "first_task"
+            achievements_response = self.session.get(f"{self.base_url}/user-achievements/{test_telegram_id}")
+            
+            if achievements_response.status_code != 200:
+                self.log_test("First Task Achievement - Get Achievements", False, 
+                            f"HTTP {achievements_response.status_code}: {achievements_response.text}")
+                return False
+            
+            user_achievements = achievements_response.json()
+            
+            # Find first_task achievement
+            first_task_earned = None
+            for achievement in user_achievements:
+                if achievement.get('achievement', {}).get('id') == 'first_task':
+                    first_task_earned = achievement
+                    break
+            
+            if not first_task_earned:
+                self.log_test("First Task Achievement - Verify Achievement", False, 
+                            "first_task achievement not found in user achievements")
+                return False
+            
+            # Step 4: Verify user stats
+            stats_response = self.session.get(f"{self.base_url}/user-stats/{test_telegram_id}")
+            
+            if stats_response.status_code != 200:
+                self.log_test("First Task Achievement - Get Stats", False, 
+                            f"HTTP {stats_response.status_code}: {stats_response.text}")
+                return False
+            
+            user_stats = stats_response.json()
+            
+            # Verify stats fields
+            if user_stats.get('tasks_created_total') != 1:
+                self.log_test("First Task Achievement - Verify Stats", False, 
+                            f"Expected tasks_created_total=1, got {user_stats.get('tasks_created_total')}")
+                return False
+            
+            # Check if first_task_created field exists and is true
+            # Note: This field might not be exposed in the API response, so we check the achievement instead
+            
+            self.log_test("First Task Achievement", True, 
+                        "Successfully earned 'Первая задача' achievement",
+                        {
+                            "telegram_id": test_telegram_id,
+                            "achievement_earned": first_task_earned['achievement'],
+                            "tasks_created_total": user_stats.get('tasks_created_total'),
+                            "earned_at": first_task_earned.get('earned_at')
+                        })
+            return True
+            
+        except Exception as e:
+            self.log_test("First Task Achievement", False, f"Exception: {str(e)}")
+            return False
+
+    def test_productive_day_achievement(self) -> bool:
+        """Test 'Продуктивный день' achievement - earned when completing 5 tasks in a day"""
+        try:
+            print("🔍 Testing 'Продуктивный день' Achievement (productive_day)...")
+            
+            # Use the same test user from first task test
+            test_telegram_id = 999111222
+            
+            # Step 1: Create 5 tasks
+            tasks_created = []
+            for i in range(5):
+                task_payload = {
+                    "telegram_id": test_telegram_id,
+                    "text": f"Задача для продуктивного дня #{i+1}",
+                    "completed": False,
+                    "category": "Учеба",
+                    "priority": "medium"
+                }
+                
+                task_response = self.session.post(
+                    f"{self.base_url}/tasks",
+                    json=task_payload,
+                    headers={"Content-Type": "application/json"}
+                )
+                
+                if task_response.status_code != 200:
+                    self.log_test("Productive Day Achievement - Create Tasks", False, 
+                                f"Failed to create task {i+1}: HTTP {task_response.status_code}: {task_response.text}")
+                    return False
+                
+                task_data = task_response.json()
+                tasks_created.append(task_data)
+            
+            # Step 2: Complete all 5 tasks
+            for i, task in enumerate(tasks_created):
+                update_payload = {
+                    "completed": True
+                }
+                
+                update_response = self.session.put(
+                    f"{self.base_url}/tasks/{task['id']}",
+                    json=update_payload,
+                    headers={"Content-Type": "application/json"}
+                )
+                
+                if update_response.status_code != 200:
+                    self.log_test("Productive Day Achievement - Complete Tasks", False, 
+                                f"Failed to complete task {i+1}: HTTP {update_response.status_code}: {update_response.text}")
+                    return False
+            
+            # Step 3: Check user achievements - should now have "productive_day"
+            achievements_response = self.session.get(f"{self.base_url}/user-achievements/{test_telegram_id}")
+            
+            if achievements_response.status_code != 200:
+                self.log_test("Productive Day Achievement - Get Achievements", False, 
+                            f"HTTP {achievements_response.status_code}: {achievements_response.text}")
+                return False
+            
+            user_achievements = achievements_response.json()
+            
+            # Find productive_day achievement
+            productive_day_earned = None
+            for achievement in user_achievements:
+                if achievement.get('achievement', {}).get('id') == 'productive_day':
+                    productive_day_earned = achievement
+                    break
+            
+            if not productive_day_earned:
+                self.log_test("Productive Day Achievement - Verify Achievement", False, 
+                            "productive_day achievement not found in user achievements")
+                return False
+            
+            # Step 4: Verify user stats
+            stats_response = self.session.get(f"{self.base_url}/user-stats/{test_telegram_id}")
+            
+            if stats_response.status_code != 200:
+                self.log_test("Productive Day Achievement - Get Stats", False, 
+                            f"HTTP {stats_response.status_code}: {stats_response.text}")
+                return False
+            
+            user_stats = stats_response.json()
+            
+            # Verify stats - should have completed at least 5 tasks today
+            tasks_completed_today = user_stats.get('tasks_completed_today', 0)
+            if tasks_completed_today < 5:
+                self.log_test("Productive Day Achievement - Verify Stats", False, 
+                            f"Expected tasks_completed_today >= 5, got {tasks_completed_today}")
+                return False
+            
+            self.log_test("Productive Day Achievement", True, 
+                        "Successfully earned 'Продуктивный день' achievement",
+                        {
+                            "telegram_id": test_telegram_id,
+                            "achievement_earned": productive_day_earned['achievement'],
+                            "tasks_completed_today": tasks_completed_today,
+                            "earned_at": productive_day_earned.get('earned_at')
+                        })
+            return True
+            
+        except Exception as e:
+            self.log_test("Productive Day Achievement", False, f"Exception: {str(e)}")
+            return False
+
+    def test_lightning_fast_achievement(self) -> bool:
+        """Test 'Молния' achievement - earned when completing 20 tasks in a day"""
+        try:
+            print("🔍 Testing 'Молния' Achievement (lightning_fast)...")
+            
+            # Use the same test user
+            test_telegram_id = 999111222
+            
+            # Step 1: Create additional 15 tasks (we already have 5 completed)
+            tasks_created = []
+            for i in range(15):
+                task_payload = {
+                    "telegram_id": test_telegram_id,
+                    "text": f"Задача для молнии #{i+6}",  # Start from 6 since we have 5 already
+                    "completed": False,
+                    "category": "Личное",
+                    "priority": "high"
+                }
+                
+                task_response = self.session.post(
+                    f"{self.base_url}/tasks",
+                    json=task_payload,
+                    headers={"Content-Type": "application/json"}
+                )
+                
+                if task_response.status_code != 200:
+                    self.log_test("Lightning Fast Achievement - Create Tasks", False, 
+                                f"Failed to create task {i+6}: HTTP {task_response.status_code}: {task_response.text}")
+                    return False
+                
+                task_data = task_response.json()
+                tasks_created.append(task_data)
+            
+            # Step 2: Complete all 15 additional tasks
+            for i, task in enumerate(tasks_created):
+                update_payload = {
+                    "completed": True
+                }
+                
+                update_response = self.session.put(
+                    f"{self.base_url}/tasks/{task['id']}",
+                    json=update_payload,
+                    headers={"Content-Type": "application/json"}
+                )
+                
+                if update_response.status_code != 200:
+                    self.log_test("Lightning Fast Achievement - Complete Tasks", False, 
+                                f"Failed to complete task {i+6}: HTTP {update_response.status_code}: {update_response.text}")
+                    return False
+            
+            # Step 3: Check user achievements - should now have "lightning_fast"
+            achievements_response = self.session.get(f"{self.base_url}/user-achievements/{test_telegram_id}")
+            
+            if achievements_response.status_code != 200:
+                self.log_test("Lightning Fast Achievement - Get Achievements", False, 
+                            f"HTTP {achievements_response.status_code}: {achievements_response.text}")
+                return False
+            
+            user_achievements = achievements_response.json()
+            
+            # Find lightning_fast achievement
+            lightning_fast_earned = None
+            for achievement in user_achievements:
+                if achievement.get('achievement', {}).get('id') == 'lightning_fast':
+                    lightning_fast_earned = achievement
+                    break
+            
+            if not lightning_fast_earned:
+                self.log_test("Lightning Fast Achievement - Verify Achievement", False, 
+                            "lightning_fast achievement not found in user achievements")
+                return False
+            
+            # Step 4: Verify user stats
+            stats_response = self.session.get(f"{self.base_url}/user-stats/{test_telegram_id}")
+            
+            if stats_response.status_code != 200:
+                self.log_test("Lightning Fast Achievement - Get Stats", False, 
+                            f"HTTP {stats_response.status_code}: {stats_response.text}")
+                return False
+            
+            user_stats = stats_response.json()
+            
+            # Verify stats - should have completed at least 20 tasks today
+            tasks_completed_today = user_stats.get('tasks_completed_today', 0)
+            if tasks_completed_today < 20:
+                self.log_test("Lightning Fast Achievement - Verify Stats", False, 
+                            f"Expected tasks_completed_today >= 20, got {tasks_completed_today}")
+                return False
+            
+            self.log_test("Lightning Fast Achievement", True, 
+                        "Successfully earned 'Молния' achievement",
+                        {
+                            "telegram_id": test_telegram_id,
+                            "achievement_earned": lightning_fast_earned['achievement'],
+                            "tasks_completed_today": tasks_completed_today,
+                            "earned_at": lightning_fast_earned.get('earned_at')
+                        })
+            return True
+            
+        except Exception as e:
+            self.log_test("Lightning Fast Achievement", False, f"Exception: {str(e)}")
+            return False
+
+    def test_task_specialist_achievement(self) -> bool:
+        """Test 'Специалист по задачам' achievement - earned when creating 50 tasks"""
+        try:
+            print("🔍 Testing 'Специалист по задачам' Achievement (task_specialist)...")
+            
+            # Create new test user for this test
+            test_telegram_id = 999111333
+            
+            # Step 1: Create user settings
+            user_payload = {
+                "telegram_id": test_telegram_id,
+                "username": "task_specialist_user",
+                "first_name": "Специалист",
+                "last_name": "Задач",
+                "group_id": "specialist-group",
+                "group_name": "Группа специалиста по задачам",
+                "facultet_id": "specialist-facultet",
+                "level_id": "specialist-level",
+                "kurs": "2",
+                "form_code": "о"
+            }
+            
+            user_response = self.session.post(
+                f"{self.base_url}/user-settings",
+                json=user_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if user_response.status_code != 200:
+                self.log_test("Task Specialist Achievement - Create User", False, 
+                            f"Failed to create user: HTTP {user_response.status_code}: {user_response.text}")
+                return False
+            
+            # Step 2: Create 50 tasks
+            print("   Creating 50 tasks (this may take a moment)...")
+            tasks_created = []
+            for i in range(50):
+                task_payload = {
+                    "telegram_id": test_telegram_id,
+                    "text": f"Задача специалиста #{i+1}",
+                    "completed": False,
+                    "category": "Проекты",
+                    "priority": "low"
+                }
+                
+                task_response = self.session.post(
+                    f"{self.base_url}/tasks",
+                    json=task_payload,
+                    headers={"Content-Type": "application/json"}
+                )
+                
+                if task_response.status_code != 200:
+                    self.log_test("Task Specialist Achievement - Create Tasks", False, 
+                                f"Failed to create task {i+1}: HTTP {task_response.status_code}: {task_response.text}")
+                    return False
+                
+                task_data = task_response.json()
+                tasks_created.append(task_data)
+                
+                # Print progress every 10 tasks
+                if (i + 1) % 10 == 0:
+                    print(f"   Created {i+1}/50 tasks...")
+            
+            # Step 3: Check user achievements - should now have "task_specialist"
+            achievements_response = self.session.get(f"{self.base_url}/user-achievements/{test_telegram_id}")
+            
+            if achievements_response.status_code != 200:
+                self.log_test("Task Specialist Achievement - Get Achievements", False, 
+                            f"HTTP {achievements_response.status_code}: {achievements_response.text}")
+                return False
+            
+            user_achievements = achievements_response.json()
+            
+            # Find task_specialist achievement
+            task_specialist_earned = None
+            for achievement in user_achievements:
+                if achievement.get('achievement', {}).get('id') == 'task_specialist':
+                    task_specialist_earned = achievement
+                    break
+            
+            if not task_specialist_earned:
+                self.log_test("Task Specialist Achievement - Verify Achievement", False, 
+                            "task_specialist achievement not found in user achievements")
+                return False
+            
+            # Step 4: Verify user stats
+            stats_response = self.session.get(f"{self.base_url}/user-stats/{test_telegram_id}")
+            
+            if stats_response.status_code != 200:
+                self.log_test("Task Specialist Achievement - Get Stats", False, 
+                            f"HTTP {stats_response.status_code}: {stats_response.text}")
+                return False
+            
+            user_stats = stats_response.json()
+            
+            # Verify stats - should have created exactly 50 tasks
+            tasks_created_total = user_stats.get('tasks_created_total', 0)
+            if tasks_created_total != 50:
+                self.log_test("Task Specialist Achievement - Verify Stats", False, 
+                            f"Expected tasks_created_total=50, got {tasks_created_total}")
+                return False
+            
+            self.log_test("Task Specialist Achievement", True, 
+                        "Successfully earned 'Специалист по задачам' achievement",
+                        {
+                            "telegram_id": test_telegram_id,
+                            "achievement_earned": task_specialist_earned['achievement'],
+                            "tasks_created_total": tasks_created_total,
+                            "earned_at": task_specialist_earned.get('earned_at')
+                        })
+            return True
+            
+        except Exception as e:
+            self.log_test("Task Specialist Achievement", False, f"Exception: {str(e)}")
+            return False
+
+    def test_completion_master_achievement(self) -> bool:
+        """Test 'Мастер завершения' achievement - earned when completing 100 tasks"""
+        try:
+            print("🔍 Testing 'Мастер завершения' Achievement (completion_master)...")
+            
+            # Use the task specialist user and complete all 50 tasks, then create and complete 50 more
+            test_telegram_id = 999111333
+            
+            # Step 1: Get all tasks for this user
+            tasks_response = self.session.get(f"{self.base_url}/tasks/{test_telegram_id}")
+            
+            if tasks_response.status_code != 200:
+                self.log_test("Completion Master Achievement - Get Tasks", False, 
+                            f"HTTP {tasks_response.status_code}: {tasks_response.text}")
+                return False
+            
+            existing_tasks = tasks_response.json()
+            
+            # Step 2: Complete all existing tasks (should be 50)
+            print(f"   Completing {len(existing_tasks)} existing tasks...")
+            for i, task in enumerate(existing_tasks):
+                if not task.get('completed', False):  # Only complete if not already completed
+                    update_payload = {
+                        "completed": True
+                    }
+                    
+                    update_response = self.session.put(
+                        f"{self.base_url}/tasks/{task['id']}",
+                        json=update_payload,
+                        headers={"Content-Type": "application/json"}
+                    )
+                    
+                    if update_response.status_code != 200:
+                        self.log_test("Completion Master Achievement - Complete Existing Tasks", False, 
+                                    f"Failed to complete task {i+1}: HTTP {update_response.status_code}: {update_response.text}")
+                        return False
+                
+                # Print progress every 10 tasks
+                if (i + 1) % 10 == 0:
+                    print(f"   Completed {i+1}/{len(existing_tasks)} existing tasks...")
+            
+            # Step 3: Create and complete 50 more tasks to reach 100 total
+            print("   Creating and completing 50 additional tasks...")
+            for i in range(50):
+                # Create task
+                task_payload = {
+                    "telegram_id": test_telegram_id,
+                    "text": f"Дополнительная задача для мастера #{i+51}",
+                    "completed": False,
+                    "category": "Спорт",
+                    "priority": "medium"
+                }
+                
+                task_response = self.session.post(
+                    f"{self.base_url}/tasks",
+                    json=task_payload,
+                    headers={"Content-Type": "application/json"}
+                )
+                
+                if task_response.status_code != 200:
+                    self.log_test("Completion Master Achievement - Create Additional Tasks", False, 
+                                f"Failed to create task {i+51}: HTTP {task_response.status_code}: {task_response.text}")
+                    return False
+                
+                task_data = task_response.json()
+                
+                # Complete task immediately
+                update_payload = {
+                    "completed": True
+                }
+                
+                update_response = self.session.put(
+                    f"{self.base_url}/tasks/{task_data['id']}",
+                    json=update_payload,
+                    headers={"Content-Type": "application/json"}
+                )
+                
+                if update_response.status_code != 200:
+                    self.log_test("Completion Master Achievement - Complete Additional Tasks", False, 
+                                f"Failed to complete task {i+51}: HTTP {update_response.status_code}: {update_response.text}")
+                    return False
+                
+                # Print progress every 10 tasks
+                if (i + 1) % 10 == 0:
+                    print(f"   Created and completed {i+1}/50 additional tasks...")
+            
+            # Step 4: Check user achievements - should now have "completion_master"
+            achievements_response = self.session.get(f"{self.base_url}/user-achievements/{test_telegram_id}")
+            
+            if achievements_response.status_code != 200:
+                self.log_test("Completion Master Achievement - Get Achievements", False, 
+                            f"HTTP {achievements_response.status_code}: {achievements_response.text}")
+                return False
+            
+            user_achievements = achievements_response.json()
+            
+            # Find completion_master achievement
+            completion_master_earned = None
+            for achievement in user_achievements:
+                if achievement.get('achievement', {}).get('id') == 'completion_master':
+                    completion_master_earned = achievement
+                    break
+            
+            if not completion_master_earned:
+                self.log_test("Completion Master Achievement - Verify Achievement", False, 
+                            "completion_master achievement not found in user achievements")
+                return False
+            
+            # Step 5: Verify user stats
+            stats_response = self.session.get(f"{self.base_url}/user-stats/{test_telegram_id}")
+            
+            if stats_response.status_code != 200:
+                self.log_test("Completion Master Achievement - Get Stats", False, 
+                            f"HTTP {stats_response.status_code}: {stats_response.text}")
+                return False
+            
+            user_stats = stats_response.json()
+            
+            # Verify stats - should have completed at least 100 tasks
+            tasks_completed_total = user_stats.get('tasks_completed_total', 0)
+            if tasks_completed_total < 100:
+                self.log_test("Completion Master Achievement - Verify Stats", False, 
+                            f"Expected tasks_completed_total >= 100, got {tasks_completed_total}")
+                return False
+            
+            self.log_test("Completion Master Achievement", True, 
+                        "Successfully earned 'Мастер завершения' achievement",
+                        {
+                            "telegram_id": test_telegram_id,
+                            "achievement_earned": completion_master_earned['achievement'],
+                            "tasks_completed_total": tasks_completed_total,
+                            "tasks_created_total": user_stats.get('tasks_created_total', 0),
+                            "earned_at": completion_master_earned.get('earned_at')
+                        })
+            return True
+            
+        except Exception as e:
+            self.log_test("Completion Master Achievement", False, f"Exception: {str(e)}")
+            return False
+
     def test_user_profile_functionality(self) -> bool:
         """Test user profile functionality as requested - GET /api/user-settings/{telegram_id} with group_name"""
         try:
