@@ -496,10 +496,105 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         )
 
 
+def generate_users_table_image(users_data, page_num=1, total_pages=1):
+    """
+    Генерирует изображение таблицы с пользователями
+    """
+    # Настройки таблицы
+    row_height = 45
+    header_height = 50
+    padding = 15
+    col_widths = [60, 200, 150, 150, 120]  # №, Имя, Username, Группа, Активность
+    total_width = sum(col_widths) + padding * 2
+    
+    # Вычисляем высоту изображения
+    table_height = header_height + len(users_data) * row_height + padding * 2
+    
+    # Создаем изображение
+    img = Image.new('RGB', (total_width, table_height), color='#1a1d29')
+    draw = ImageDraw.Draw(img)
+    
+    # Пытаемся загрузить шрифт, если не получается - используем дефолтный
+    try:
+        font_header = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16)
+        font_cell = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14)
+    except:
+        font_header = ImageFont.load_default()
+        font_cell = ImageFont.load_default()
+    
+    # Рисуем заголовок таблицы
+    y_offset = padding
+    
+    # Фон заголовка
+    draw.rectangle(
+        [(padding, y_offset), (total_width - padding, y_offset + header_height)],
+        fill='#2d3142'
+    )
+    
+    # Заголовки колонок
+    headers = ['№', 'Имя', 'Username', 'Группа', 'Активность']
+    x_offset = padding + 10
+    
+    for i, header in enumerate(headers):
+        draw.text(
+            (x_offset, y_offset + 15),
+            header,
+            fill='#ffffff',
+            font=font_header
+        )
+        x_offset += col_widths[i]
+    
+    y_offset += header_height
+    
+    # Рисуем строки с данными
+    for idx, user in enumerate(users_data):
+        # Цвет фона строки (чередующийся)
+        row_color = '#22242f' if idx % 2 == 0 else '#1a1d29'
+        
+        draw.rectangle(
+            [(padding, y_offset), (total_width - padding, y_offset + row_height)],
+            fill=row_color
+        )
+        
+        # Данные строки
+        row_data = [
+            str(user['idx']),
+            user['name'][:20] + '...' if len(user['name']) > 20 else user['name'],
+            '@' + user['username'][:15] + '...' if len(user['username']) > 15 else '@' + user['username'],
+            user['group'][:18] + '...' if len(user['group']) > 18 else user['group'],
+            user['activity']
+        ]
+        
+        x_offset = padding + 10
+        
+        for i, data in enumerate(row_data):
+            draw.text(
+                (x_offset, y_offset + 12),
+                data,
+                fill='#e0e0e0',
+                font=font_cell
+            )
+            x_offset += col_widths[i]
+        
+        y_offset += row_height
+    
+    # Рисуем информацию о странице внизу если страниц больше одной
+    if total_pages > 1:
+        footer_text = f"Страница {page_num} из {total_pages}"
+        draw.text(
+            (total_width // 2 - 50, table_height - 25),
+            footer_text,
+            fill='#888888',
+            font=font_cell
+        )
+    
+    return img
+
+
 async def users_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     Обработчик команды /users
-    Показывает список всех пользователей (только для администраторов)
+    Показывает список всех пользователей в виде таблицы-изображения (только для администраторов)
     """
     user = update.effective_user
     
@@ -520,36 +615,27 @@ async def users_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     logger.info(f"Команда /users от администратора: {telegram_id} (@{user.username})")
     
     try:
+        # Отправляем сообщение о начале генерации
+        status_message = await update.message.reply_text("⏳ Генерирую таблицу пользователей...")
+        
         # Получаем всех пользователей из БД
         users_cursor = db.user_settings.find().sort("created_at", -1)
         users_list = await users_cursor.to_list(length=None)
         
         if not users_list:
-            await update.message.reply_text("📭 Пользователей в базе данных пока нет.")
+            await status_message.edit_text("📭 Пользователей в базе данных пока нет.")
             return
         
-        # Формируем сообщение со списком пользователей
-        message_parts = [f"👥 <b>Список пользователей</b> ({len(users_list)} чел.)\n"]
+        # Подготавливаем данные для таблицы
+        table_data = []
         
         for idx, user_data in enumerate(users_list, 1):
-            telegram_id = user_data.get('telegram_id', 'N/A')
-            username = user_data.get('username', 'нет')
             first_name = user_data.get('first_name', '')
             last_name = user_data.get('last_name', '')
             full_name = f"{first_name} {last_name}".strip() or "Нет имени"
-            
+            username = user_data.get('username', 'нет')
             group_name = user_data.get('group_name', 'Не выбрана')
-            created_at = user_data.get('created_at')
             last_activity = user_data.get('last_activity')
-            
-            # Форматируем дату регистрации
-            if created_at:
-                if isinstance(created_at, str):
-                    from datetime import datetime as dt
-                    created_at = dt.fromisoformat(created_at.replace('Z', '+00:00'))
-                date_str = created_at.strftime("%d.%m.%Y")
-            else:
-                date_str = "N/A"
             
             # Форматируем последнюю активность
             if last_activity:
@@ -563,47 +649,60 @@ async def users_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
                 elif time_diff.days == 1:
                     activity_str = "вчера"
                 elif time_diff.days < 7:
-                    activity_str = f"{time_diff.days} дн. назад"
+                    activity_str = f"{time_diff.days}д назад"
                 else:
                     activity_str = last_activity.strftime("%d.%m.%Y")
             else:
                 activity_str = "N/A"
             
-            user_line = f"\n{idx}. <b>{full_name}</b> (@{username})\n"
-            user_line += f"   ID: <code>{telegram_id}</code>\n"
-            user_line += f"   Группа: {group_name}\n"
-            user_line += f"   Регистрация: {date_str}\n"
-            user_line += f"   Активность: {activity_str}\n"
-            
-            message_parts.append(user_line)
+            table_data.append({
+                'idx': idx,
+                'name': full_name,
+                'username': username,
+                'group': group_name,
+                'activity': activity_str
+            })
         
-        # Telegram ограничивает сообщения 4096 символами
-        # Разбиваем на несколько сообщений если нужно
-        full_message = "".join(message_parts)
+        # Разбиваем на страницы (максимум 20 пользователей на изображение)
+        users_per_page = 20
+        total_pages = math.ceil(len(table_data) / users_per_page)
         
-        if len(full_message) <= 4096:
-            await update.message.reply_text(full_message, parse_mode='HTML')
-        else:
-            # Разбиваем на части
-            current_message = message_parts[0]  # Заголовок
+        # Генерируем и отправляем изображения
+        for page_num in range(1, total_pages + 1):
+            start_idx = (page_num - 1) * users_per_page
+            end_idx = min(start_idx + users_per_page, len(table_data))
+            page_data = table_data[start_idx:end_idx]
             
-            for part in message_parts[1:]:
-                if len(current_message) + len(part) <= 4000:
-                    current_message += part
-                else:
-                    await update.message.reply_text(current_message, parse_mode='HTML')
-                    current_message = part
+            # Генерируем изображение
+            img = generate_users_table_image(page_data, page_num, total_pages)
             
-            # Отправляем последнюю часть
-            if current_message:
-                await update.message.reply_text(current_message, parse_mode='HTML')
+            # Конвертируем в байты
+            bio = io.BytesIO()
+            bio.name = f'users_table_page_{page_num}.png'
+            img.save(bio, 'PNG')
+            bio.seek(0)
+            
+            # Отправляем изображение
+            caption = f"👥 Список пользователей ({len(users_list)} чел.)"
+            if total_pages > 1:
+                caption += f" - Страница {page_num}/{total_pages}"
+            
+            await update.message.reply_photo(
+                photo=bio,
+                caption=caption
+            )
+            
+            logger.info(f"✅ Отправлена страница {page_num}/{total_pages} таблицы пользователей")
+        
+        # Удаляем статусное сообщение
+        await status_message.delete()
         
         logger.info(f"✅ Отправлен список из {len(users_list)} пользователей администратору {telegram_id}")
         
     except Exception as e:
         logger.error(f"❌ Ошибка при обработке /users: {e}", exc_info=True)
         await update.message.reply_text(
-            "❌ Произошла ошибка при получении списка пользователей."
+            "❌ Произошла ошибка при генерации таблицы пользователей."
         )
 
 
