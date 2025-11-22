@@ -16,7 +16,7 @@ if [ $# -eq 0 ]; then
 fi
 
 BACKUP_PATH=$1
-DB_NAME="rudn_schedule"
+DB_NAME="test_database"
 MONGO_URI="mongodb://localhost:27017"
 
 echo "🔄 Восстановление MongoDB из бэкапа"
