@@ -3598,7 +3598,7 @@ async def get_top_users(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@api_router.get("/admin/faculty-stats", response_model=List[FacultyStats])
+@api_router.get("/admin/faculty-stats")
 async def get_faculty_stats():
     """
     Получить статистику по факультетам
