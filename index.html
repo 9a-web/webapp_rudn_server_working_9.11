@@ -28,57 +28,92 @@
                         console.log('🟢 [index.html] Telegram WebApp API загружен');
                         console.log('📊 [index.html] Состояние до ready():', {
                             isExpanded: tg.isExpanded,
-                            viewportHeight: tg.viewportHeight,
-                            viewportStableHeight: tg.viewportStableHeight
+                            viewportHeight: tg.viewportHeight
                         });
                         
-                        // Устанавливаем цвет header
-                        if (typeof tg.setHeaderColor === 'function') {
-                            tg.setHeaderColor('#1C1C1E');
-                            console.log('🎨 [index.html] Header color установлен');
-                        }
-                        
-                        // Разворачиваем на весь экран
-                        if (typeof tg.expand === 'function') {
-                            tg.expand();
-                            console.log('📱 [index.html] Expand вызван');
-                        }
-                        
-                        // Сигнализируем о готовности
+                        // Вызываем ready
                         tg.ready();
-                        console.log('✅ [index.html] WebApp.ready() вызван');
+                        console.log('✅ [index.html] tg.ready() вызван');
                         
-                        console.log('📊 [index.html] Состояние после ready():', {
-                            isExpanded: tg.isExpanded,
-                            viewportHeight: tg.viewportHeight,
-                            viewportStableHeight: tg.viewportStableHeight
-                        });
+                        // Агрессивно вызываем expand много раз
+                        var expandAttempts = 0;
+                        var maxAttempts = 20;
                         
-                        // Проверяем через 100ms
-                        setTimeout(function() {
-                            console.log('📊 [index.html] Состояние через 100ms:', {
-                                isExpanded: tg.isExpanded,
-                                viewportHeight: tg.viewportHeight
-                            });
+                        var tryExpand = function() {
+                            expandAttempts++;
+                            console.log('🔄 [index.html] Попытка expand #' + expandAttempts);
+                            tg.expand();
                             
-                            // Если не развернулось - пробуем еще раз
-                            if (!tg.isExpanded && typeof tg.expand === 'function') {
-                                console.log('🔄 [index.html] Повторный вызов expand()');
-                                tg.expand();
-                            }
-                        }, 100);
+                            setTimeout(function() {
+                                console.log('📏 [index.html] isExpanded:', tg.isExpanded, ', viewportHeight:', tg.viewportHeight);
+                                
+                                if (!tg.isExpanded && expandAttempts < maxAttempts) {
+                                    setTimeout(tryExpand, 100);
+                                } else if (tg.isExpanded) {
+                                    console.log('🎉 [index.html] УСПЕХ! WebApp развернут на полный экран');
+                                }
+                            }, 50);
+                        };
+                        
+                        // Начинаем попытки expand
+                        tryExpand();
+                        
+                        // Дополнительные вызовы с интервалами
+                        setTimeout(function() { tg.expand(); }, 10);
+                        setTimeout(function() { tg.expand(); }, 50);
+                        setTimeout(function() { tg.expand(); }, 100);
+                        setTimeout(function() { tg.expand(); }, 200);
+                        setTimeout(function() { tg.expand(); }, 500);
+                        setTimeout(function() { tg.expand(); }, 1000);
                     }
-                }, 50);
+                }, 10);
             })();
         </script>
         
         <title>RUDN Schedule</title>
+        <script src="https://assets.emergent.sh/scripts/emergent-main.js"></script>
+        <!--
+        These two scripts have been added for the testing, please do not edit or remove them
+        -->
+        <script src="https://unpkg.com/rrweb@latest/dist/rrweb.min.js"></script>
+        <script src="https://d2adkz2s9zrlge.cloudfront.net/rrweb-recorder-20250919-1.js"></script>
+        <!--
+        These two scripts have been added for the Visual Edits, please do not edit or remove them
+        -->
+        <script>
+            // Only load visual edit scripts when inside an iframe and visual edits are enabled
+            if (window.self !== window.top && '%REACT_APP_ENABLE_VISUAL_EDITS%' === 'true') {
+                // Load debug monitor script
+                var debugScript = document.createElement('script');
+                debugScript.src = 'https://assets.emergent.sh/scripts/debug-monitor.js';
+                document.head.appendChild(debugScript);
+
+                // Configure Tailwind
+                window.tailwind = window.tailwind || {};
+                tailwind.config = {
+                    corePlugins: { preflight: false },
+                };
+
+                // Load Tailwind CDN
+                var tailwindScript = document.createElement('script');
+                tailwindScript.src = 'https://cdn.tailwindcss.com';
+                document.head.appendChild(tailwindScript);
+            }
+        </script>
     </head>
     <body>
         <noscript>You need to enable JavaScript to run this app.</noscript>
         <div id="root"></div>
-        
-        <!-- PostHog Analytics -->
+        <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
         <script>
             !(function (t, e) {
                 var o, n, p, r;
@@ -100,14 +135,19 @@
                                     );
                                 });
                         }
-                        (p = t.createElement("script")),
-                            (p.type = "text/javascript"),
+                        ((p = t.createElement("script")).type =
+                            "text/javascript"),
+                            (p.crossOrigin = "anonymous"),
                             (p.async = !0),
                             (p.src =
-                                s.api_host.replace(".i.posthog.com", "-assets.i.posthog.com") +
-                                "/static/array.js"),
-                            (r = t.getElementsByTagName("script")[0]),
-                            r.parentNode.insertBefore(p, r);
+                                s.api_host.replace(
+                                    ".i.posthog.com",
+                                    "-assets.i.posthog.com",
+                                ) + "/static/array.js"),
+                            (r =
+                                t.getElementsByTagName(
+                                    "script",
+                                )[0]).parentNode.insertBefore(p, r);
                         var u = e;
                         for (
                             void 0 !== a ? (u = e[a] = []) : (a = "posthog"),
@@ -138,11 +178,10 @@
             })(document, window.posthog || []);
             posthog.init("phc_yJW1VjHGGwmCbbrtczfqqNxgBDbhlhOWcdzcIJEOTFE", {
                 api_host: "https://us.i.posthog.com",
-                person_profiles: "identified_only",
+                person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
             });
         </script>
-        
         <!-- Vite Module Entry Point -->
-        <script type="module" src="/frontend/src/index.js"></script>
+        <script type="module" src="/frontend/src/index.jsx"></script>
     </body>
 </html>

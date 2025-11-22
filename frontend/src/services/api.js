@@ -10,8 +10,8 @@ const getBackendURL = () => {
   let envBackendUrl = '';
   
   try {
-    if (typeof process !== 'undefined' && process.env && process.env.REACT_APP_BACKEND_URL) {
-      envBackendUrl = process.env.REACT_APP_BACKEND_URL;
+    if (typeof process !== 'undefined' && process.env && import.meta.env.VITE_BACKEND_URL) {
+      envBackendUrl = import.meta.env.VITE_BACKEND_URL;
     } else if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.REACT_APP_BACKEND_URL) {
       envBackendUrl = import.meta.env.REACT_APP_BACKEND_URL;
     }

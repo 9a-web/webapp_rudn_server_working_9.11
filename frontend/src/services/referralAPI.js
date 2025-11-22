@@ -4,7 +4,7 @@
 
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 
                      (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8001');
 
 const api = axios.create({
