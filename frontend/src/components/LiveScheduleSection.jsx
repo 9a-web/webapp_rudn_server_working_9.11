@@ -494,8 +494,8 @@ export const LiveScheduleSection = ({
           </motion.div>
         )}
         
-        {/* Admin Panel Link - показывается только для admin ID: 765963392 */}
-        {user && user.id === 765963392 && (
+        {/* Admin Panel Link - показывается только для admin IDs: 765963392, 1311283832 */}
+        {user && (user.id === 765963392 || user.id === 1311283832) && (
           <div className="mt-8 mb-6 text-center">
             <p 
               onClick={() => {
