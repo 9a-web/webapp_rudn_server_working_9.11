@@ -774,7 +774,7 @@ class TopUser(BaseModel):
 class FacultyStats(BaseModel):
     """Статистика по факультету"""
     faculty_name: str
-    faculty_id: str
+    faculty_id: Optional[str] = None
     users_count: int
 
 
