@@ -24,7 +24,7 @@ async def test_duplication_prevention():
     # Подключение к MongoDB
     mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
     client = AsyncIOMotorClient(mongo_url)
-    db = client.rudn_schedule
+    db = client.test_database
     
     # Тестовые данные
     test_telegram_id = 999999999
@@ -194,7 +194,7 @@ async def test_failure_scenarios():
     
     mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
     client = AsyncIOMotorClient(mongo_url)
-    db = client.rudn_schedule
+    db = client.test_database
     
     # Тестовые данные
     test_telegram_id = 888888888
