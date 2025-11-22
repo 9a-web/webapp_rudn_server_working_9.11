@@ -17,11 +17,11 @@ echo -e "${BLUE}  MongoDB Backup Script для rudn_schedule${NC}"
 echo -e "${BLUE}========================================${NC}\n"
 
 # Параметры
-DB_NAME="rudn_schedule"
+DB_NAME="test_database"
 MONGO_URI="mongodb://localhost:27017"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_DIR="/app/backups"
-BACKUP_NAME="rudn_schedule_backup_${TIMESTAMP}"
+BACKUP_NAME="test_database_backup_${TIMESTAMP}"
 
 # Создание директории для бэкапов
 mkdir -p ${BACKUP_DIR}
