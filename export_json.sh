@@ -3,7 +3,7 @@
 # Быстрый экспорт MongoDB в JSON формат
 # Использование: ./export_json.sh
 
-DB_NAME="rudn_schedule"
+DB_NAME="test_database"
 MONGO_URI="mongodb://localhost:27017"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 EXPORT_DIR="/app/exports/export_${TIMESTAMP}"
