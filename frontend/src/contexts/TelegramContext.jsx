@@ -173,11 +173,12 @@ export const TelegramProvider = ({ children }) => {
         console.log('👤 Пользователь Telegram:', userData.first_name);
       } else {
         console.warn('⚠️ Telegram user не найден. Mock данные.');
+        // Для разработки используем реальный admin ID для тестирования
         setUser({
-          id: 999888777,
+          id: 1311283832,
           first_name: 'Test',
-          last_name: 'User',
-          username: 'testuser',
+          last_name: 'Admin',
+          username: 'testadmin',
         });
       }
       
