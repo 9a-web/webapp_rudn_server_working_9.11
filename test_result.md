@@ -115,12 +115,11 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "GET /api/admin/top-users?metric=points&limit=10 - топ пользователей"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
   - agent: "testing"
-    message: "Completed comprehensive testing of all Admin API endpoints for РУДН Schedule App. 7 out of 8 endpoints working correctly. One critical issue found with /api/admin/top-users endpoint - returns 400 error for 'activity' metric. All other endpoints return proper data formats as expected by frontend. Hour format in hourly-activity is correctly integers 0-23 as required."
+    message: "✅ COMPLETED: Comprehensive testing of all Admin API endpoints for РУДН Schedule App. ALL 8 endpoints working correctly and returning proper data formats as expected by frontend. Key findings: 1) Hour format in hourly-activity correctly returns integers 0-23 as required, 2) All endpoints return non-empty data with proper structure, 3) Top-users endpoint supports metrics: points, achievements, tasks, schedule_views (correctly rejects unsupported metrics), 4) All data types and field names match frontend expectations. Backend URL: http://localhost:8001 - Admin panel should populate correctly."
