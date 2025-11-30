@@ -3888,9 +3888,18 @@ async def get_feature_usage(days: Optional[int] = None):
 @api_router.get("/admin/top-users", response_model=List[TopUser])
 async def get_top_users(metric: str = "points", limit: int = 10):
     """Get top users by metric"""
-    sort_field = "total_points"
-    if metric == "achievements":
-        sort_field = "achievements_count"
+    valid_metrics = {
+        "points": "total_points",
+        "achievements": "achievements_count", 
+        "tasks": "schedule_views",  # Using schedule_views as proxy for activity
+        "schedule_views": "schedule_views",
+        "activity": "schedule_views"  # Adding activity metric
+    }
+    
+    if metric not in valid_metrics:
+        raise HTTPException(status_code=400, detail=f"Недопустимая метрика. Доступные: {', '.join(valid_metrics.keys())}")
+    
+    sort_field = valid_metrics[metric]
         
     users_stats = await db.user_stats.find().sort(sort_field, -1).limit(limit).to_list(limit)
     
