@@ -35,6 +35,45 @@ import { UpcomingClassNotification } from './components/UpcomingClassNotificatio
 const Home = () => {
   const { user, isReady, showAlert, hapticFeedback } = useTelegram();
   const { t } = useTranslation();
+  // TEST: Добавляем тестовое состояние для проверки уведомления
+  const [testNotification, setTestNotification] = useState(false);
+  
+  // Функция для включения теста
+  const toggleTestNotification = () => {
+    setTestNotification(prev => !prev);
+    if (!testNotification) {
+       // Добавляем фейковое занятие через 10 минут
+       const now = new Date();
+       const future = new Date(now.getTime() + 10 * 60000); // +10 min
+       
+       const startHour = future.getHours();
+       const startMin = future.getMinutes();
+       const endHour = startHour + 1;
+       
+       const timeStr = `${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')} - ${endHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`;
+       
+       const currentDayName = now.toLocaleDateString('ru-RU', { weekday: 'long' });
+       const formattedDayName = currentDayName.charAt(0).toUpperCase() + currentDayName.slice(1);
+
+       const fakeClass = {
+           discipline: "TEST SUBJECT (Testing Notification)",
+           time: timeStr,
+           day: formattedDayName,
+           auditory: "Room 101",
+           teacher: "Test Teacher",
+           lessonType: "Seminar"
+       };
+       
+       setSchedule(prev => [...prev, fakeClass]);
+       hapticFeedback('success');
+       showAlert("Test class added! Notification should appear.");
+    } else {
+       // Reload schedule to remove fake
+       loadSchedule();
+       hapticFeedback('warning');
+       showAlert("Test class removed.");
+    }
+  };
   
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
