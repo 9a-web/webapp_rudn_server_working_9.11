@@ -34,11 +34,11 @@ export const AchievementNotification = ({ achievement, onClose, hapticFeedback }
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          className="fixed top-4 right-4 z-[100] w-[calc(100%-32px)] max-w-md md:w-96"
-          initial={{ opacity: 0, x: 400, scale: 0.8 }}
+          className="fixed top-4 left-0 right-0 mx-auto z-[100] w-[calc(100%-32px)] max-w-md md:w-96"
+          initial={{ opacity: 0, y: -100, scale: 0.8 }}
           animate={{ 
             opacity: 1, 
-            x: 0, 
+            y: 0, 
             scale: 1,
             transition: {
               type: "spring",
@@ -48,7 +48,7 @@ export const AchievementNotification = ({ achievement, onClose, hapticFeedback }
           }}
           exit={{ 
             opacity: 0, 
-            x: 400,
+            y: -100,
             scale: 0.9,
             transition: { duration: 0.3 }
           }}
