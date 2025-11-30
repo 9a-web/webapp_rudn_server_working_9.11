@@ -355,7 +355,7 @@ grep -n "db\[" /app/backend/server.py | cut -d"[" -f2 | cut -d"]" -f1 | sort -u
 | Новый API endpoint | `/app/backend/server.py` + `models.py` |
 | Новый UI компонент | `/app/frontend/src/components/NewComponent.jsx` |
 | Новое достижение | `/app/backend/achievements.py` (массив ACHIEVEMENTS) |
-| Логика уведомлений | `/app/backend/notifications.py` + `scheduler.py` |
+| Логика уведомлений V2 | `/app/backend/scheduler_v2.py` + `notifications.py` |
 | Новая страница | `/app/frontend/src/App.js` + новый компонент |
 | Схема БД | `/app/backend/models.py` (Pydantic) |
 | Перевод | `/app/frontend/src/i18n/locales/ru.json` и `en.json` |
