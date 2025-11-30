@@ -227,28 +227,7 @@ export const LiveScheduleSection = ({
 
   // Группируем предметы с одинаковым названием и временем
   const todaySchedule = useMemo(() => {
-    const groups = {};
-    
-    rawTodaySchedule.forEach(item => {
-      // Создаем уникальный ключ на основе названия и времени
-      const key = `${item.discipline?.trim()}-${item.time?.trim()}`;
-      
-      if (!groups[key]) {
-        groups[key] = {
-          ...item,
-          subItems: [] // Массив для хранения деталей каждого под-предмета
-        };
-      }
-      
-      // Добавляем детали (преподаватель, аудитория) в subItems
-      groups[key].subItems.push({
-        teacher: item.teacher,
-        auditory: item.auditory,
-        raw: item
-      });
-    });
-    
-    return Object.values(groups);
+    return groupScheduleItems(rawTodaySchedule);
   }, [rawTodaySchedule]);
 
   return (
