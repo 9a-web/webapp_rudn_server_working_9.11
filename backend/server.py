@@ -352,6 +352,14 @@ async def save_user_settings(settings: UserSettingsCreate):
             
             await db.user_settings.insert_one(user_dict)
             
+            # Если у нового пользователя включены уведомления (вдруг), планируем их
+            if user_settings.notifications_enabled:
+                try:
+                    scheduler = get_scheduler_v2(db)
+                    await scheduler.schedule_user_notifications(settings.telegram_id)
+                except Exception as e:
+                    logger.error(f"Failed to schedule notifications for new user: {e}")
+            
             return UserSettingsResponse(**user_dict)
     except Exception as e:
         logger.error(f"Ошибка при сохранении настроек пользователя: {e}")
