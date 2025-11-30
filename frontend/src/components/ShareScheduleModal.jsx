@@ -4,6 +4,7 @@ import { Share2, Copy, Check, MessageCircle, Image as ImageIcon, X, Download } f
 import { toPng } from 'html-to-image';
 import { botAPI } from '../services/api';
 import { achievementsAPI } from '../services/api';
+import { groupScheduleItems } from '../utils/scheduleUtils';
 
 /**
  * Компонент для шаринга расписания
