@@ -3462,23 +3462,51 @@ async def startup_event():
     
     # Создаем индексы для коллекций
     try:
-        # Уникальный индекс для sent_notifications чтобы предотвратить дубликаты
+        # Уникальный индекс для sent_notifications (старая система)
         await db.sent_notifications.create_index(
             [("notification_key", 1)],
             unique=True,
             name="unique_notification_key"
         )
-        logger.info("Database indexes created successfully")
+        
+        # Индексы для новой системы scheduled_notifications
+        await db.scheduled_notifications.create_index(
+            [("notification_key", 1)],
+            unique=True,
+            name="unique_scheduled_notification_key"
+        )
+        await db.scheduled_notifications.create_index(
+            [("telegram_id", 1), ("date", 1)],
+            name="user_date_index"
+        )
+        await db.scheduled_notifications.create_index(
+            [("status", 1), ("date", 1)],
+            name="status_date_index"
+        )
+        await db.scheduled_notifications.create_index(
+            [("scheduled_time", 1)],
+            name="scheduled_time_index"
+        )
+        
+        logger.info("✅ Database indexes created successfully")
     except Exception as e:
         logger.warning(f"Index creation warning (may already exist): {e}")
     
-    # Запускаем планировщик уведомлений
+    # Запускаем НОВЫЙ планировщик уведомлений V2
     try:
-        scheduler = get_scheduler(db)
-        scheduler.start()
-        logger.info("Notification scheduler started successfully")
+        scheduler_v2 = get_scheduler_v2(db)
+        scheduler_v2.start()
+        logger.info("✅ Notification Scheduler V2 started successfully")
     except Exception as e:
-        logger.error(f"Failed to start notification scheduler: {e}")
+        logger.error(f"❌ Failed to start notification scheduler V2: {e}")
+        # Fallback на старую систему в случае ошибки
+        try:
+            logger.info("Attempting fallback to old scheduler...")
+            scheduler = get_scheduler(db)
+            scheduler.start()
+            logger.info("⚠️ Fallback: Old notification scheduler started")
+        except Exception as fallback_error:
+            logger.error(f"❌ Fallback also failed: {fallback_error}")
     
     # Запускаем Telegram бота как background task
     try:
