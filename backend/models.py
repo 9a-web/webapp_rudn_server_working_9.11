@@ -196,6 +196,15 @@ class NotificationSettingsResponse(BaseModel):
     test_notification_error: Optional[str] = None
 
 
+class NotificationStatsResponse(BaseModel):
+    """Статистика уведомлений за день"""
+    date: str
+    total: int
+    pending: int
+    sent: int
+    failed: int
+    cancelled: int
+
 
 # ============ Модели для достижений ============
 
