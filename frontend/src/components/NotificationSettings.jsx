@@ -18,25 +18,6 @@ export const NotificationSettings = ({
   const [notificationTime, setNotificationTime] = useState(10);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [testing, setTesting] = useState(false);
-
-  const handleTestNotification = async () => {
-    if (!telegramId) return;
-    
-    try {
-      setTesting(true);
-      hapticFeedback && hapticFeedback('impact', 'medium');
-      
-      await userAPI.sendTestNotification(telegramId);
-      
-      showAlert && showAlert('✅ Тестовое уведомление отправлено! Проверьте чат с ботом.');
-    } catch (error) {
-      console.error('Error sending test notification:', error);
-      showAlert && showAlert('Ошибка отправки тестового уведомления');
-    } finally {
-      setTesting(false);
-    }
-  };
 
   // Доступные варианты времени уведомления
   const timeOptions = [
