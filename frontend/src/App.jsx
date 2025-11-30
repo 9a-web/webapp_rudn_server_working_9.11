@@ -561,11 +561,14 @@ const Home = () => {
         
         {/* Hidden Test Trigger (Triple tap on title usually works, but let's add a dev button if strictly needed. 
             For now, let's add it visible for testing then remove) */}
-        {/* <div className="px-6 mt-2">
-            <button onClick={toggleTestNotification} className="text-xs text-gray-400 border border-gray-700 px-2 py-1 rounded">
-                {testNotification ? "Remove Test Class" : "Add Test Class (+10m)"}
+        <div className="px-6 mt-2 flex justify-center opacity-50 hover:opacity-100 transition-opacity">
+            <button 
+                onClick={toggleTestNotification} 
+                className="text-xs text-white/50 bg-white/10 border border-white/20 px-3 py-1 rounded-full"
+            >
+                {testNotification ? "❌ Remove Test Class" : "🔔 Test Notification (+10m)"}
             </button>
-        </div> */}
+        </div>
         
         {/* Условное отображение разделов в зависимости от активной вкладки */}
         {activeTab === 'home' && (
