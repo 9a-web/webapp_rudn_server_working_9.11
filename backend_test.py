@@ -1236,6 +1236,485 @@ class RUDNScheduleAPITester:
             self.log_test("GET /api/bot-info", False, f"Exception: {str(e)}")
             return False
 
+    def test_admin_stats_endpoint(self) -> bool:
+        """Test GET /api/admin/stats endpoint"""
+        try:
+            print("🔍 Testing GET /api/admin/stats...")
+            
+            response = self.session.get(f"{self.base_url}/admin/stats")
+            
+            if response.status_code != 200:
+                self.log_test("GET /api/admin/stats", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+            
+            stats = response.json()
+            
+            # Validate response structure
+            if not isinstance(stats, dict):
+                self.log_test("GET /api/admin/stats", False, 
+                            "Response is not a dictionary")
+                return False
+            
+            # Check required fields
+            required_fields = ['total_users', 'active_users_today', 'total_tasks']
+            for field in required_fields:
+                if field not in stats:
+                    self.log_test("GET /api/admin/stats", False, 
+                                f"Missing required field: {field}")
+                    return False
+            
+            # Validate data types
+            for field in required_fields:
+                if not isinstance(stats[field], int):
+                    self.log_test("GET /api/admin/stats", False, 
+                                f"Field {field} should be integer, got {type(stats[field])}")
+                    return False
+            
+            # Validate non-negative values
+            for field in required_fields:
+                if stats[field] < 0:
+                    self.log_test("GET /api/admin/stats", False, 
+                                f"Field {field} should be non-negative, got {stats[field]}")
+                    return False
+            
+            self.log_test("GET /api/admin/stats", True, 
+                        "Successfully retrieved admin statistics",
+                        {
+                            "total_users": stats['total_users'],
+                            "active_users_today": stats['active_users_today'],
+                            "total_tasks": stats['total_tasks']
+                        })
+            return True
+            
+        except Exception as e:
+            self.log_test("GET /api/admin/stats", False, f"Exception: {str(e)}")
+            return False
+
+    def test_admin_users_activity_endpoint(self) -> bool:
+        """Test GET /api/admin/users-activity?days=30 endpoint"""
+        try:
+            print("🔍 Testing GET /api/admin/users-activity?days=30...")
+            
+            response = self.session.get(f"{self.base_url}/admin/users-activity?days=30")
+            
+            if response.status_code != 200:
+                self.log_test("GET /api/admin/users-activity", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+            
+            activity_data = response.json()
+            
+            # Validate response structure
+            if not isinstance(activity_data, list):
+                self.log_test("GET /api/admin/users-activity", False, 
+                            "Response is not a list")
+                return False
+            
+            # Check that we have data (should return array with date and count)
+            if len(activity_data) == 0:
+                self.log_test("GET /api/admin/users-activity", False, 
+                            "Response is empty - expected array with date and count")
+                return False
+            
+            # Validate structure of first item
+            if activity_data:
+                first_item = activity_data[0]
+                if not isinstance(first_item, dict):
+                    self.log_test("GET /api/admin/users-activity", False, 
+                                "Activity item is not a dictionary")
+                    return False
+                
+                required_fields = ['date', 'count']
+                for field in required_fields:
+                    if field not in first_item:
+                        self.log_test("GET /api/admin/users-activity", False, 
+                                    f"Activity item missing required field: {field}")
+                        return False
+                
+                # Validate count is integer
+                if not isinstance(first_item['count'], int):
+                    self.log_test("GET /api/admin/users-activity", False, 
+                                f"Count should be integer, got {type(first_item['count'])}")
+                    return False
+            
+            self.log_test("GET /api/admin/users-activity", True, 
+                        "Successfully retrieved users activity data",
+                        {
+                            "data_points": len(activity_data),
+                            "sample_item": activity_data[0] if activity_data else None
+                        })
+            return True
+            
+        except Exception as e:
+            self.log_test("GET /api/admin/users-activity", False, f"Exception: {str(e)}")
+            return False
+
+    def test_admin_hourly_activity_endpoint(self) -> bool:
+        """Test GET /api/admin/hourly-activity?days=30 endpoint"""
+        try:
+            print("🔍 Testing GET /api/admin/hourly-activity?days=30...")
+            
+            response = self.session.get(f"{self.base_url}/admin/hourly-activity?days=30")
+            
+            if response.status_code != 200:
+                self.log_test("GET /api/admin/hourly-activity", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+            
+            hourly_data = response.json()
+            
+            # Validate response structure
+            if not isinstance(hourly_data, list):
+                self.log_test("GET /api/admin/hourly-activity", False, 
+                            "Response is not a list")
+                return False
+            
+            # Should return 24 elements (0-23 hours)
+            if len(hourly_data) != 24:
+                self.log_test("GET /api/admin/hourly-activity", False, 
+                            f"Expected 24 hourly elements, got {len(hourly_data)}")
+                return False
+            
+            # Validate structure of each hour
+            for i, hour_item in enumerate(hourly_data):
+                if not isinstance(hour_item, dict):
+                    self.log_test("GET /api/admin/hourly-activity", False, 
+                                f"Hour item {i} is not a dictionary")
+                    return False
+                
+                required_fields = ['hour', 'count']
+                for field in required_fields:
+                    if field not in hour_item:
+                        self.log_test("GET /api/admin/hourly-activity", False, 
+                                    f"Hour item {i} missing required field: {field}")
+                        return False
+                
+                # IMPORTANT: Validate hour is integer (0-23), not string
+                if not isinstance(hour_item['hour'], int):
+                    self.log_test("GET /api/admin/hourly-activity", False, 
+                                f"Hour should be integer, got {type(hour_item['hour'])} for item {i}")
+                    return False
+                
+                if hour_item['hour'] < 0 or hour_item['hour'] > 23:
+                    self.log_test("GET /api/admin/hourly-activity", False, 
+                                f"Hour should be 0-23, got {hour_item['hour']} for item {i}")
+                    return False
+                
+                # Validate count is integer
+                if not isinstance(hour_item['count'], int):
+                    self.log_test("GET /api/admin/hourly-activity", False, 
+                                f"Count should be integer, got {type(hour_item['count'])} for item {i}")
+                    return False
+            
+            self.log_test("GET /api/admin/hourly-activity", True, 
+                        "Successfully retrieved hourly activity data with correct format",
+                        {
+                            "hours_count": len(hourly_data),
+                            "sample_hours": hourly_data[:3],
+                            "hour_format_correct": "All hours are integers 0-23"
+                        })
+            return True
+            
+        except Exception as e:
+            self.log_test("GET /api/admin/hourly-activity", False, f"Exception: {str(e)}")
+            return False
+
+    def test_admin_weekly_activity_endpoint(self) -> bool:
+        """Test GET /api/admin/weekly-activity?days=30 endpoint"""
+        try:
+            print("🔍 Testing GET /api/admin/weekly-activity?days=30...")
+            
+            response = self.session.get(f"{self.base_url}/admin/weekly-activity?days=30")
+            
+            if response.status_code != 200:
+                self.log_test("GET /api/admin/weekly-activity", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+            
+            weekly_data = response.json()
+            
+            # Validate response structure
+            if not isinstance(weekly_data, list):
+                self.log_test("GET /api/admin/weekly-activity", False, 
+                            "Response is not a list")
+                return False
+            
+            # Should return 7 elements (Monday-Sunday)
+            if len(weekly_data) != 7:
+                self.log_test("GET /api/admin/weekly-activity", False, 
+                            f"Expected 7 weekly elements (Mon-Sun), got {len(weekly_data)}")
+                return False
+            
+            # Validate structure of each day
+            expected_days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']
+            for i, day_item in enumerate(weekly_data):
+                if not isinstance(day_item, dict):
+                    self.log_test("GET /api/admin/weekly-activity", False, 
+                                f"Day item {i} is not a dictionary")
+                    return False
+                
+                required_fields = ['day', 'count']
+                for field in required_fields:
+                    if field not in day_item:
+                        self.log_test("GET /api/admin/weekly-activity", False, 
+                                    f"Day item {i} missing required field: {field}")
+                        return False
+                
+                # Validate count is integer
+                if not isinstance(day_item['count'], int):
+                    self.log_test("GET /api/admin/weekly-activity", False, 
+                                f"Count should be integer, got {type(day_item['count'])} for item {i}")
+                    return False
+            
+            self.log_test("GET /api/admin/weekly-activity", True, 
+                        "Successfully retrieved weekly activity data",
+                        {
+                            "days_count": len(weekly_data),
+                            "sample_days": weekly_data[:3]
+                        })
+            return True
+            
+        except Exception as e:
+            self.log_test("GET /api/admin/weekly-activity", False, f"Exception: {str(e)}")
+            return False
+
+    def test_admin_feature_usage_endpoint(self) -> bool:
+        """Test GET /api/admin/feature-usage?days=30 endpoint"""
+        try:
+            print("🔍 Testing GET /api/admin/feature-usage?days=30...")
+            
+            response = self.session.get(f"{self.base_url}/admin/feature-usage?days=30")
+            
+            if response.status_code != 200:
+                self.log_test("GET /api/admin/feature-usage", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+            
+            feature_data = response.json()
+            
+            # Validate response structure
+            if not isinstance(feature_data, dict):
+                self.log_test("GET /api/admin/feature-usage", False, 
+                            "Response is not a dictionary")
+                return False
+            
+            # Check for expected feature usage fields
+            expected_features = ['schedule_views', 'task_creations', 'group_task_creations', 'room_creations']
+            for feature in expected_features:
+                if feature not in feature_data:
+                    self.log_test("GET /api/admin/feature-usage", False, 
+                                f"Missing expected feature: {feature}")
+                    return False
+                
+                # Validate count is integer
+                if not isinstance(feature_data[feature], int):
+                    self.log_test("GET /api/admin/feature-usage", False, 
+                                f"Feature {feature} should be integer, got {type(feature_data[feature])}")
+                    return False
+                
+                # Validate non-negative
+                if feature_data[feature] < 0:
+                    self.log_test("GET /api/admin/feature-usage", False, 
+                                f"Feature {feature} should be non-negative, got {feature_data[feature]}")
+                    return False
+            
+            self.log_test("GET /api/admin/feature-usage", True, 
+                        "Successfully retrieved feature usage statistics",
+                        {
+                            "schedule_views": feature_data['schedule_views'],
+                            "task_creations": feature_data['task_creations'],
+                            "group_task_creations": feature_data['group_task_creations'],
+                            "room_creations": feature_data['room_creations']
+                        })
+            return True
+            
+        except Exception as e:
+            self.log_test("GET /api/admin/feature-usage", False, f"Exception: {str(e)}")
+            return False
+
+    def test_admin_top_users_endpoint(self) -> bool:
+        """Test GET /api/admin/top-users?metric=points&limit=10 endpoint"""
+        try:
+            print("🔍 Testing GET /api/admin/top-users?metric=points&limit=10...")
+            
+            response = self.session.get(f"{self.base_url}/admin/top-users?metric=points&limit=10")
+            
+            if response.status_code != 200:
+                self.log_test("GET /api/admin/top-users", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+            
+            top_users = response.json()
+            
+            # Validate response structure
+            if not isinstance(top_users, list):
+                self.log_test("GET /api/admin/top-users", False, 
+                            "Response is not a list")
+                return False
+            
+            # Should not exceed limit of 10
+            if len(top_users) > 10:
+                self.log_test("GET /api/admin/top-users", False, 
+                            f"Expected max 10 users, got {len(top_users)}")
+                return False
+            
+            # Validate structure of each user (if any users exist)
+            if top_users:
+                for i, user in enumerate(top_users):
+                    if not isinstance(user, dict):
+                        self.log_test("GET /api/admin/top-users", False, 
+                                    f"User item {i} is not a dictionary")
+                        return False
+                    
+                    required_fields = ['telegram_id', 'first_name', 'total_points']
+                    for field in required_fields:
+                        if field not in user:
+                            self.log_test("GET /api/admin/top-users", False, 
+                                        f"User item {i} missing required field: {field}")
+                            return False
+                    
+                    # Validate data types
+                    if not isinstance(user['telegram_id'], int):
+                        self.log_test("GET /api/admin/top-users", False, 
+                                    f"telegram_id should be integer, got {type(user['telegram_id'])} for user {i}")
+                        return False
+                    
+                    if not isinstance(user['total_points'], int):
+                        self.log_test("GET /api/admin/top-users", False, 
+                                    f"total_points should be integer, got {type(user['total_points'])} for user {i}")
+                        return False
+            
+            self.log_test("GET /api/admin/top-users", True, 
+                        "Successfully retrieved top users by points",
+                        {
+                            "users_count": len(top_users),
+                            "sample_user": top_users[0] if top_users else None
+                        })
+            return True
+            
+        except Exception as e:
+            self.log_test("GET /api/admin/top-users", False, f"Exception: {str(e)}")
+            return False
+
+    def test_admin_faculty_stats_endpoint(self) -> bool:
+        """Test GET /api/admin/faculty-stats endpoint"""
+        try:
+            print("🔍 Testing GET /api/admin/faculty-stats...")
+            
+            response = self.session.get(f"{self.base_url}/admin/faculty-stats")
+            
+            if response.status_code != 200:
+                self.log_test("GET /api/admin/faculty-stats", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+            
+            faculty_stats = response.json()
+            
+            # Validate response structure
+            if not isinstance(faculty_stats, list):
+                self.log_test("GET /api/admin/faculty-stats", False, 
+                            "Response is not a list")
+                return False
+            
+            # Validate structure of each faculty stat (if any exist)
+            if faculty_stats:
+                for i, faculty in enumerate(faculty_stats):
+                    if not isinstance(faculty, dict):
+                        self.log_test("GET /api/admin/faculty-stats", False, 
+                                    f"Faculty item {i} is not a dictionary")
+                        return False
+                    
+                    required_fields = ['faculty_id', 'faculty_name', 'user_count']
+                    for field in required_fields:
+                        if field not in faculty:
+                            self.log_test("GET /api/admin/faculty-stats", False, 
+                                        f"Faculty item {i} missing required field: {field}")
+                            return False
+                    
+                    # Validate user_count is integer
+                    if not isinstance(faculty['user_count'], int):
+                        self.log_test("GET /api/admin/faculty-stats", False, 
+                                    f"user_count should be integer, got {type(faculty['user_count'])} for faculty {i}")
+                        return False
+                    
+                    # Validate non-negative count
+                    if faculty['user_count'] < 0:
+                        self.log_test("GET /api/admin/faculty-stats", False, 
+                                    f"user_count should be non-negative, got {faculty['user_count']} for faculty {i}")
+                        return False
+            
+            self.log_test("GET /api/admin/faculty-stats", True, 
+                        "Successfully retrieved faculty statistics",
+                        {
+                            "faculties_count": len(faculty_stats),
+                            "sample_faculty": faculty_stats[0] if faculty_stats else None
+                        })
+            return True
+            
+        except Exception as e:
+            self.log_test("GET /api/admin/faculty-stats", False, f"Exception: {str(e)}")
+            return False
+
+    def test_admin_course_stats_endpoint(self) -> bool:
+        """Test GET /api/admin/course-stats endpoint"""
+        try:
+            print("🔍 Testing GET /api/admin/course-stats...")
+            
+            response = self.session.get(f"{self.base_url}/admin/course-stats")
+            
+            if response.status_code != 200:
+                self.log_test("GET /api/admin/course-stats", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+            
+            course_stats = response.json()
+            
+            # Validate response structure
+            if not isinstance(course_stats, list):
+                self.log_test("GET /api/admin/course-stats", False, 
+                            "Response is not a list")
+                return False
+            
+            # Validate structure of each course stat (if any exist)
+            if course_stats:
+                for i, course in enumerate(course_stats):
+                    if not isinstance(course, dict):
+                        self.log_test("GET /api/admin/course-stats", False, 
+                                    f"Course item {i} is not a dictionary")
+                        return False
+                    
+                    required_fields = ['course', 'user_count']
+                    for field in required_fields:
+                        if field not in course:
+                            self.log_test("GET /api/admin/course-stats", False, 
+                                        f"Course item {i} missing required field: {field}")
+                            return False
+                    
+                    # Validate user_count is integer
+                    if not isinstance(course['user_count'], int):
+                        self.log_test("GET /api/admin/course-stats", False, 
+                                    f"user_count should be integer, got {type(course['user_count'])} for course {i}")
+                        return False
+                    
+                    # Validate non-negative count
+                    if course['user_count'] < 0:
+                        self.log_test("GET /api/admin/course-stats", False, 
+                                    f"user_count should be non-negative, got {course['user_count']} for course {i}")
+                        return False
+            
+            self.log_test("GET /api/admin/course-stats", True, 
+                        "Successfully retrieved course statistics",
+                        {
+                            "courses_count": len(course_stats),
+                            "sample_course": course_stats[0] if course_stats else None
+                        })
+            return True
+            
+        except Exception as e:
+            self.log_test("GET /api/admin/course-stats", False, f"Exception: {str(e)}")
+            return False
+
     def test_new_task_achievements_total_count(self) -> bool:
         """Test that total achievements count is now 24 (was 16, added 8 new task achievements)"""
         try:
