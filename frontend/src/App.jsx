@@ -559,6 +559,14 @@ const Home = () => {
           onProfileStateChange={setIsProfileOpen}
         />
         
+        {/* Hidden Test Trigger (Triple tap on title usually works, but let's add a dev button if strictly needed. 
+            For now, let's add it visible for testing then remove) */}
+        {/* <div className="px-6 mt-2">
+            <button onClick={toggleTestNotification} className="text-xs text-gray-400 border border-gray-700 px-2 py-1 rounded">
+                {testNotification ? "Remove Test Class" : "Add Test Class (+10m)"}
+            </button>
+        </div> */}
+        
         {/* Условное отображение разделов в зависимости от активной вкладки */}
         {activeTab === 'home' && (
           <>
