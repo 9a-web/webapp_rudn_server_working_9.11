@@ -1,8 +1,15 @@
 
-import asyncio
 import os
 import logging
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+from pathlib import Path
+
+# Загрузка .env
+ROOT_DIR = Path(__file__).parent
+load_dotenv(ROOT_DIR / '.env')
+
+import asyncio
 import pytz
 from motor.motor_asyncio import AsyncIOMotorClient
 from scheduler_v2 import get_scheduler_v2
