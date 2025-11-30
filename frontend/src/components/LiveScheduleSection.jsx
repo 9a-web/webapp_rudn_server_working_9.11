@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Calendar, ChevronRight, ChevronDown, RefreshCw, Users, ChevronLeft, Share2 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { getWeekNumberForDate } from '../utils/dateUtils';
+import { groupScheduleItems } from '../utils/scheduleUtils';
 import { useTranslation } from 'react-i18next';
 import { fadeInUp, listItemVariants, buttonVariants, staggerContainer } from '../utils/animations';
 import { translateDiscipline, translateLessonType } from '../i18n/subjects';
