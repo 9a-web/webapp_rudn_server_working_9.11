@@ -1149,6 +1149,38 @@ async def get_user_invites(telegram_id: int):
         logger.error(f"Ошибка при получении приглашений: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/notifications/test", response_model=SuccessResponse)
+async def send_test_notification_endpoint(telegram_id: int = Body(..., embed=True)):
+    """Отправить тестовое уведомление о паре в Telegram"""
+    try:
+        service = get_notification_service()
+        
+        # Тестовые данные о паре
+        dummy_class = {
+            "discipline": "Тестовая пара (Test Subject)",
+            "time": "10:00 - 11:30",
+            "teacher": "Тестовый Преподаватель",
+            "auditory": "Кабинет 101",
+            "lessonType": "Лекция"
+        }
+        
+        success = await service.send_class_notification(
+            telegram_id=telegram_id,
+            class_info=dummy_class,
+            minutes_before=10
+        )
+        
+        if success:
+            return SuccessResponse(success=True, message="Тестовое уведомление отправлено в Telegram")
+        else:
+            # Даже если не удалось отправить в телеграм (например, бот заблокирован), возвращаем ошибку 500
+            raise HTTPException(status_code=500, detail="Не удалось отправить уведомление (возможно, бот заблокирован пользователем)")
+            
+    except Exception as e:
+        logger.error(f"Ошибка при отправке тестового уведомления: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 @api_router.post("/group-tasks/{task_id}/accept", response_model=SuccessResponse)
 async def accept_group_task_invite(task_id: str, telegram_id: int = Body(..., embed=True)):
