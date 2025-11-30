@@ -481,28 +481,32 @@ export const LiveScheduleSection = ({
                       {/* Expanded details */}
                       {isExpanded && (
                         <div className="mt-3 space-y-2 animate-in fade-in duration-200">
-                          {classItem.auditory && (
-                            <p 
-                              style={{ 
-                                fontSize: '13px',
-                                color: '#999999',
-                                fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont, sans-serif'
-                              }}
-                            >
-                              {t('classDetails.auditory')} <span style={{ color: '#3B3B3B' }}>{classItem.auditory}</span>
-                            </p>
-                          )}
-                          {classItem.teacher && (
-                            <p 
-                              style={{ 
-                                fontSize: '13px',
-                                color: '#999999',
-                                fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont, sans-serif'
-                              }}
-                            >
-                              {t('classDetails.teacher')} <span style={{ color: '#3B3B3B' }}>{classItem.teacher}</span>
-                            </p>
-                          )}
+                          {classItem.subItems && classItem.subItems.map((subItem, subIndex) => (
+                            <div key={subIndex} className={subIndex > 0 ? "pt-2 mt-2 border-t border-black/5" : ""}>
+                              {subItem.auditory && (
+                                <p 
+                                  style={{ 
+                                    fontSize: '13px',
+                                    color: '#999999',
+                                    fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont, sans-serif'
+                                  }}
+                                >
+                                  {t('classDetails.auditory')} <span style={{ color: '#3B3B3B' }}>{subItem.auditory}</span>
+                                </p>
+                              )}
+                              {subItem.teacher && (
+                                <p 
+                                  style={{ 
+                                    fontSize: '13px',
+                                    color: '#999999',
+                                    fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont, sans-serif'
+                                  }}
+                                >
+                                  {t('classDetails.teacher')} <span style={{ color: '#3B3B3B' }}>{subItem.teacher}</span>
+                                </p>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>
