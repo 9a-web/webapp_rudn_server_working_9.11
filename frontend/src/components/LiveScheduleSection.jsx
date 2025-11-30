@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Calendar, ChevronRight, ChevronDown, RefreshCw, Users, ChevronLeft, Share2 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { getWeekNumberForDate } from '../utils/dateUtils';
