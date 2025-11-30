@@ -234,6 +234,19 @@ export const userAPI = {
       handleError(error);
     }
   },
+
+  /**
+   * Отправить тестовое уведомление
+   * @param {number} telegramId - Telegram ID пользователя
+   */
+  sendTestNotification: async (telegramId) => {
+    try {
+      const response = await api.post('/notifications/test', { telegram_id: telegramId });
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
 };
 
 /**
