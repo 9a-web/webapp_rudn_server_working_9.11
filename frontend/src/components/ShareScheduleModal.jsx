@@ -457,7 +457,7 @@ export const ShareScheduleModal = ({
 const ScheduleImageCard = React.forwardRef(({ schedule, selectedDate, groupName, formatDate }, ref) => {
   const dayName = selectedDate.toLocaleDateString('ru-RU', { weekday: 'long' });
   const formattedDayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
-  const todaySchedule = schedule.filter(item => item.day === formattedDayName);
+  const todaySchedule = groupScheduleItems(schedule.filter(item => item.day === formattedDayName));
   
   // Определяем эмодзи для типа занятия
   const getClassTypeEmoji = (discipline) => {
