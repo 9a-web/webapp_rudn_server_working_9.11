@@ -3564,13 +3564,19 @@ async def shutdown_db_client():
         except Exception as e:
             logger.error(f"Error stopping Telegram bot: {e}")
     
-    # Останавливаем планировщик
+    # Останавливаем планировщик V2
     try:
-        scheduler = get_scheduler(db)
-        scheduler.stop()
-        logger.info("Notification scheduler stopped")
+        scheduler_v2 = get_scheduler_v2(db)
+        scheduler_v2.stop()
+        logger.info("✅ Notification Scheduler V2 stopped")
     except Exception as e:
-        logger.error(f"Error stopping scheduler: {e}")
+        logger.error(f"Error stopping scheduler V2: {e}")
+        # Пытаемся остановить старый планировщик на всякий случай
+        try:
+            scheduler = get_scheduler(db)
+            scheduler.stop()
+        except:
+            pass
     
     # Закрываем подключение к БД
     client.close()
