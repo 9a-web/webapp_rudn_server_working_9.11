@@ -29,7 +29,8 @@
   "classStatus": {
     "upcoming": "Предстоит",
     "inProgress": "В процессе",
-    "finished": "Закончилась"
+    "finished": "Закончилась",
+    "upcomingIn": "Начало через {{minutes}} мин"
   },
   "classDetails": {
     "auditory": "Аудитория:",

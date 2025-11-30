@@ -29,7 +29,8 @@
   "classStatus": {
     "upcoming": "Upcoming",
     "inProgress": "In Progress",
-    "finished": "Finished"
+    "finished": "Finished",
+    "upcomingIn": "Starts in {{minutes}} min"
   },
   "classDetails": {
     "auditory": "Room:",
