@@ -187,6 +187,16 @@ created_at: datetime, updated_at: datetime
 completed_by: int?, completed_at: datetime?
 ```
 
+### scheduled_notifications (NEW! система V2)
+```python
+id: UUID, notification_key: str (unique), telegram_id: int, date: str
+class_info: {discipline, time, teacher, auditory, lessonType}
+scheduled_time: datetime, notification_time_minutes: int
+status: str ('pending'|'sent'|'failed'|'cancelled')
+attempts: int, last_attempt_at: datetime?, error_message: str?
+created_at: datetime, sent_at: datetime?
+```
+
 ---
 
 ## КРИТИЧЕСКИЕ ПРАВИЛА
