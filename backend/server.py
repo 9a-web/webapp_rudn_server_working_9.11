@@ -2927,62 +2927,6 @@ async def get_referral_tree(telegram_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# COMMENTED OUT - Duplicate admin endpoints removed - using the improved implementation below
-# @api_router.get("/admin/stats")
-# async def get_admin_stats_old(days: Optional[int] = None):
-#     """
-#     Получить общую статистику для админ панели
-#     """
-    try:
-        # Определяем временной диапазон
-        if days:
-            date_filter = {"created_at": {"$gte": datetime.utcnow() - timedelta(days=days)}}
-        else:
-            date_filter = {}
-        
-        # Общая статистика пользователей
-        total_users = await db.user_settings.count_documents({})
-        
-        # Активные пользователи сегодня
-        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-        active_users_today = await db.user_settings.count_documents({
-            "last_activity": {"$gte": today_start}
-        })
-        
-        # Новые пользователи за неделю
-        week_ago = datetime.utcnow() - timedelta(days=7)
-        new_users_week = await db.user_settings.count_documents({
-            "created_at": {"$gte": week_ago}
-        })
-        
-        # Статистика задач
-        total_tasks = await db.tasks.count_documents(date_filter)
-        total_completed_tasks = await db.tasks.count_documents({
-            **date_filter,
-            "completed": True
-        })
-        
-        # Статистика достижений
-        total_achievements_earned = await db.user_achievements.count_documents(date_filter)
-        
-        # Статистика комнат
-        total_rooms = await db.rooms.count_documents(date_filter)
-        
-        return AdminStatsResponse(
-            total_users=total_users,
-            active_users_today=active_users_today,
-            new_users_week=new_users_week,
-            total_tasks=total_tasks,
-            total_completed_tasks=total_completed_tasks,
-            total_achievements_earned=total_achievements_earned,
-            total_rooms=total_rooms
-        )
-    
-    except Exception as e:
-        logger.error(f"Ошибка при получении статистики админ панели: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @api_router.get("/admin/users-activity", response_model=List[UserActivityPoint])
 async def get_users_activity(days: Optional[int] = 30):
     """
