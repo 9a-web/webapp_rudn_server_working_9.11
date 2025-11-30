@@ -36,6 +36,7 @@ from models import (
     SuccessResponse,
     NotificationSettingsUpdate,
     NotificationSettingsResponse,
+    NotificationStatsResponse,
     Achievement,
     UserAchievement,
     UserAchievementResponse,
