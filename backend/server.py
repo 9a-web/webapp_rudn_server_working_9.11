@@ -470,6 +470,38 @@ async def get_notification_settings(telegram_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.get("/notifications/stats", response_model=NotificationStatsResponse)
+async def get_notification_stats(date: Optional[str] = None):
+    """
+    Получить статистику уведомлений за день
+    
+    Args:
+        date: Дата в формате YYYY-MM-DD (по умолчанию - сегодня)
+    """
+    try:
+        scheduler_v2 = get_scheduler_v2(db)
+        stats = await scheduler_v2.get_notification_stats(date)
+        
+        if not stats:
+            # Возвращаем пустую статистику
+            from datetime import datetime
+            import pytz
+            today = datetime.now(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d') if not date else date
+            return NotificationStatsResponse(
+                date=today,
+                total=0,
+                pending=0,
+                sent=0,
+                failed=0,
+                cancelled=0
+            )
+        
+        return NotificationStatsResponse(**stats)
+    except Exception as e:
+        logger.error(f"Ошибка при получении статистики уведомлений: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ============ Эндпоинты для достижений ============
 
 @api_router.get("/achievements", response_model=List[Achievement])
