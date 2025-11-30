@@ -343,6 +343,13 @@ async def save_user_settings(settings: UserSettingsCreate):
                 {"$set": update_data}
             )
             
+            # Пересчитываем уведомления при обновлении настроек (например, смена группы)
+            try:
+                scheduler = get_scheduler_v2(db)
+                await scheduler.schedule_user_notifications(settings.telegram_id)
+            except Exception as e:
+                logger.error(f"Failed to reschedule notifications on settings update: {e}")
+            
             user_data = await db.user_settings.find_one({"telegram_id": settings.telegram_id})
             return UserSettingsResponse(**user_data)
         else:
