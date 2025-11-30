@@ -702,6 +702,63 @@ class NotificationSchedulerV2:
             logger.error(f"Error getting notification stats: {e}")
             return {}
 
+    async def schedule_user_notifications(self, telegram_id: int) -> Dict:
+        """
+        Принудительно запланировать уведомления для конкретного пользователя на сегодня
+        (Вызывать при изменении настроек или расписания)
+        
+        Args:
+            telegram_id: ID пользователя
+            
+        Returns:
+            Словарь с результатами {created, scheduled}
+        """
+        try:
+            now = datetime.now(MOSCOW_TZ)
+            today = now.strftime('%Y-%m-%d')
+            current_day = now.strftime('%A')
+            
+            # Переводим день недели на русский
+            day_mapping = {
+                'Monday': 'Понедельник',
+                'Tuesday': 'Вторник',
+                'Wednesday': 'Среда',
+                'Thursday': 'Четверг',
+                'Friday': 'Пятница',
+                'Saturday': 'Суббота',
+                'Sunday': 'Воскресенье'
+            }
+            russian_day = day_mapping.get(current_day, current_day)
+            
+            # Определяем номер недели
+            week_number = self._get_week_number(now)
+            
+            # Получаем данные пользователя
+            user = await self.db.user_settings.find_one({"telegram_id": telegram_id})
+            if not user:
+                logger.warning(f"User {telegram_id} not found for scheduling")
+                return {"created": 0, "scheduled": 0}
+            
+            if not user.get("notifications_enabled"):
+                logger.info(f"Notifications disabled for user {telegram_id}, skipping")
+                return {"created": 0, "scheduled": 0}
+            
+            logger.info(f"🔄 Force scheduling notifications for user {telegram_id}")
+            
+            created, scheduled = await self._prepare_user_schedule(
+                user, 
+                russian_day, 
+                week_number, 
+                today, 
+                now
+            )
+            
+            return {"created": created, "scheduled": scheduled}
+            
+        except Exception as e:
+            logger.error(f"Error scheduling user notifications: {e}", exc_info=True)
+            return {"created": 0, "scheduled": 0}
+
 
 # Глобальный экземпляр планировщика
 scheduler_v2_instance = None
