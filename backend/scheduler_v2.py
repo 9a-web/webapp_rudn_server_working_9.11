@@ -202,10 +202,12 @@ class NotificationSchedulerV2:
             notification_time = user.get('notification_time', 10)
             
             # Получаем расписание из кэша
+            # Важно: expires_at хранится в UTC, поэтому сравниваем с UTC
+            utc_now = datetime.utcnow()
             cached_schedule = await self.db.schedule_cache.find_one({
                 "group_id": user.get('group_id'),
                 "week_number": week_number,
-                "expires_at": {"$gt": now.replace(tzinfo=None)}
+                "expires_at": {"$gt": utc_now}
             })
             
             if not cached_schedule:
