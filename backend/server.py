@@ -285,6 +285,25 @@ async def get_schedule_endpoint(request: ScheduleRequest):
             upsert=True
         )
         
+        # Попытка запланировать уведомления для пользователей этой группы, у которых включены уведомления
+        # (В реальном production лучше делать это фоновой задачей, но для MVP можно и так)
+        try:
+            # Запускаем в фоне, чтобы не тормозить ответ
+            async def schedule_for_group():
+                users = await db.user_settings.find({
+                    "group_id": request.group_id,
+                    "notifications_enabled": True
+                }).to_list(None)
+                
+                if users:
+                    scheduler = get_scheduler_v2(db)
+                    for user in users:
+                        await scheduler.schedule_user_notifications(user['telegram_id'])
+            
+            asyncio.create_task(schedule_for_group())
+        except Exception as e:
+            logger.error(f"Failed to trigger group scheduling: {e}")
+        
         return ScheduleResponse(
             events=[ScheduleEvent(**event) for event in events],
             group_id=request.group_id,
