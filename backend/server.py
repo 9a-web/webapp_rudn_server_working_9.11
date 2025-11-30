@@ -435,11 +435,12 @@ async def update_notification_settings(telegram_id: int, settings: NotificationS
             }}
         )
         
-        # Если уведомления включены, отправляем тестовое уведомление
+        # Если уведомления включены, отправляем тестовое уведомление и планируем реальные
         test_notification_sent = None
         test_notification_error = None
         
         if settings.notifications_enabled:
+            # 1. Отправляем тестовое (сразу)
             try:
                 notification_service = get_notification_service()
                 success = await notification_service.send_test_notification(telegram_id)
@@ -450,6 +451,14 @@ async def update_notification_settings(telegram_id: int, settings: NotificationS
                 logger.warning(f"Failed to send test notification: {e}")
                 test_notification_sent = False
                 test_notification_error = f"Ошибка: {str(e)}. Пожалуйста, начните диалог с ботом командой /start в Telegram"
+            
+            # 2. Планируем уведомления на сегодня (асинхронно)
+            try:
+                scheduler = get_scheduler_v2(db)
+                stats = await scheduler.schedule_user_notifications(telegram_id)
+                logger.info(f"Scheduled {stats.get('scheduled', 0)} notifications for user {telegram_id}")
+            except Exception as e:
+                logger.error(f"Failed to schedule notifications after enabling: {e}")
         
         return NotificationSettingsResponse(
             notifications_enabled=settings.notifications_enabled,
