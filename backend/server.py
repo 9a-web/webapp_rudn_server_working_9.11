@@ -93,7 +93,8 @@ from models import (
     ReferralConnection
 )
 from notifications import get_notification_service
-from scheduler import get_scheduler
+from scheduler import get_scheduler  # Старая система (резерв)
+from scheduler_v2 import get_scheduler_v2  # Новая улучшенная система
 from cache import cache
 from achievements import (
     get_all_achievements,
