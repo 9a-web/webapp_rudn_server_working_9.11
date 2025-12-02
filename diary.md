@@ -7,6 +7,45 @@
 
 ## ПОСЛЕДНИЕ ИЗМЕНЕНИЯ
 
+### 2025-12-02 — Реферальная система через Web App ссылки
+
+#### ✅ Выполнено:
+1. **Backend (`server.py`)**:
+   - Обновлён endpoint `GET /api/referral/code/{telegram_id}` — теперь возвращает `referral_link_webapp`
+   - Новый endpoint: `POST /api/referral/process-webapp` — обработка реферального кода через Web App
+   - Добавлена функция `award_referral_bonus()` для начисления бонусов
+
+2. **Backend (`models.py`)**:
+   - Обновлена модель `ReferralCodeResponse` — добавлено поле `referral_link_webapp`
+   - Новые модели: `ProcessReferralRequest`, `ProcessReferralResponse`
+
+3. **Frontend (`TelegramContext.jsx`)**:
+   - Добавлено получение `startParam` из `window.Telegram.WebApp.initDataUnsafe.start_param`
+   - `startParam` экспортируется через контекст
+
+4. **Frontend (`App.jsx`)**:
+   - Добавлена обработка реферального кода из `startParam` при открытии приложения
+   - Автоматический вызов `processReferralWebApp()` при наличии `ref_` в startParam
+
+5. **Frontend (`referralAPI.js`)**:
+   - Добавлена функция `processReferralWebApp()`
+
+6. **Frontend (`ProfileModal.jsx`)**:
+   - Приоритет копирования `referral_link_webapp` вместо `referral_link`
+
+#### 📋 Формат реферальных ссылок:
+- **Старый формат (через /start):** `https://t.me/rudn_pro_bot?start=ref_CODE`
+- **Новый формат (через Web App):** `https://t.me/rudn_pro_bot/app?startapp=ref_CODE` ✅
+
+#### 🔗 Как работает:
+1. Пользователь открывает ссылку `t.me/rudn_pro_bot/app?startapp=ref_28DB4CDB84`
+2. Telegram открывает Web App и передаёт `start_param = "ref_28DB4CDB84"`
+3. Frontend получает `startParam` через TelegramContext
+4. App.jsx отправляет запрос на `/api/referral/process-webapp`
+5. Backend создаёт связь реферала и начисляет бонусы
+
+---
+
 ### 2025-12-02 — Переключение между тестовым и продакшн ботами
 
 #### ✅ Выполнено:
