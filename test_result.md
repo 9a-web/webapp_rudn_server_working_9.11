@@ -135,3 +135,15 @@ agent_communication:
       - working: true
         agent: "user"
         comment: "✅ Verified Journal creation, invite link generation (Telegram format), and stats endpoint via custom test script."
+
+  - task: "Student Personal Invite Links - API endpoints"
+    implemented: true
+    working: "needs_testing"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "needs_testing"
+        agent: "main"
+        comment: "NEW: Implemented student personal invite links. Each student gets unique invite_code, API returns invite_link. New endpoints: POST /api/journals/join-student/{invite_code}, POST /api/journals/{id}/students/{sid}/unlink. Telegram bot handles jstudent_{code} format."
