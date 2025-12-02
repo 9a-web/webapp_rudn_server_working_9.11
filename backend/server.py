@@ -3919,6 +3919,97 @@ async def join_journal(invite_token: str, data: JournalJoinRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.post("/journals/join-student/{invite_code}")
+async def join_journal_by_student_link(invite_code: str, data: JoinStudentRequest):
+    """Присоединиться к журналу по персональной ссылке студента"""
+    try:
+        # Найти студента по invite_code
+        student = await db.journal_students.find_one({"invite_code": invite_code})
+        if not student:
+            raise HTTPException(status_code=404, detail="Invalid student invite link")
+        
+        journal_id = student["journal_id"]
+        
+        # Найти журнал
+        journal = await db.attendance_journals.find_one({"journal_id": journal_id})
+        if not journal:
+            raise HTTPException(status_code=404, detail="Journal not found")
+        
+        # Проверить, не владелец ли это
+        if journal["owner_id"] == data.telegram_id:
+            return {
+                "status": "owner", 
+                "message": "Вы являетесь старостой этого журнала", 
+                "journal_id": journal_id,
+                "student_name": student["full_name"]
+            }
+        
+        # Проверить, не привязан ли уже этот студент к другому Telegram
+        if student.get("is_linked") and student.get("telegram_id") != data.telegram_id:
+            return {
+                "status": "occupied",
+                "message": f"Место для «{student['full_name']}» уже занято другим пользователем",
+                "journal_id": journal_id,
+                "student_name": student["full_name"]
+            }
+        
+        # Проверить, не привязан ли уже этот пользователь к другому студенту в этом журнале
+        existing_link = await db.journal_students.find_one({
+            "journal_id": journal_id,
+            "telegram_id": data.telegram_id,
+            "is_linked": True
+        })
+        if existing_link and existing_link["id"] != student["id"]:
+            return {
+                "status": "already_linked",
+                "message": f"Вы уже привязаны как «{existing_link['full_name']}» в этом журнале",
+                "journal_id": journal_id,
+                "student_name": existing_link["full_name"]
+            }
+        
+        # Если уже привязан к этому же студенту
+        if student.get("is_linked") and student.get("telegram_id") == data.telegram_id:
+            return {
+                "status": "success",
+                "message": f"Вы уже привязаны как «{student['full_name']}»",
+                "journal_id": journal_id,
+                "student_name": student["full_name"]
+            }
+        
+        # Привязать пользователя к студенту
+        from datetime import datetime
+        await db.journal_students.update_one(
+            {"id": student["id"]},
+            {"$set": {
+                "telegram_id": data.telegram_id,
+                "username": data.username,
+                "first_name": data.first_name,
+                "is_linked": True,
+                "linked_at": datetime.utcnow()
+            }}
+        )
+        
+        # Удалить из pending если был там
+        await db.journal_pending_members.delete_many({
+            "journal_id": journal_id,
+            "telegram_id": data.telegram_id
+        })
+        
+        logger.info(f"✅ User {data.telegram_id} linked to student '{student['full_name']}' in journal {journal_id}")
+        return {
+            "status": "success",
+            "message": f"Вы успешно привязаны как «{student['full_name']}»",
+            "journal_id": journal_id,
+            "student_name": student["full_name"],
+            "journal_name": journal.get("name", "Журнал")
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error joining journal by student link: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ===== Студенты в журнале =====
 
 @api_router.post("/journals/{journal_id}/students", response_model=JournalStudentResponse)
