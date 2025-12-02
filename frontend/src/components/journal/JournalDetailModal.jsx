@@ -9,12 +9,15 @@ import {
   getJournalDetail,
   getJournalStudents,
   getJournalSessions,
+  getJournalSubjects,
   getPendingMembers,
   generateJournalInviteLink,
   addStudent,
   addStudentsBulk,
   linkStudent,
   deleteStudent,
+  createSubject,
+  deleteSubject,
   createSession,
   deleteSession,
   getSessionAttendance,
@@ -23,6 +26,8 @@ import {
 } from '../../services/journalAPI';
 import { AddStudentsModal } from './AddStudentsModal';
 import { CreateSessionModal } from './CreateSessionModal';
+import { CreateSubjectModal } from './CreateSubjectModal';
+import { SubjectDetailModal } from './SubjectDetailModal';
 import { AttendanceModal } from './AttendanceModal';
 import { LinkStudentModal } from './LinkStudentModal';
 
