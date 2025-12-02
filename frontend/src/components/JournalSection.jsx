@@ -30,10 +30,20 @@ export const JournalSection = ({ telegramId, hapticFeedback, userSettings, pendi
     loadJournals();
   }, [loadJournals]);
 
+  // Перезагружаем журналы когда приходит pendingJournalId (пользователь только что присоединился)
+  useEffect(() => {
+    if (pendingJournalId && telegramId) {
+      console.log('🔄 Перезагружаем журналы после присоединения, pendingJournalId:', pendingJournalId);
+      loadJournals();
+    }
+  }, [pendingJournalId, telegramId]);
+
   // Автоматическое открытие журнала по pendingJournalId (после присоединения по ссылке)
   useEffect(() => {
     if (pendingJournalId && journals.length > 0 && !isLoading) {
       console.log('📖 Ищем журнал для автооткрытия:', pendingJournalId);
+      console.log('📋 Доступные журналы:', journals.map(j => ({ id: j.journal_id, name: j.name })));
+      
       const journalToOpen = journals.find(j => j.journal_id === pendingJournalId);
       
       if (journalToOpen) {
@@ -45,11 +55,8 @@ export const JournalSection = ({ telegramId, hapticFeedback, userSettings, pendi
           onPendingJournalHandled();
         }
       } else {
-        console.log('⚠️ Журнал не найден в списке, возможно ожидает привязки');
-        // Сбрасываем pendingJournalId даже если журнал не найден
-        if (onPendingJournalHandled) {
-          onPendingJournalHandled();
-        }
+        console.log('⚠️ Журнал не найден в списке. Возможно данные еще не загружены.');
+        // НЕ сбрасываем pendingJournalId - ждем пока журнал появится после загрузки
       }
     }
   }, [pendingJournalId, journals, isLoading, onPendingJournalHandled]);
