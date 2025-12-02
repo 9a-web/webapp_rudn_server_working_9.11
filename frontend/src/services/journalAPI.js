@@ -286,6 +286,17 @@ export const getJournalStats = async (journalId) => {
   }
 };
 
+// Присоединиться по персональной ссылке студента
+export const joinJournalByStudentCode = async (inviteCode, userData) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/api/journals/join-student/${inviteCode}`, userData);
+    return response.data;
+  } catch (error) {
+    console.error('Error joining journal by student code:', error);
+    throw error;
+  }
+};
+
 
 export const updateStudent = async (journalId, studentId, data) => {
   const response = await api.put(`/journals/${journalId}/students/${studentId}`, data);
