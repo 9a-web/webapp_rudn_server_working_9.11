@@ -297,13 +297,13 @@ export const joinJournalByStudentCode = async (inviteCode, userData) => {
   }
 };
 
-
-export const updateStudent = async (journalId, studentId, data) => {
-  const response = await api.put(`/journals/${journalId}/students/${studentId}`, data);
-  return response.data;
-};
-
+// Отвязать студента от Telegram
 export const unlinkStudent = async (journalId, studentId) => {
-    const response = await api.post(`/journals/${journalId}/students/${studentId}/unlink`);
+  try {
+    const response = await axios.post(`${API_BASE_URL}/api/journals/${journalId}/students/${studentId}/unlink`);
     return response.data;
+  } catch (error) {
+    console.error('Error unlinking student:', error);
+    throw error;
+  }
 };
