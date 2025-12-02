@@ -655,7 +655,7 @@ def generate_users_table_image(users_data, page_num=1, total_pages=1):
     try:
         font_header = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16)
         font_cell = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14)
-    except:
+    except Exception:
         font_header = ImageFont.load_default()
         font_cell = ImageFont.load_default()
     
