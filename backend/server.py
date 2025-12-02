@@ -101,6 +101,8 @@ from models import (
     JournalStudentCreate,
     JournalStudentBulkCreate,
     JournalStudentLink,
+    JournalSubject,
+    JournalSubjectCreate,
     JournalSession,
     JournalSessionCreate,
     AttendanceRecord,
