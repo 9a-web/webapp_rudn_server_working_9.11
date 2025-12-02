@@ -4059,11 +4059,15 @@ async def generate_journal_invite_link(journal_id: str):
         if not journal:
             raise HTTPException(status_code=404, detail="Journal not found")
         
-        bot_username = os.environ.get("TELEGRAM_BOT_USERNAME", "rudn_mosbot")
+        bot_username = "rudn_pro_bot"
+        # Старый формат через /start
         invite_link = f"https://t.me/{bot_username}?start=journal_{journal['invite_token']}"
+        # Новый формат через Web App
+        invite_link_webapp = f"https://t.me/{bot_username}/app?startapp=journal_{journal['invite_token']}"
         
         return JournalInviteLinkResponse(
             invite_link=invite_link,
+            invite_link_webapp=invite_link_webapp,
             invite_token=journal["invite_token"],
             journal_id=journal_id,
             bot_username=bot_username
