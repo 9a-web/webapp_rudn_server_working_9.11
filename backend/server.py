@@ -4797,9 +4797,15 @@ async def startup_event():
         sys.path.insert(0, '/app/backend')
         from telegram_bot import start_command, users_command, clear_db_command, TELEGRAM_BOT_TOKEN
         
-        if TELEGRAM_BOT_TOKEN:
+        # Получаем токен через config (с учетом ENV)
+        active_token = get_telegram_bot_token()
+        
+        if active_token:
+            env_mode = "TEST" if is_test_environment() else "PRODUCTION"
+            logger.info(f"🤖 Запуск Telegram бота в режиме {env_mode}...")
+            
             # Создаем приложение бота
-            bot_application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+            bot_application = Application.builder().token(active_token).build()
             
             # Регистрируем обработчики
             bot_application.add_handler(CommandHandler("start", start_command))
@@ -4814,13 +4820,13 @@ async def startup_event():
                     allowed_updates=Update.ALL_TYPES,
                     drop_pending_updates=True
                 )
-                logger.info("✅ Telegram bot polling started successfully")
+                logger.info(f"✅ Telegram bot polling started successfully (ENV={ENV})")
             
             # Создаем background task
             asyncio.create_task(start_bot())
-            logger.info("Telegram bot initialization started as background task")
+            logger.info(f"Telegram bot initialization started as background task (ENV={ENV})")
         else:
-            logger.warning("TELEGRAM_BOT_TOKEN not found, bot not started")
+            logger.warning("Токен бота не найден, bot not started")
     except Exception as e:
         logger.error(f"Failed to start Telegram bot: {e}", exc_info=True)
 
