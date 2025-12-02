@@ -618,6 +618,18 @@ export const JournalDetailModal = ({
             hapticFeedback={hapticFeedback}
           />
         )}
+        
+        {showEditStudent && (
+          <EditStudentModal
+            isOpen={!!showEditStudent}
+            onClose={() => setShowEditStudent(null)}
+            student={showEditStudent}
+            onUpdate={handleUpdateStudent}
+            onDelete={handleDeleteStudent}
+            onUnlink={handleUnlinkStudent}
+            hapticFeedback={hapticFeedback}
+          />
+        )}
       </motion.div>
     </AnimatePresence>
   );
