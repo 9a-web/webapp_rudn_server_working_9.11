@@ -105,6 +105,9 @@ const Home = () => {
   
   // Состояние для реферальной системы Web App
   const [referralProcessed, setReferralProcessed] = useState(false);
+  
+  // Состояние для обработки приглашения в журнал
+  const [journalInviteProcessed, setJournalInviteProcessed] = useState(false);
 
   // Состояние для нижнего меню навигации (загружаем из localStorage)
   const [activeTab, setActiveTab] = useState(() => {
