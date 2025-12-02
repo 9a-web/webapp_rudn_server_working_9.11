@@ -950,10 +950,31 @@ class JournalStudentLink(BaseModel):
     first_name: Optional[str] = None
 
 
+class JournalSubject(BaseModel):
+    """Предмет в журнале (страница журнала)"""
+    subject_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    journal_id: str
+    name: str                            # Название предмета
+    description: Optional[str] = None    # Описание
+    color: str = "blue"                  # Цвет для UI
+    order: int = 0                       # Порядок в списке
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: int                      # Кто создал
+
+
+class JournalSubjectCreate(BaseModel):
+    """Запрос на создание предмета"""
+    name: str
+    description: Optional[str] = None
+    color: str = "blue"
+    telegram_id: int                     # Кто создаёт
+
+
 class JournalSession(BaseModel):
     """Занятие в журнале"""
     session_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     journal_id: str
+    subject_id: str                      # К какому предмету относится
     date: str                            # YYYY-MM-DD
     title: str                           # Название занятия
     description: Optional[str] = None
@@ -964,6 +985,7 @@ class JournalSession(BaseModel):
 
 class JournalSessionCreate(BaseModel):
     """Запрос на создание занятия"""
+    subject_id: str                      # К какому предмету
     date: str                            # YYYY-MM-DD
     title: str
     description: Optional[str] = None
