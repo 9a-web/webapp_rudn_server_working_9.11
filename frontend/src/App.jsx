@@ -701,6 +701,7 @@ const Home = () => {
             <JournalSection 
               telegramId={user?.id}
               hapticFeedback={hapticFeedback}
+              userSettings={userSettings}
             />
           </div>
         )}
