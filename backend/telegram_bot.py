@@ -1152,7 +1152,7 @@ def main() -> None:
     """Запуск бота"""
     
     if not TELEGRAM_BOT_TOKEN:
-        logger.error("❌ TELEGRAM_BOT_TOKEN не найден в .env файле!")
+        logger.error("❌ Токен бота не найден! Проверьте TELEGRAM_BOT_TOKEN и TEST_TELEGRAM_BOT_TOKEN в .env файле!")
         return
     
     # Проверяем, не запущен ли бот в другом процессе или если это dev-окружение
@@ -1160,7 +1160,8 @@ def main() -> None:
     # Поэтому здесь мы не должны запускать polling если этот скрипт импортируется или запускается вместе с server.py
     # Но этот файл запускается отдельно через Supervisor?
     
-    logger.info("🤖 Запуск Telegram бота...")
+    env_mode = "TEST" if is_test_environment() else "PRODUCTION"
+    logger.info(f"🤖 Запуск Telegram бота в режиме {env_mode}...")
     logger.info(f"📍 Web App URL: {WEB_APP_URL}")
     logger.info(f"💾 MongoDB: {MONGO_URL}")
     logger.info(f"🗄 Database: {DB_NAME}")
