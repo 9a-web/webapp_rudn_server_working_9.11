@@ -117,7 +117,8 @@ export const JournalDetailModal = ({
   const handleGenerateInviteLink = async () => {
     try {
       const result = await generateJournalInviteLink(journalId);
-      setInviteLink(result.invite_link);
+      // Используем webapp ссылку для прямого открытия приложения
+      setInviteLink(result.invite_link_webapp || result.invite_link);
       setShowInviteLink(true);
     } catch (error) {
       console.error('Error generating invite link:', error);
