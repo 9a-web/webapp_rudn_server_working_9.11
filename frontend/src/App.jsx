@@ -34,7 +34,7 @@ const AdminPanel = lazy(() => import('./components/AdminPanel'));
 import { UpcomingClassNotification } from './components/UpcomingClassNotification';
 
 const Home = () => {
-  const { user, isReady, showAlert, hapticFeedback } = useTelegram();
+  const { user, isReady, showAlert, hapticFeedback, startParam } = useTelegram();
   const { t } = useTranslation();
   // TEST: Добавляем тестовое состояние для проверки уведомления
   const [testNotification, setTestNotification] = useState(false);
