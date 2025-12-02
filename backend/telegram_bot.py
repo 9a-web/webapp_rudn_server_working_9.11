@@ -489,6 +489,11 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
                 except ValueError:
                     logger.warning(f"⚠️ Некорректный ID пользователя в приглашении: {parts[3]}")
         
+        # Проверяем на персональную ссылку студента: jstudent_{invite_code}
+        elif arg.startswith("jstudent_"):
+            student_invite_code = arg[9:]  # Убираем префикс "jstudent_"
+            logger.info(f"👤 Обнаружена персональная ссылка студента: code={student_invite_code}")
+        
         # Проверяем на приглашение в журнал: journal_{invite_token}
         elif arg.startswith("journal_"):
             journal_invite_token = arg[8:]  # Убираем префикс "journal_"
