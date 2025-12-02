@@ -112,6 +112,8 @@ from models import (
     AttendanceRecordResponse,
     JournalStatsResponse,
     JournalInviteLinkResponse,
+    StudentInviteLinkResponse,
+    JoinStudentRequest,
     MyAttendanceResponse,
     JournalSettings
 )
