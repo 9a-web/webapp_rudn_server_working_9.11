@@ -729,7 +729,7 @@ async def get_user_profile_photo(telegram_id: int):
     try:
         from telegram import Bot
         
-        bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
+        bot_token = get_telegram_bot_token()
         if not bot_token:
             return JSONResponse({"photo_url": None})
         
