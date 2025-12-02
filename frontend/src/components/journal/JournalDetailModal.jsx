@@ -134,10 +134,12 @@ export const JournalDetailModal = ({
 
   // Копирование персональной ссылки студента
   const handleCopyStudentLink = async (student) => {
-    if (!student.invite_link) return;
+    // Используем webapp ссылку для прямого открытия приложения
+    const linkToCopy = student.invite_link_webapp || student.invite_link;
+    if (!linkToCopy) return;
     
     try {
-      await navigator.clipboard.writeText(student.invite_link);
+      await navigator.clipboard.writeText(linkToCopy);
       setCopiedStudentId(student.id);
       if (hapticFeedback?.notificationOccurred) {
         hapticFeedback.notificationOccurred('success');
