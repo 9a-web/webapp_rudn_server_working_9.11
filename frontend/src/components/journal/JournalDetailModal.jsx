@@ -688,6 +688,28 @@ export const JournalDetailModal = ({
             hapticFeedback={hapticFeedback}
           />
         )}
+
+        <CreateSubjectModal
+          isOpen={showCreateSubject}
+          onClose={() => setShowCreateSubject(false)}
+          onCreate={handleCreateSubject}
+          hapticFeedback={hapticFeedback}
+        />
+
+        {showSubjectDetail && (
+          <SubjectDetailModal
+            isOpen={!!showSubjectDetail}
+            onClose={() => {
+              setShowSubjectDetail(null);
+              loadData();
+            }}
+            subjectId={showSubjectDetail}
+            journalId={journalId}
+            telegramId={telegramId}
+            hapticFeedback={hapticFeedback}
+            onSubjectUpdated={loadData}
+          />
+        )}
       </motion.div>
     </AnimatePresence>
   );
