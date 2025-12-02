@@ -28,11 +28,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Импорт конфигурации с выбором токена по ENV
+from config import get_telegram_bot_token, ENV, is_test_environment
+
 # Получение переменных окружения
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_BOT_TOKEN = get_telegram_bot_token()
 MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
 DB_NAME = os.getenv("DB_NAME", "test_database")
 WEB_APP_URL = "https://rudn-schedule.ru"
+
+# Логируем текущее окружение
+logger.info(f"🚀 Telegram Bot запущен в режиме: {'TEST' if is_test_environment() else 'PRODUCTION'}")
 
 # ID администраторов (могут использовать команду /users и /clear_db)
 ADMIN_IDS = [765963392, 1311283832]
