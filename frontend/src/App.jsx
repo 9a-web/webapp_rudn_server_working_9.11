@@ -772,6 +772,8 @@ const Home = () => {
               telegramId={user?.id}
               hapticFeedback={hapticFeedback}
               userSettings={userSettings}
+              pendingJournalId={pendingJournalId}
+              onPendingJournalHandled={() => setPendingJournalId(null)}
             />
           </div>
         )}
