@@ -4872,7 +4872,7 @@ class RUDNScheduleAPITester:
                 return False
             
             journal_data = journal_response.json()
-            journal_id = journal_data['id']
+            journal_id = journal_data['journal_id']
             
             self.log_test("Student Invite Links - Create Journal", True, 
                         f"Successfully created test journal with ID: {journal_id}")
