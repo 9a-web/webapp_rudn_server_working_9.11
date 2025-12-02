@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, ArrowLeft, Users, Calendar, BarChart3, Share2, Settings, 
   UserPlus, Plus, Check, Clock, Link2, Crown, Trash2,
-  BookOpen, GraduationCap, FlaskConical, FileText
+  BookOpen, GraduationCap, FlaskConical, FileText, Copy, ExternalLink
 } from 'lucide-react';
 import {
   getJournalDetail,
