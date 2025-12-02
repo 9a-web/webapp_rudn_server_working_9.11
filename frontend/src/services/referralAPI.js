@@ -17,7 +17,7 @@ const api = axios.create({
 /**
  * Получить реферальный код пользователя
  * @param {number} telegram_id - ID пользователя в Telegram
- * @returns {Promise} - { referral_code, referral_link, bot_username }
+ * @returns {Promise} - { referral_code, referral_link, referral_link_webapp, bot_username }
  */
 export const getReferralCode = async (telegram_id) => {
   const response = await api.get(`/referral/code/${telegram_id}`);
@@ -44,8 +44,20 @@ export const getReferralTree = async (telegram_id) => {
   return response.data;
 };
 
+/**
+ * Обработать реферальный код через Web App
+ * Вызывается при открытии приложения по ссылке t.me/bot/app?startapp=ref_CODE
+ * @param {Object} data - { telegram_id, username, first_name, last_name, referral_code }
+ * @returns {Promise} - { success, message, referrer_name, bonus_points }
+ */
+export const processReferralWebApp = async (data) => {
+  const response = await api.post('/referral/process-webapp', data);
+  return response.data;
+};
+
 export default {
   getReferralCode,
   getReferralStats,
   getReferralTree,
+  processReferralWebApp,
 };
