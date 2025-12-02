@@ -354,6 +354,97 @@ async def join_user_to_journal(telegram_id: int, username: str, first_name: str,
         "status": "added_to_pending"
     }
 
+
+async def join_user_to_journal_by_student_code(telegram_id: int, username: str, first_name: str, student_invite_code: str) -> dict:
+    """
+    Привязывает пользователя к конкретному студенту в журнале по персональной ссылке
+    """
+    # Находим студента по invite_code
+    student = await db.journal_students.find_one({"invite_code": student_invite_code})
+    
+    if not student:
+        logger.warning(f"⚠️ Студент с invite_code {student_invite_code} не найден")
+        return None
+    
+    journal_id = student["journal_id"]
+    
+    # Находим журнал
+    journal_doc = await db.attendance_journals.find_one({"journal_id": journal_id})
+    
+    if not journal_doc:
+        logger.warning(f"⚠️ Журнал {journal_id} не найден")
+        return None
+    
+    # Проверяем, не является ли пользователь владельцем
+    if journal_doc.get("owner_id") == telegram_id:
+        return {
+            "journal": journal_doc,
+            "student": student,
+            "status": "owner"
+        }
+    
+    # Проверяем, не занято ли уже место другим пользователем
+    if student.get("is_linked") and student.get("telegram_id") != telegram_id:
+        return {
+            "journal": journal_doc,
+            "student": student,
+            "status": "occupied"
+        }
+    
+    # Проверяем, не привязан ли уже этот пользователь к другому студенту
+    existing_link = await db.journal_students.find_one({
+        "journal_id": journal_id,
+        "telegram_id": telegram_id,
+        "is_linked": True
+    })
+    if existing_link and existing_link["id"] != student["id"]:
+        return {
+            "journal": journal_doc,
+            "student": existing_link,
+            "status": "already_linked_other"
+        }
+    
+    # Если уже привязан к этому же студенту
+    if student.get("is_linked") and student.get("telegram_id") == telegram_id:
+        return {
+            "journal": journal_doc,
+            "student": student,
+            "status": "already_linked"
+        }
+    
+    # Привязываем пользователя к студенту
+    await db.journal_students.update_one(
+        {"id": student["id"]},
+        {"$set": {
+            "telegram_id": telegram_id,
+            "username": username,
+            "first_name": first_name,
+            "is_linked": True,
+            "linked_at": datetime.utcnow()
+        }}
+    )
+    
+    # Удаляем из pending если был там
+    await db.journal_pending_members.delete_many({
+        "journal_id": journal_id,
+        "telegram_id": telegram_id
+    })
+    
+    # Обновляем студента в локальной переменной для ответа
+    student["telegram_id"] = telegram_id
+    student["username"] = username
+    student["first_name"] = first_name
+    student["is_linked"] = True
+    
+    logger.info(f"✅ Пользователь {telegram_id} привязан к студенту '{student['full_name']}' в журнале {journal_id}")
+    
+    return {
+        "journal": journal_doc,
+        "student": student,
+        "status": "linked"
+    }
+
+
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     Обработчик команды /start
