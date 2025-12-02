@@ -191,6 +191,63 @@ export const getPendingMembers = async (journalId) => {
   }
 };
 
+// ===== Предметы =====
+
+// Создать предмет
+export const createSubject = async (journalId, subjectData) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/api/journals/${journalId}/subjects`, subjectData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating subject:', error);
+    throw error;
+  }
+};
+
+// Получить список предметов
+export const getJournalSubjects = async (journalId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/journals/${journalId}/subjects`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching subjects:', error);
+    throw error;
+  }
+};
+
+// Получить детали предмета с занятиями
+export const getSubjectDetail = async (subjectId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/journals/subjects/${subjectId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching subject detail:', error);
+    throw error;
+  }
+};
+
+// Обновить предмет
+export const updateSubject = async (subjectId, data) => {
+  try {
+    const response = await axios.put(`${API_BASE_URL}/api/journals/subjects/${subjectId}`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating subject:', error);
+    throw error;
+  }
+};
+
+// Удалить предмет
+export const deleteSubject = async (subjectId) => {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/api/journals/subjects/${subjectId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting subject:', error);
+    throw error;
+  }
+};
+
 // ===== Занятия =====
 
 // Создать занятие
