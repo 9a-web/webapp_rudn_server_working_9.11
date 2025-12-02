@@ -857,3 +857,245 @@ class ReferralConnection(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     points_earned: int = 0  # сколько баллов referrer заработал с этого реферала
 
+
+
+# ============ Модели для журнала посещений ============
+
+class AttendanceStatus(str):
+    """Статусы посещаемости"""
+    PRESENT = "present"      # Присутствовал
+    ABSENT = "absent"        # Отсутствовал
+    EXCUSED = "excused"      # Уважительная причина
+    LATE = "late"            # Опоздал
+    UNMARKED = "unmarked"    # Не отмечен
+
+
+class JournalSettings(BaseModel):
+    """Настройки журнала"""
+    allow_self_mark: bool = False        # Могут ли участники отмечаться сами
+    show_group_stats: bool = True        # Показывать общую статистику
+    absence_reasons: List[str] = ["Болезнь", "Уважительная", "Семейные обстоятельства"]
+
+
+class AttendanceJournal(BaseModel):
+    """Модель журнала посещений"""
+    journal_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str                            # Название журнала (предмет)
+    group_name: str                      # Название группы
+    description: Optional[str] = None    # Описание (семестр, год и т.д.)
+    owner_id: int                        # Telegram ID старосты
+    color: str = "purple"                # Цвет для UI
+    invite_token: str = Field(default_factory=lambda: str(uuid.uuid4())[:12])
+    settings: JournalSettings = Field(default_factory=JournalSettings)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class JournalCreate(BaseModel):
+    """Запрос на создание журнала"""
+    name: str
+    group_name: str
+    description: Optional[str] = None
+    telegram_id: int                     # Создатель (староста)
+    color: str = "purple"
+
+
+class JournalStudent(BaseModel):
+    """Студент в журнале"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    journal_id: str
+    full_name: str                       # ФИО из списка
+    telegram_id: Optional[int] = None    # После привязки
+    username: Optional[str] = None       # После привязки
+    first_name: Optional[str] = None     # После привязки
+    is_linked: bool = False              # Привязан ли к Telegram
+    linked_at: Optional[datetime] = None # Когда привязан
+    order: int = 0                       # Порядок в списке
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class JournalStudentCreate(BaseModel):
+    """Запрос на добавление студента"""
+    full_name: str
+
+
+class JournalStudentBulkCreate(BaseModel):
+    """Массовое добавление студентов"""
+    names: List[str]                     # Список ФИО
+
+
+class JournalStudentLink(BaseModel):
+    """Привязка Telegram к ФИО"""
+    telegram_id: int
+    username: Optional[str] = None
+    first_name: Optional[str] = None
+
+
+class JournalSession(BaseModel):
+    """Занятие в журнале"""
+    session_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    journal_id: str
+    date: str                            # YYYY-MM-DD
+    title: str                           # Название занятия
+    description: Optional[str] = None
+    type: str = "lecture"                # lecture, seminar, lab, exam
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: int                      # Кто создал
+
+
+class JournalSessionCreate(BaseModel):
+    """Запрос на создание занятия"""
+    date: str                            # YYYY-MM-DD
+    title: str
+    description: Optional[str] = None
+    type: str = "lecture"
+    telegram_id: int                     # Кто создаёт
+
+
+class AttendanceRecord(BaseModel):
+    """Запись посещаемости"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    journal_id: str
+    session_id: str
+    student_id: str                      # ID из journal_students
+    status: str = "unmarked"             # present, absent, excused, late, unmarked
+    reason: Optional[str] = None         # Причина (если есть)
+    note: Optional[str] = None           # Заметка
+    marked_by: int                       # Кто отметил
+    marked_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class AttendanceRecordCreate(BaseModel):
+    """Запрос на отметку посещаемости"""
+    student_id: str
+    status: str
+    reason: Optional[str] = None
+    note: Optional[str] = None
+
+
+class AttendanceBulkCreate(BaseModel):
+    """Массовая отметка посещаемости"""
+    records: List[AttendanceRecordCreate]
+    telegram_id: int                     # Кто отмечает
+
+
+class JournalPendingMember(BaseModel):
+    """Ожидающий привязки участник"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    journal_id: str
+    telegram_id: int
+    username: Optional[str] = None
+    first_name: Optional[str] = None
+    joined_at: datetime = Field(default_factory=datetime.utcnow)
+    is_linked: bool = False
+
+
+class JournalJoinRequest(BaseModel):
+    """Запрос на присоединение к журналу"""
+    invite_token: str
+    telegram_id: int
+    username: Optional[str] = None
+    first_name: Optional[str] = None
+
+
+# ===== Response модели =====
+
+class JournalResponse(BaseModel):
+    """Ответ с журналом"""
+    journal_id: str
+    name: str
+    group_name: str
+    description: Optional[str]
+    owner_id: int
+    color: str
+    invite_token: str
+    settings: JournalSettings
+    created_at: datetime
+    updated_at: datetime
+    total_students: int = 0
+    linked_students: int = 0
+    total_sessions: int = 0
+    is_owner: bool = False
+    my_attendance_percent: Optional[float] = None
+
+
+class JournalStudentResponse(BaseModel):
+    """Ответ со студентом"""
+    id: str
+    journal_id: str
+    full_name: str
+    telegram_id: Optional[int]
+    username: Optional[str]
+    first_name: Optional[str]
+    is_linked: bool
+    linked_at: Optional[datetime]
+    order: int
+    attendance_percent: Optional[float] = None
+    present_count: int = 0
+    absent_count: int = 0
+    excused_count: int = 0
+    late_count: int = 0
+    total_sessions: int = 0
+
+
+class JournalSessionResponse(BaseModel):
+    """Ответ с занятием"""
+    session_id: str
+    journal_id: str
+    date: str
+    title: str
+    description: Optional[str]
+    type: str
+    created_at: datetime
+    created_by: int
+    attendance_filled: int = 0           # Сколько отмечено
+    total_students: int = 0              # Всего студентов
+    present_count: int = 0
+    absent_count: int = 0
+
+
+class AttendanceRecordResponse(BaseModel):
+    """Ответ с записью посещаемости"""
+    id: str
+    journal_id: str
+    session_id: str
+    student_id: str
+    student_name: str
+    status: str
+    reason: Optional[str]
+    note: Optional[str]
+    marked_by: int
+    marked_at: datetime
+
+
+class JournalStatsResponse(BaseModel):
+    """Статистика журнала"""
+    journal_id: str
+    total_students: int
+    linked_students: int
+    total_sessions: int
+    overall_attendance_percent: float
+    students_stats: List[JournalStudentResponse]
+    sessions_stats: List[JournalSessionResponse]
+
+
+class JournalInviteLinkResponse(BaseModel):
+    """Ответ со ссылкой приглашения"""
+    invite_link: str
+    invite_token: str
+    journal_id: str
+    bot_username: str
+
+
+class MyAttendanceResponse(BaseModel):
+    """Мои посещения"""
+    student_id: str
+    full_name: str
+    attendance_percent: float
+    present_count: int
+    absent_count: int
+    excused_count: int
+    late_count: int
+    total_sessions: int
+    records: List[AttendanceRecordResponse]
+
