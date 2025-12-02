@@ -468,13 +468,13 @@ export const JournalDetailModal = ({
                   </div>
                 )}
 
-                {/* Sessions Tab */}
+                {/* Subjects Tab (instead of Sessions) */}
                 {activeTab === 'sessions' && isOwner && (
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-white">Занятия</h3>
+                      <h3 className="text-lg font-semibold text-white">Предметы</h3>
                       <button
-                        onClick={() => setShowCreateSession(true)}
+                        onClick={() => setShowCreateSubject(true)}
                         className={`flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r ${gradient} rounded-lg text-sm text-white`}
                       >
                         <Plus className="w-4 h-4" />
@@ -482,62 +482,44 @@ export const JournalDetailModal = ({
                       </button>
                     </div>
 
-                    {sessions.length === 0 ? (
+                    {subjects.length === 0 ? (
                       <div className="text-center py-10">
-                        <Calendar className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                        <p className="text-gray-400">Нет занятий</p>
-                        <p className="text-gray-500 text-sm mt-1">Добавьте первое занятие</p>
+                        <BookOpen className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                        <p className="text-gray-400">Нет предметов</p>
+                        <p className="text-gray-500 text-sm mt-1">Добавьте первый предмет для ведения посещаемости</p>
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {sessions.map((session) => {
-                          const SessionIcon = SESSION_ICONS[session.type] || BookOpen;
-                          const sessionGradient = SESSION_COLORS[session.type] || SESSION_COLORS.lecture;
+                        {subjects.map((subject) => {
+                          const subjectGradient = COLORS[subject.color] || COLORS.blue;
                           
                           return (
                             <motion.div
-                              key={session.session_id}
+                              key={subject.subject_id}
                               whileTap={{ scale: 0.98 }}
-                              onClick={() => setShowAttendance(session.session_id)}
+                              onClick={() => setShowSubjectDetail(subject.subject_id)}
                               className="bg-white/5 rounded-xl p-4 cursor-pointer hover:bg-white/10 transition-colors"
                             >
                               <div className="flex items-start justify-between">
                                 <div className="flex items-start gap-3">
-                                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${sessionGradient} flex items-center justify-center flex-shrink-0`}>
-                                    <SessionIcon className="w-5 h-5 text-white" />
+                                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${subjectGradient} flex items-center justify-center flex-shrink-0`}>
+                                    <BookOpen className="w-6 h-6 text-white" />
                                   </div>
                                   <div>
-                                    <p className="text-white font-medium">{session.title}</p>
-                                    <p className="text-sm text-gray-400 mt-0.5">
-                                      {new Date(session.date).toLocaleDateString('ru-RU', {
-                                        day: 'numeric',
-                                        month: 'long'
-                                      })}
+                                    <p className="text-white font-medium text-lg">{subject.name}</p>
+                                    {subject.description && (
+                                      <p className="text-sm text-gray-400 mt-0.5">{subject.description}</p>
+                                    )}
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      {subject.sessions_count} {subject.sessions_count === 1 ? 'занятие' : 
+                                        subject.sessions_count >= 2 && subject.sessions_count <= 4 ? 'занятия' : 'занятий'}
                                     </p>
                                   </div>
-                                </div>
-                                <div className="text-right">
-                                  <p className={`text-sm font-medium ${
-                                    session.attendance_filled === session.total_students
-                                      ? 'text-green-400'
-                                      : 'text-yellow-400'
-                                  }`}>
-                                    {session.present_count}/{session.total_students}
-                                  </p>
-                                  <p className="text-xs text-gray-500">присутствуют</p>
-                                </div>
-                              </div>
-                              <div className="mt-3 flex items-center justify-between">
-                                <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden mr-3">
-                                  <div
-                                    className={`h-full bg-gradient-to-r ${sessionGradient} rounded-full`}
-                                    style={{ width: `${(session.present_count / Math.max(1, session.total_students)) * 100}%` }}
-                                  />
                                 </div>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleDeleteSession(session.session_id);
+                                    handleDeleteSubject(subject.subject_id);
                                   }}
                                   className="p-1.5 rounded-lg hover:bg-red-500/20 text-gray-500 hover:text-red-400 transition-colors"
                                 >
