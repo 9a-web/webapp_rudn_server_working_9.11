@@ -3943,6 +3943,10 @@ async def add_student(journal_id: str, data: JournalStudentCreate):
         )
         await db.journal_students.insert_one(student.model_dump())
         
+        # Генерируем ссылку для студента
+        bot_username = os.environ.get("TELEGRAM_BOT_USERNAME", "rudn_mosbot")
+        invite_link = f"https://t.me/{bot_username}?start=jstudent_{student.invite_code}"
+        
         return JournalStudentResponse(
             id=student.id,
             journal_id=student.journal_id,
@@ -3952,7 +3956,9 @@ async def add_student(journal_id: str, data: JournalStudentCreate):
             first_name=None,
             is_linked=False,
             linked_at=None,
-            order=student.order
+            order=student.order,
+            invite_code=student.invite_code,
+            invite_link=invite_link
         )
     except HTTPException:
         raise
