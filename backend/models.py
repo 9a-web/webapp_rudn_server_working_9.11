@@ -1155,6 +1155,7 @@ class ProcessJournalInviteRequest(BaseModel):
     telegram_id: int
     username: Optional[str] = None
     first_name: Optional[str] = None
+    last_name: Optional[str] = None
     invite_type: str  # "journal" или "jstudent"
     invite_code: str  # invite_token для журнала или invite_code для студента
 
