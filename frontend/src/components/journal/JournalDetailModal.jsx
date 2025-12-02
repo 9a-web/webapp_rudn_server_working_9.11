@@ -66,6 +66,7 @@ export const JournalDetailModal = ({
   const [journal, setJournal] = useState(null);
   const [students, setStudents] = useState([]);
   const [sessions, setSessions] = useState([]);
+  const [subjects, setSubjects] = useState([]);
   const [pendingMembers, setPendingMembers] = useState([]);
   const [activeTab, setActiveTab] = useState('students');
   const [isLoading, setIsLoading] = useState(true);
@@ -74,6 +75,8 @@ export const JournalDetailModal = ({
   // Modals
   const [showAddStudents, setShowAddStudents] = useState(false);
   const [showCreateSession, setShowCreateSession] = useState(false);
+  const [showCreateSubject, setShowCreateSubject] = useState(false);
+  const [showSubjectDetail, setShowSubjectDetail] = useState(null); // subject_id
   const [showAttendance, setShowAttendance] = useState(null); // session_id
   const [showLinkStudent, setShowLinkStudent] = useState(null); // student to link
   const [showInviteLink, setShowInviteLink] = useState(false);
@@ -85,16 +88,18 @@ export const JournalDetailModal = ({
     
     setIsLoading(true);
     try {
-      const [journalData, studentsData, sessionsData, pendingData] = await Promise.all([
+      const [journalData, studentsData, sessionsData, subjectsData, pendingData] = await Promise.all([
         getJournalDetail(journalId, telegramId),
         getJournalStudents(journalId),
         getJournalSessions(journalId),
+        getJournalSubjects(journalId),
         getPendingMembers(journalId)
       ]);
       
       setJournal(journalData);
       setStudents(studentsData);
       setSessions(sessionsData);
+      setSubjects(subjectsData);
       setPendingMembers(pendingData);
     } catch (error) {
       console.error('Error loading journal data:', error);
