@@ -123,3 +123,15 @@ test_plan:
 agent_communication:
   - agent: "testing"
     message: "✅ COMPLETED: Comprehensive testing of all Admin API endpoints for РУДН Schedule App. ALL 8 endpoints working correctly and returning proper data formats as expected by frontend. Key findings: 1) Hour format in hourly-activity correctly returns integers 0-23 as required, 2) All endpoints return non-empty data with proper structure, 3) Top-users endpoint supports metrics: points, achievements, tasks, schedule_views (correctly rejects unsupported metrics), 4) All data types and field names match frontend expectations. Backend URL: http://localhost:8001 - Admin panel should populate correctly."
+
+  - task: "Journal API Flow (Create, Invite, Stats)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "user"
+        comment: "✅ Verified Journal creation, invite link generation (Telegram format), and stats endpoint via custom test script."
