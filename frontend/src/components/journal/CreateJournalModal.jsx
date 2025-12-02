@@ -89,21 +89,6 @@ export const CreateJournalModal = ({ isOpen, onClose, onCreate, hapticFeedback, 
 
           {/* Form */}
           <div className="space-y-5">
-            {/* Название предмета */}
-            <div>
-              <label className="flex items-center gap-2 text-sm text-gray-400 mb-2">
-                <BookOpen className="w-4 h-4" />
-                Название предмета
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Математический анализ"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 transition-colors"
-              />
-            </div>
-
             {/* Название группы */}
             <div>
               <label className="flex items-center gap-2 text-sm text-gray-400 mb-2">
@@ -131,7 +116,7 @@ export const CreateJournalModal = ({ isOpen, onClose, onCreate, hapticFeedback, 
               />
             </div>
 
-            {/* Цвет */}
+            {/* Цвет журнала */}
             <div>
               <label className="flex items-center gap-2 text-sm text-gray-400 mb-3">
                 <Palette className="w-4 h-4" />
@@ -153,9 +138,9 @@ export const CreateJournalModal = ({ isOpen, onClose, onCreate, hapticFeedback, 
           <motion.button
             whileTap={{ scale: 0.98 }}
             onClick={handleCreate}
-            disabled={!name.trim() || !groupName.trim() || isLoading}
+            disabled={!groupName.trim() || isLoading}
             className={`w-full mt-6 py-4 rounded-2xl font-semibold text-white transition-all ${
-              name.trim() && groupName.trim() && !isLoading
+              groupName.trim() && !isLoading
                 ? `bg-gradient-to-r ${COLORS.find(c => c.id === color)?.gradient || 'from-purple-400 to-pink-400'}`
                 : 'bg-white/10 text-gray-500'
             }`}
