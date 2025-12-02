@@ -4855,7 +4855,8 @@ class RUDNScheduleAPITester:
             # Create journal
             journal_payload = {
                 "name": "Журнал для тестирования приглашений студентов",
-                "subject": "Тестирование приглашений",
+                "group_name": "Группа для тестирования приглашений",
+                "description": "Тестирование приглашений студентов",
                 "telegram_id": test_telegram_id
             }
             
