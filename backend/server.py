@@ -91,7 +91,29 @@ from models import (
     ReferralStats,
     ReferralTreeNode,
     ReferralCodeResponse,
-    ReferralConnection
+    ReferralConnection,
+    # Модели для журнала посещений
+    AttendanceJournal,
+    JournalCreate,
+    JournalStudent,
+    JournalStudentCreate,
+    JournalStudentBulkCreate,
+    JournalStudentLink,
+    JournalSession,
+    JournalSessionCreate,
+    AttendanceRecord,
+    AttendanceRecordCreate,
+    AttendanceBulkCreate,
+    JournalPendingMember,
+    JournalJoinRequest,
+    JournalResponse,
+    JournalStudentResponse,
+    JournalSessionResponse,
+    AttendanceRecordResponse,
+    JournalStatsResponse,
+    JournalInviteLinkResponse,
+    MyAttendanceResponse,
+    JournalSettings
 )
 from notifications import get_notification_service
 from scheduler import get_scheduler  # Старая система (резерв)
