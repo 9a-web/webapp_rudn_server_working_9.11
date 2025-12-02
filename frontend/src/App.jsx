@@ -236,6 +236,12 @@ const Home = () => {
           
           // Переключаемся на вкладку Журнал
           setActiveTab('journal');
+          
+          // Если получили journal_id - сохраняем для автоматического открытия
+          if (result.journal_id) {
+            console.log('📖 Устанавливаем pendingJournalId:', result.journal_id);
+            setPendingJournalId(result.journal_id);
+          }
         } else {
           console.log('ℹ️ Приглашение в журнал не применено:', result.message);
           showAlert(result.message);
