@@ -650,7 +650,10 @@ const Home = () => {
         {/* Раздел "Журнал" */}
         {activeTab === 'journal' && (
           <div className="px-4">
-            <JournalSection />
+            <JournalSection 
+              telegramId={user?.id}
+              hapticFeedback={hapticFeedback}
+            />
           </div>
         )}
         
