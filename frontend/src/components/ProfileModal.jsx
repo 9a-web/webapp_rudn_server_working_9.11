@@ -69,12 +69,14 @@ export const ProfileModal = ({
     };
   }, [isOpen, onClose]);
 
-  // Копирование реферальной ссылки
+  // Копирование реферальной ссылки (используем Web App ссылку)
   const copyReferralLink = async () => {
-    if (!referralData?.referral_link) return;
+    // Приоритет: Web App ссылка, иначе обычная ссылка
+    const linkToCopy = referralData?.referral_link_webapp || referralData?.referral_link;
+    if (!linkToCopy) return;
     
     try {
-      await navigator.clipboard.writeText(referralData.referral_link);
+      await navigator.clipboard.writeText(linkToCopy);
       setCopiedLink(true);
       if (hapticFeedback) hapticFeedback('impact', 'medium');
       
@@ -83,7 +85,7 @@ export const ProfileModal = ({
       console.error('Ошибка копирования:', error);
       // Фоллбэк для старых браузеров
       const textArea = document.createElement('textarea');
-      textArea.value = referralData.referral_link;
+      textArea.value = linkToCopy;
       document.body.appendChild(textArea);
       textArea.select();
       document.execCommand('copy');
