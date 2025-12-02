@@ -101,6 +101,9 @@ const Home = () => {
   const [userAchievements, setUserAchievements] = useState([]);
   const [userStats, setUserStats] = useState(null);
   const [newAchievement, setNewAchievement] = useState(null); // Для показа уведомления
+  
+  // Состояние для реферальной системы Web App
+  const [referralProcessed, setReferralProcessed] = useState(false);
 
   // Состояние для нижнего меню навигации (загружаем из localStorage)
   const [activeTab, setActiveTab] = useState(() => {
