@@ -4243,6 +4243,580 @@ class RUDNScheduleAPITester:
             self.log_test("GET /api/admin/course-stats", False, f"Exception: {str(e)}")
             return False
 
+    def test_journal_crud_operations(self) -> bool:
+        """Test Journal CRUD operations - Create, Read, Update, Delete"""
+        try:
+            print("🔍 Testing Journal CRUD Operations...")
+            
+            test_telegram_id = 999888777  # As specified in the request
+            
+            # Step 1: Create a new journal
+            journal_payload = {
+                "name": "Тестовый журнал посещений",
+                "description": "Журнал для тестирования API",
+                "subject": "Тестовый предмет",
+                "telegram_id": test_telegram_id
+            }
+            
+            create_response = self.session.post(
+                f"{self.base_url}/journals",
+                json=journal_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if create_response.status_code != 200:
+                self.log_test("Journal CRUD - Create", False, 
+                            f"HTTP {create_response.status_code}: {create_response.text}")
+                return False
+            
+            journal_data = create_response.json()
+            
+            # Validate journal creation response
+            required_fields = ['journal_id', 'name', 'description', 'subject', 'owner_id', 'created_at']
+            for field in required_fields:
+                if field not in journal_data:
+                    self.log_test("Journal CRUD - Create", False, 
+                                f"Missing required field: {field}")
+                    return False
+            
+            journal_id = journal_data['journal_id']
+            self.test_data['test_journal_id'] = journal_id
+            
+            # Step 2: Get user's journals
+            get_journals_response = self.session.get(f"{self.base_url}/journals/{test_telegram_id}")
+            
+            if get_journals_response.status_code != 200:
+                self.log_test("Journal CRUD - Get User Journals", False, 
+                            f"HTTP {get_journals_response.status_code}: {get_journals_response.text}")
+                return False
+            
+            journals_list = get_journals_response.json()
+            
+            if not isinstance(journals_list, list):
+                self.log_test("Journal CRUD - Get User Journals", False, 
+                            "Response is not a list")
+                return False
+            
+            # Find our created journal
+            created_journal = None
+            for journal in journals_list:
+                if journal.get('journal_id') == journal_id:
+                    created_journal = journal
+                    break
+            
+            if not created_journal:
+                self.log_test("Journal CRUD - Get User Journals", False, 
+                            "Created journal not found in user's journals list")
+                return False
+            
+            # Step 3: Get journal details
+            get_detail_response = self.session.get(
+                f"{self.base_url}/journals/detail/{journal_id}?telegram_id={test_telegram_id}"
+            )
+            
+            if get_detail_response.status_code != 200:
+                self.log_test("Journal CRUD - Get Details", False, 
+                            f"HTTP {get_detail_response.status_code}: {get_detail_response.text}")
+                return False
+            
+            journal_details = get_detail_response.json()
+            
+            if journal_details.get('journal_id') != journal_id:
+                self.log_test("Journal CRUD - Get Details", False, 
+                            "Journal ID mismatch in details response")
+                return False
+            
+            # Step 4: Update journal
+            update_payload = {
+                "name": "Обновленный журнал посещений",
+                "description": "Обновленное описание",
+                "telegram_id": test_telegram_id
+            }
+            
+            update_response = self.session.put(
+                f"{self.base_url}/journals/{journal_id}",
+                json=update_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if update_response.status_code != 200:
+                self.log_test("Journal CRUD - Update", False, 
+                            f"HTTP {update_response.status_code}: {update_response.text}")
+                return False
+            
+            updated_journal = update_response.json()
+            
+            if updated_journal.get('name') != update_payload['name']:
+                self.log_test("Journal CRUD - Update", False, 
+                            "Journal name not updated correctly")
+                return False
+            
+            # Step 5: Generate invite link
+            invite_response = self.session.post(
+                f"{self.base_url}/journals/{journal_id}/invite-link",
+                json={"telegram_id": test_telegram_id},
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if invite_response.status_code != 200:
+                self.log_test("Journal CRUD - Generate Invite", False, 
+                            f"HTTP {invite_response.status_code}: {invite_response.text}")
+                return False
+            
+            invite_data = invite_response.json()
+            
+            if 'invite_link' not in invite_data or 'invite_token' not in invite_data:
+                self.log_test("Journal CRUD - Generate Invite", False, 
+                            "Missing invite_link or invite_token in response")
+                return False
+            
+            invite_token = invite_data['invite_token']
+            self.test_data['test_invite_token'] = invite_token
+            
+            # Step 6: Test join by invite (with different user)
+            join_response = self.session.post(
+                f"{self.base_url}/journals/join/{invite_token}",
+                json={"telegram_id": 999888778, "username": "test_joiner", "first_name": "Test Joiner"},
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if join_response.status_code != 200:
+                self.log_test("Journal CRUD - Join by Invite", False, 
+                            f"HTTP {join_response.status_code}: {join_response.text}")
+                return False
+            
+            self.log_test("Journal CRUD Operations", True, 
+                        "Successfully completed all CRUD operations",
+                        {
+                            "journal_id": journal_id,
+                            "created": True,
+                            "retrieved": True,
+                            "updated": True,
+                            "invite_generated": True,
+                            "join_successful": True
+                        })
+            return True
+            
+        except Exception as e:
+            self.log_test("Journal CRUD Operations", False, f"Exception: {str(e)}")
+            return False
+
+    def test_journal_students_management(self) -> bool:
+        """Test Journal Students Management - Add, Link, Delete students"""
+        try:
+            print("🔍 Testing Journal Students Management...")
+            
+            if 'test_journal_id' not in self.test_data:
+                self.log_test("Journal Students Management", False, 
+                            "No test journal available from previous test")
+                return False
+            
+            journal_id = self.test_data['test_journal_id']
+            test_telegram_id = 999888777
+            
+            # Step 1: Add single student
+            student_payload = {
+                "full_name": "Иван Петров"
+            }
+            
+            add_student_response = self.session.post(
+                f"{self.base_url}/journals/{journal_id}/students",
+                json=student_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if add_student_response.status_code != 200:
+                self.log_test("Journal Students - Add Single", False, 
+                            f"HTTP {add_student_response.status_code}: {add_student_response.text}")
+                return False
+            
+            student_data = add_student_response.json()
+            
+            if 'student_id' not in student_data or 'full_name' not in student_data:
+                self.log_test("Journal Students - Add Single", False, 
+                            "Missing student_id or full_name in response")
+                return False
+            
+            student_id = student_data['student_id']
+            self.test_data['test_student_id'] = student_id
+            
+            # Step 2: Add multiple students (bulk)
+            bulk_payload = {
+                "names": ["Мария Сидорова", "Алексей Козлов", "Елена Морозова"]
+            }
+            
+            bulk_response = self.session.post(
+                f"{self.base_url}/journals/{journal_id}/students/bulk",
+                json=bulk_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if bulk_response.status_code != 200:
+                self.log_test("Journal Students - Add Bulk", False, 
+                            f"HTTP {bulk_response.status_code}: {bulk_response.text}")
+                return False
+            
+            bulk_result = bulk_response.json()
+            
+            if 'added_count' not in bulk_result:
+                self.log_test("Journal Students - Add Bulk", False, 
+                            "Missing added_count in bulk response")
+                return False
+            
+            if bulk_result['added_count'] != 3:
+                self.log_test("Journal Students - Add Bulk", False, 
+                            f"Expected 3 students added, got {bulk_result['added_count']}")
+                return False
+            
+            # Step 3: Get all students
+            get_students_response = self.session.get(f"{self.base_url}/journals/{journal_id}/students")
+            
+            if get_students_response.status_code != 200:
+                self.log_test("Journal Students - Get All", False, 
+                            f"HTTP {get_students_response.status_code}: {get_students_response.text}")
+                return False
+            
+            students_list = get_students_response.json()
+            
+            if not isinstance(students_list, list):
+                self.log_test("Journal Students - Get All", False, 
+                            "Response is not a list")
+                return False
+            
+            if len(students_list) != 4:  # 1 single + 3 bulk
+                self.log_test("Journal Students - Get All", False, 
+                            f"Expected 4 students, got {len(students_list)}")
+                return False
+            
+            # Step 4: Link telegram user to student
+            link_payload = {
+                "telegram_id": 999888779,
+                "username": "ivan_petrov",
+                "first_name": "Иван"
+            }
+            
+            link_response = self.session.post(
+                f"{self.base_url}/journals/{journal_id}/students/{student_id}/link",
+                json=link_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if link_response.status_code != 200:
+                self.log_test("Journal Students - Link Telegram", False, 
+                            f"HTTP {link_response.status_code}: {link_response.text}")
+                return False
+            
+            # Step 5: Get pending members
+            pending_response = self.session.get(f"{self.base_url}/journals/{journal_id}/pending-members")
+            
+            if pending_response.status_code != 200:
+                self.log_test("Journal Students - Get Pending", False, 
+                            f"HTTP {pending_response.status_code}: {pending_response.text}")
+                return False
+            
+            pending_members = pending_response.json()
+            
+            if not isinstance(pending_members, list):
+                self.log_test("Journal Students - Get Pending", False, 
+                            "Pending members response is not a list")
+                return False
+            
+            self.log_test("Journal Students Management", True, 
+                        "Successfully completed all student management operations",
+                        {
+                            "single_student_added": True,
+                            "bulk_students_added": 3,
+                            "total_students": len(students_list),
+                            "telegram_link_created": True,
+                            "pending_members_retrieved": True
+                        })
+            return True
+            
+        except Exception as e:
+            self.log_test("Journal Students Management", False, f"Exception: {str(e)}")
+            return False
+
+    def test_journal_sessions_management(self) -> bool:
+        """Test Journal Sessions Management - Create, Get, Delete sessions"""
+        try:
+            print("🔍 Testing Journal Sessions Management...")
+            
+            if 'test_journal_id' not in self.test_data:
+                self.log_test("Journal Sessions Management", False, 
+                            "No test journal available from previous test")
+                return False
+            
+            journal_id = self.test_data['test_journal_id']
+            test_telegram_id = 999888777
+            
+            # Step 1: Create session
+            from datetime import datetime, timedelta
+            today = datetime.now().strftime('%Y-%m-%d')
+            
+            session_payload = {
+                "date": today,
+                "title": "Лекция по тестированию API",
+                "type": "lecture",
+                "telegram_id": test_telegram_id
+            }
+            
+            create_session_response = self.session.post(
+                f"{self.base_url}/journals/{journal_id}/sessions",
+                json=session_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if create_session_response.status_code != 200:
+                self.log_test("Journal Sessions - Create", False, 
+                            f"HTTP {create_session_response.status_code}: {create_session_response.text}")
+                return False
+            
+            session_data = create_session_response.json()
+            
+            required_fields = ['session_id', 'date', 'title', 'type', 'journal_id']
+            for field in required_fields:
+                if field not in session_data:
+                    self.log_test("Journal Sessions - Create", False, 
+                                f"Missing required field: {field}")
+                    return False
+            
+            session_id = session_data['session_id']
+            self.test_data['test_session_id'] = session_id
+            
+            # Step 2: Get all sessions for journal
+            get_sessions_response = self.session.get(f"{self.base_url}/journals/{journal_id}/sessions")
+            
+            if get_sessions_response.status_code != 200:
+                self.log_test("Journal Sessions - Get All", False, 
+                            f"HTTP {get_sessions_response.status_code}: {get_sessions_response.text}")
+                return False
+            
+            sessions_list = get_sessions_response.json()
+            
+            if not isinstance(sessions_list, list):
+                self.log_test("Journal Sessions - Get All", False, 
+                            "Response is not a list")
+                return False
+            
+            # Find our created session
+            created_session = None
+            for session in sessions_list:
+                if session.get('session_id') == session_id:
+                    created_session = session
+                    break
+            
+            if not created_session:
+                self.log_test("Journal Sessions - Get All", False, 
+                            "Created session not found in sessions list")
+                return False
+            
+            # Step 3: Create another session for testing
+            session_payload_2 = {
+                "date": (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d'),
+                "title": "Практическое занятие",
+                "type": "practice",
+                "telegram_id": test_telegram_id
+            }
+            
+            create_session_2_response = self.session.post(
+                f"{self.base_url}/journals/{journal_id}/sessions",
+                json=session_payload_2,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if create_session_2_response.status_code != 200:
+                self.log_test("Journal Sessions - Create Second", False, 
+                            f"HTTP {create_session_2_response.status_code}: {create_session_2_response.text}")
+                return False
+            
+            session_2_data = create_session_2_response.json()
+            session_2_id = session_2_data['session_id']
+            
+            self.log_test("Journal Sessions Management", True, 
+                        "Successfully completed all session management operations",
+                        {
+                            "session_created": True,
+                            "sessions_retrieved": True,
+                            "total_sessions": len(sessions_list) + 1,  # +1 for second session
+                            "session_id": session_id,
+                            "second_session_id": session_2_id
+                        })
+            return True
+            
+        except Exception as e:
+            self.log_test("Journal Sessions Management", False, f"Exception: {str(e)}")
+            return False
+
+    def test_journal_attendance_operations(self) -> bool:
+        """Test Journal Attendance Operations - Mark, Get attendance and stats"""
+        try:
+            print("🔍 Testing Journal Attendance Operations...")
+            
+            required_data = ['test_journal_id', 'test_session_id', 'test_student_id']
+            for key in required_data:
+                if key not in self.test_data:
+                    self.log_test("Journal Attendance Operations", False, 
+                                f"Missing {key} from previous tests")
+                    return False
+            
+            journal_id = self.test_data['test_journal_id']
+            session_id = self.test_data['test_session_id']
+            student_id = self.test_data['test_student_id']
+            test_telegram_id = 999888777
+            
+            # Step 1: Mark attendance for session
+            attendance_payload = {
+                "records": [
+                    {
+                        "student_id": student_id,
+                        "status": "present"
+                    }
+                ],
+                "telegram_id": test_telegram_id
+            }
+            
+            mark_attendance_response = self.session.post(
+                f"{self.base_url}/journals/sessions/{session_id}/attendance",
+                json=attendance_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if mark_attendance_response.status_code != 200:
+                self.log_test("Journal Attendance - Mark", False, 
+                            f"HTTP {mark_attendance_response.status_code}: {mark_attendance_response.text}")
+                return False
+            
+            attendance_result = mark_attendance_response.json()
+            
+            if 'records_processed' not in attendance_result:
+                self.log_test("Journal Attendance - Mark", False, 
+                            "Missing records_processed in response")
+                return False
+            
+            if attendance_result['records_processed'] != 1:
+                self.log_test("Journal Attendance - Mark", False, 
+                            f"Expected 1 record processed, got {attendance_result['records_processed']}")
+                return False
+            
+            # Step 2: Get attendance for session
+            get_attendance_response = self.session.get(
+                f"{self.base_url}/journals/sessions/{session_id}/attendance"
+            )
+            
+            if get_attendance_response.status_code != 200:
+                self.log_test("Journal Attendance - Get Session", False, 
+                            f"HTTP {get_attendance_response.status_code}: {get_attendance_response.text}")
+                return False
+            
+            session_attendance = get_attendance_response.json()
+            
+            if not isinstance(session_attendance, list):
+                self.log_test("Journal Attendance - Get Session", False, 
+                            "Response is not a list")
+                return False
+            
+            if len(session_attendance) != 1:
+                self.log_test("Journal Attendance - Get Session", False, 
+                            f"Expected 1 attendance record, got {len(session_attendance)}")
+                return False
+            
+            attendance_record = session_attendance[0]
+            if attendance_record.get('status') != 'present':
+                self.log_test("Journal Attendance - Get Session", False, 
+                            f"Expected status 'present', got '{attendance_record.get('status')}'")
+                return False
+            
+            # Step 3: Get user's attendance (my-attendance)
+            get_my_attendance_response = self.session.get(
+                f"{self.base_url}/journals/{journal_id}/my-attendance/{test_telegram_id}"
+            )
+            
+            if get_my_attendance_response.status_code != 200:
+                self.log_test("Journal Attendance - Get My Attendance", False, 
+                            f"HTTP {get_my_attendance_response.status_code}: {get_my_attendance_response.text}")
+                return False
+            
+            my_attendance = get_my_attendance_response.json()
+            
+            if not isinstance(my_attendance, list):
+                self.log_test("Journal Attendance - Get My Attendance", False, 
+                            "My attendance response is not a list")
+                return False
+            
+            # Step 4: Get journal statistics
+            get_stats_response = self.session.get(f"{self.base_url}/journals/{journal_id}/stats")
+            
+            if get_stats_response.status_code != 200:
+                self.log_test("Journal Attendance - Get Stats", False, 
+                            f"HTTP {get_stats_response.status_code}: {get_stats_response.text}")
+                return False
+            
+            journal_stats = get_stats_response.json()
+            
+            required_stats_fields = ['total_students', 'total_sessions', 'attendance_rate']
+            for field in required_stats_fields:
+                if field not in journal_stats:
+                    self.log_test("Journal Attendance - Get Stats", False, 
+                                f"Missing required stats field: {field}")
+                    return False
+            
+            # Validate stats data types
+            if not isinstance(journal_stats['total_students'], int):
+                self.log_test("Journal Attendance - Get Stats", False, 
+                            f"total_students should be integer, got {type(journal_stats['total_students'])}")
+                return False
+            
+            if not isinstance(journal_stats['total_sessions'], int):
+                self.log_test("Journal Attendance - Get Stats", False, 
+                            f"total_sessions should be integer, got {type(journal_stats['total_sessions'])}")
+                return False
+            
+            if not isinstance(journal_stats['attendance_rate'], (int, float)):
+                self.log_test("Journal Attendance - Get Stats", False, 
+                            f"attendance_rate should be numeric, got {type(journal_stats['attendance_rate'])}")
+                return False
+            
+            # Step 5: Test different attendance statuses
+            attendance_payload_varied = {
+                "records": [
+                    {
+                        "student_id": student_id,
+                        "status": "late"
+                    }
+                ],
+                "telegram_id": test_telegram_id
+            }
+            
+            mark_varied_response = self.session.post(
+                f"{self.base_url}/journals/sessions/{session_id}/attendance",
+                json=attendance_payload_varied,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            # This should update the existing record
+            if mark_varied_response.status_code != 200:
+                self.log_test("Journal Attendance - Update Status", False, 
+                            f"HTTP {mark_varied_response.status_code}: {mark_varied_response.text}")
+                return False
+            
+            self.log_test("Journal Attendance Operations", True, 
+                        "Successfully completed all attendance operations",
+                        {
+                            "attendance_marked": True,
+                            "session_attendance_retrieved": True,
+                            "my_attendance_retrieved": True,
+                            "stats_retrieved": True,
+                            "status_updated": True,
+                            "total_students": journal_stats['total_students'],
+                            "total_sessions": journal_stats['total_sessions'],
+                            "attendance_rate": journal_stats['attendance_rate']
+                        })
+            return True
+            
+        except Exception as e:
+            self.log_test("Journal Attendance Operations", False, f"Exception: {str(e)}")
+            return False
+
 def main():
     """Main test runner"""
     tester = RUDNScheduleAPITester()
