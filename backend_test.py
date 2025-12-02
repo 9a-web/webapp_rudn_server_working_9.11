@@ -3584,7 +3584,12 @@ class RUDNScheduleAPITester:
             self.test_admin_feature_usage_endpoint,
             self.test_admin_top_users_endpoint,
             self.test_admin_faculty_stats_endpoint,
-            self.test_admin_course_stats_endpoint
+            self.test_admin_course_stats_endpoint,
+            # Journal (Attendance) API Tests
+            self.test_journal_crud_operations,
+            self.test_journal_students_management,
+            self.test_journal_sessions_management,
+            self.test_journal_attendance_operations
         ]
         
         passed = 0
