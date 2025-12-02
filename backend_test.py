@@ -4819,6 +4819,356 @@ class RUDNScheduleAPITester:
             self.log_test("Journal Attendance Operations", False, f"Exception: {str(e)}")
             return False
 
+    def test_student_personal_invite_links(self) -> bool:
+        """Test Student Personal Invite Links functionality for Attendance Journal"""
+        try:
+            print("🔍 Testing Student Personal Invite Links functionality...")
+            
+            # Step 1: Create a test journal
+            test_telegram_id = 999888111
+            
+            # Create user first
+            user_payload = {
+                "telegram_id": test_telegram_id,
+                "username": "invite_test_teacher",
+                "first_name": "Преподаватель",
+                "last_name": "Тест",
+                "group_id": "invite-test-group",
+                "group_name": "Группа для тестирования приглашений",
+                "facultet_id": "invite-test-facultet",
+                "level_id": "invite-test-level",
+                "kurs": "3",
+                "form_code": "д"
+            }
+            
+            user_response = self.session.post(
+                f"{self.base_url}/user-settings",
+                json=user_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if user_response.status_code != 200:
+                self.log_test("Student Invite Links - Create User", False, 
+                            f"Failed to create user: HTTP {user_response.status_code}: {user_response.text}")
+                return False
+            
+            # Create journal
+            journal_payload = {
+                "name": "Журнал для тестирования приглашений студентов",
+                "subject": "Тестирование приглашений",
+                "telegram_id": test_telegram_id
+            }
+            
+            journal_response = self.session.post(
+                f"{self.base_url}/journals",
+                json=journal_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if journal_response.status_code != 200:
+                self.log_test("Student Invite Links - Create Journal", False, 
+                            f"Failed to create journal: HTTP {journal_response.status_code}: {journal_response.text}")
+                return False
+            
+            journal_data = journal_response.json()
+            journal_id = journal_data['id']
+            
+            self.log_test("Student Invite Links - Create Journal", True, 
+                        f"Successfully created test journal with ID: {journal_id}")
+            
+            # Step 2: Add students to journal and verify invite_code and invite_link fields
+            students_to_add = [
+                {"name": "Иван Петров", "student_id": "ST001"},
+                {"name": "Мария Сидорова", "student_id": "ST002"},
+                {"name": "Алексей Козлов", "student_id": "ST003"}
+            ]
+            
+            created_students = []
+            
+            for student_data in students_to_add:
+                student_payload = {
+                    "name": student_data["name"],
+                    "student_id": student_data["student_id"]
+                }
+                
+                student_response = self.session.post(
+                    f"{self.base_url}/journals/{journal_id}/students",
+                    json=student_payload,
+                    headers={"Content-Type": "application/json"}
+                )
+                
+                if student_response.status_code != 200:
+                    self.log_test("Student Invite Links - Add Students", False, 
+                                f"Failed to add student {student_data['name']}: HTTP {student_response.status_code}: {student_response.text}")
+                    return False
+                
+                student = student_response.json()
+                created_students.append(student)
+                
+                # Validate that student has invite_code and invite_link
+                required_fields = ['id', 'name', 'student_id', 'invite_code', 'invite_link']
+                for field in required_fields:
+                    if field not in student:
+                        self.log_test("Student Invite Links - Validate Student Fields", False, 
+                                    f"Student missing required field: {field}")
+                        return False
+                
+                # Validate invite_code format (should be 8 characters)
+                if not isinstance(student['invite_code'], str) or len(student['invite_code']) != 8:
+                    self.log_test("Student Invite Links - Validate Invite Code", False, 
+                                f"invite_code should be 8 character string, got: {student['invite_code']}")
+                    return False
+                
+                # Validate invite_link format (should be Telegram bot link)
+                expected_link_pattern = f"https://t.me/"
+                if not student['invite_link'].startswith(expected_link_pattern):
+                    self.log_test("Student Invite Links - Validate Invite Link", False, 
+                                f"invite_link should start with {expected_link_pattern}, got: {student['invite_link']}")
+                    return False
+                
+                # Validate that invite_link contains the invite_code
+                if f"jstudent_{student['invite_code']}" not in student['invite_link']:
+                    self.log_test("Student Invite Links - Validate Invite Link Format", False, 
+                                f"invite_link should contain 'jstudent_{student['invite_code']}', got: {student['invite_link']}")
+                    return False
+            
+            self.log_test("Student Invite Links - Add Students with Invite Links", True, 
+                        f"Successfully added {len(created_students)} students with invite codes and links",
+                        {
+                            "students_added": len(created_students),
+                            "sample_invite_code": created_students[0]['invite_code'],
+                            "sample_invite_link": created_students[0]['invite_link']
+                        })
+            
+            # Step 3: Test GET /api/journals/{journal_id}/students returns students with invite fields
+            get_students_response = self.session.get(f"{self.base_url}/journals/{journal_id}/students")
+            
+            if get_students_response.status_code != 200:
+                self.log_test("Student Invite Links - GET Students", False, 
+                            f"HTTP {get_students_response.status_code}: {get_students_response.text}")
+                return False
+            
+            students_list = get_students_response.json()
+            
+            if len(students_list) != len(created_students):
+                self.log_test("Student Invite Links - GET Students Count", False, 
+                            f"Expected {len(created_students)} students, got {len(students_list)}")
+                return False
+            
+            # Verify all students have unique invite codes
+            invite_codes = [student['invite_code'] for student in students_list]
+            if len(set(invite_codes)) != len(invite_codes):
+                self.log_test("Student Invite Links - Unique Invite Codes", False, 
+                            "Invite codes are not unique")
+                return False
+            
+            self.log_test("Student Invite Links - GET Students with Invite Data", True, 
+                        "Successfully retrieved students with unique invite codes and links")
+            
+            # Step 4: Test join-student endpoint with various scenarios
+            test_user_telegram_id = 777888999
+            test_invite_code = created_students[0]['invite_code']
+            
+            # Test case a: Valid invite_code, student not linked
+            join_payload = {
+                "telegram_id": test_user_telegram_id,
+                "username": "test_student",
+                "first_name": "Тест"
+            }
+            
+            join_response = self.session.post(
+                f"{self.base_url}/journals/join-student/{test_invite_code}",
+                json=join_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if join_response.status_code != 200:
+                self.log_test("Student Invite Links - Join Valid Code", False, 
+                            f"HTTP {join_response.status_code}: {join_response.text}")
+                return False
+            
+            join_result = join_response.json()
+            
+            if join_result.get('status') != 'success':
+                self.log_test("Student Invite Links - Join Valid Code Status", False, 
+                            f"Expected status 'success', got: {join_result.get('status')}")
+                return False
+            
+            self.log_test("Student Invite Links - Join Valid Code", True, 
+                        "Successfully linked student with valid invite code")
+            
+            # Test case b: Invalid invite_code
+            invalid_join_response = self.session.post(
+                f"{self.base_url}/journals/join-student/INVALID1",
+                json=join_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if invalid_join_response.status_code != 404:
+                self.log_test("Student Invite Links - Join Invalid Code", False, 
+                            f"Expected HTTP 404 for invalid code, got: {invalid_join_response.status_code}")
+                return False
+            
+            self.log_test("Student Invite Links - Join Invalid Code", True, 
+                        "Correctly returned 404 for invalid invite code")
+            
+            # Test case c: User already linked to this student
+            duplicate_join_response = self.session.post(
+                f"{self.base_url}/journals/join-student/{test_invite_code}",
+                json=join_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if duplicate_join_response.status_code != 200:
+                self.log_test("Student Invite Links - Join Already Linked", False, 
+                            f"HTTP {duplicate_join_response.status_code}: {duplicate_join_response.text}")
+                return False
+            
+            duplicate_result = duplicate_join_response.json()
+            
+            if duplicate_result.get('status') != 'success':
+                self.log_test("Student Invite Links - Join Already Linked Status", False, 
+                            f"Expected status 'success' for already linked user, got: {duplicate_result.get('status')}")
+                return False
+            
+            self.log_test("Student Invite Links - Join Already Linked", True, 
+                        "Correctly handled already linked user")
+            
+            # Test case d: User already linked to different student in same journal
+            different_invite_code = created_students[1]['invite_code']
+            different_student_response = self.session.post(
+                f"{self.base_url}/journals/join-student/{different_invite_code}",
+                json=join_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if different_student_response.status_code != 200:
+                self.log_test("Student Invite Links - Join Different Student", False, 
+                            f"HTTP {different_student_response.status_code}: {different_student_response.text}")
+                return False
+            
+            different_result = different_student_response.json()
+            
+            if different_result.get('status') != 'already_linked':
+                self.log_test("Student Invite Links - Join Different Student Status", False, 
+                            f"Expected status 'already_linked', got: {different_result.get('status')}")
+                return False
+            
+            self.log_test("Student Invite Links - Join Different Student", True, 
+                        "Correctly prevented linking to different student in same journal")
+            
+            # Step 5: Test unlink student endpoint
+            student_id = created_students[0]['id']
+            
+            unlink_response = self.session.post(
+                f"{self.base_url}/journals/{journal_id}/students/{student_id}/unlink",
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if unlink_response.status_code != 200:
+                self.log_test("Student Invite Links - Unlink Student", False, 
+                            f"HTTP {unlink_response.status_code}: {unlink_response.text}")
+                return False
+            
+            unlink_result = unlink_response.json()
+            
+            if unlink_result.get('status') != 'success':
+                self.log_test("Student Invite Links - Unlink Student Status", False, 
+                            f"Expected status 'success', got: {unlink_result.get('status')}")
+                return False
+            
+            # Verify student is unlinked by checking student data
+            get_student_response = self.session.get(f"{self.base_url}/journals/{journal_id}/students")
+            
+            if get_student_response.status_code != 200:
+                self.log_test("Student Invite Links - Verify Unlink", False, 
+                            f"Failed to get students after unlink: HTTP {get_student_response.status_code}")
+                return False
+            
+            updated_students = get_student_response.json()
+            unlinked_student = next((s for s in updated_students if s['id'] == student_id), None)
+            
+            if not unlinked_student:
+                self.log_test("Student Invite Links - Verify Unlink", False, 
+                            "Student not found after unlink")
+                return False
+            
+            # Check that telegram fields are reset
+            if (unlinked_student.get('telegram_id') is not None or 
+                unlinked_student.get('username') is not None or 
+                unlinked_student.get('first_name') is not None or 
+                unlinked_student.get('is_linked', True)):
+                self.log_test("Student Invite Links - Verify Unlink Fields", False, 
+                            "Student fields not properly reset after unlink")
+                return False
+            
+            self.log_test("Student Invite Links - Unlink Student", True, 
+                        "Successfully unlinked student and reset fields")
+            
+            # Test case e: Student already linked to different user (occupied)
+            # First link the student to a different user
+            different_user_payload = {
+                "telegram_id": 888999111,
+                "username": "different_user",
+                "first_name": "Другой"
+            }
+            
+            # Link student to different user
+            link_different_response = self.session.post(
+                f"{self.base_url}/journals/join-student/{test_invite_code}",
+                json=different_user_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if link_different_response.status_code != 200:
+                self.log_test("Student Invite Links - Link to Different User", False, 
+                            f"Failed to link to different user: HTTP {link_different_response.status_code}")
+                return False
+            
+            # Now try to link the same student to original user (should be occupied)
+            occupied_response = self.session.post(
+                f"{self.base_url}/journals/join-student/{test_invite_code}",
+                json=join_payload,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if occupied_response.status_code != 200:
+                self.log_test("Student Invite Links - Join Occupied Student", False, 
+                            f"HTTP {occupied_response.status_code}: {occupied_response.text}")
+                return False
+            
+            occupied_result = occupied_response.json()
+            
+            if occupied_result.get('status') != 'occupied':
+                self.log_test("Student Invite Links - Join Occupied Student Status", False, 
+                            f"Expected status 'occupied', got: {occupied_result.get('status')}")
+                return False
+            
+            self.log_test("Student Invite Links - Join Occupied Student", True, 
+                        "Correctly returned 'occupied' status for student linked to different user")
+            
+            # Final comprehensive test result
+            self.log_test("Student Personal Invite Links - Complete Test", True, 
+                        "Successfully completed all Student Personal Invite Links tests",
+                        {
+                            "journal_created": True,
+                            "students_added_with_invite_links": len(created_students),
+                            "unique_invite_codes_verified": True,
+                            "join_valid_code_tested": True,
+                            "join_invalid_code_tested": True,
+                            "join_already_linked_tested": True,
+                            "join_different_student_tested": True,
+                            "join_occupied_student_tested": True,
+                            "unlink_student_tested": True,
+                            "all_scenarios_covered": True
+                        })
+            
+            return True
+            
+        except Exception as e:
+            self.log_test("Student Personal Invite Links - Complete Test", False, f"Exception: {str(e)}")
+            return False
+
 def main():
     """Main test runner"""
     tester = RUDNScheduleAPITester()
