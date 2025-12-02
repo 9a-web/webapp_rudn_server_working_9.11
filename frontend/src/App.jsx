@@ -192,6 +192,63 @@ const Home = () => {
     }
   }, [isReady, user, startParam, referralProcessed]);
 
+  // 📚 Обработка приглашения в журнал из Web App ссылки
+  useEffect(() => {
+    const processJournalInvite = async () => {
+      // Проверяем условия: есть startParam, начинается с journal_ или jstudent_, не обработан ещё
+      if (!startParam || journalInviteProcessed || !user) {
+        return;
+      }
+      
+      let inviteType = null;
+      let inviteCode = null;
+      
+      if (startParam.startsWith('journal_')) {
+        inviteType = 'journal';
+        inviteCode = startParam.replace('journal_', '');
+      } else if (startParam.startsWith('jstudent_')) {
+        inviteType = 'jstudent';
+        inviteCode = startParam.replace('jstudent_', '');
+      } else {
+        return; // Не наш параметр
+      }
+      
+      console.log('📚 Обработка приглашения в журнал через Web App:', inviteType, inviteCode);
+      
+      try {
+        const result = await processJournalWebAppInvite({
+          telegram_id: user.id,
+          username: user.username,
+          first_name: user.first_name,
+          invite_type: inviteType,
+          invite_code: inviteCode
+        });
+        
+        setJournalInviteProcessed(true);
+        
+        if (result.success) {
+          console.log('✅ Приглашение в журнал обработано:', result.message);
+          hapticFeedback('success');
+          showAlert(result.message);
+          
+          // Переключаемся на вкладку Журнал
+          setActiveTab('journal');
+        } else {
+          console.log('ℹ️ Приглашение в журнал не применено:', result.message);
+          showAlert(result.message);
+        }
+      } catch (error) {
+        console.error('❌ Ошибка обработки приглашения в журнал:', error);
+        setJournalInviteProcessed(true);
+        showAlert('Ошибка при присоединении к журналу');
+      }
+    };
+    
+    if (isReady && user && startParam) {
+      processJournalInvite();
+    }
+  }, [isReady, user, startParam, journalInviteProcessed]);
+
   // Загрузка расписания при изменении настроек или недели
   useEffect(() => {
     // Проверяем, что у пользователя есть полные настройки группы
