@@ -283,6 +283,7 @@ export const TelegramProvider = ({ children }) => {
     webApp,
     user,
     isReady,
+    startParam, // Параметр startapp из ссылки (для реферальной системы)
     showAlert,
     showConfirm,
     showPopup,
