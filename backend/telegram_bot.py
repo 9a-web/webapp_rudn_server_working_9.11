@@ -638,6 +638,35 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 🚀 <b>Твой персональный помощник в учебе</b>
 
 <i>Нажимай кнопку ниже, чтобы начать! 👇</i>"""
+            elif student_join_data and student_join_data.get("journal"):
+                # Приветствие при присоединении по персональной ссылке студента
+                journal = student_join_data["journal"]
+                student = student_join_data.get("student", {})
+                journal_name = journal.get("name", "Журнал")
+                student_name = student.get("full_name", "")
+                
+                status = student_join_data.get("status")
+                if status == "linked":
+                    status_text = f"✅ Вы успешно привязаны как <b>{student_name}</b>!"
+                elif status == "occupied":
+                    status_text = f"❌ Место «{student_name}» уже занято другим пользователем."
+                elif status == "already_linked":
+                    status_text = f"✅ Вы уже привязаны как <b>{student_name}</b>."
+                elif status == "already_linked_other":
+                    status_text = f"ℹ️ Вы уже привязаны как <b>{student_name}</b> в этом журнале."
+                elif status == "owner":
+                    status_text = "👑 Вы являетесь старостой этого журнала."
+                else:
+                    status_text = "✅ Переход выполнен!"
+
+                welcome_text = f"""🎓 Привет, {first_name}! Добро пожаловать в <b>RUDN Go</b>!
+
+📚 Журнал: <b>{journal_name}</b>
+{status_text}
+
+🚀 <b>Твой персональный помощник в учебе</b>
+
+<i>Нажимай кнопку ниже, чтобы начать! 👇</i>"""
             elif referral_code and new_user.get("referred_by"):
                 referrer_info = await db.user_settings.find_one({"telegram_id": new_user["referred_by"]})
                 referrer_name = referrer_info.get("first_name", "друг") if referrer_info else "друг"
