@@ -4269,36 +4269,46 @@ async def process_journal_webapp_invite(data: ProcessJournalInviteRequest):
                     "student_name": existing_link['full_name']
                 }
             
-            # Проверить, не в pending ли уже
+            # Проверить, не в pending ли уже (для обратной совместимости - удаляем из pending)
             existing_pending = await db.journal_pending_members.find_one({
                 "journal_id": journal_id,
                 "telegram_id": data.telegram_id
             })
             if existing_pending:
-                return {
-                    "success": True,
-                    "status": "pending",
-                    "message": f"Вы уже ожидаете привязки в журнале «{journal_name}»",
-                    "journal_id": journal_id,
-                    "journal_name": journal_name
-                }
+                # Удаляем из pending, так как сейчас будем создавать студента напрямую
+                await db.journal_pending_members.delete_one({"_id": existing_pending["_id"]})
             
-            # Добавить в pending
-            pending = JournalPendingMember(
+            # Создаем нового студента и сразу привязываем его
+            # Используем first_name из Telegram как ФИО (пользователь может изменить позже)
+            student_name = data.first_name or data.username or f"Студент {data.telegram_id}"
+            
+            # Получаем максимальный order для новых студентов
+            max_order_student = await db.journal_students.find_one(
+                {"journal_id": journal_id},
+                sort=[("order", -1)]
+            )
+            new_order = (max_order_student["order"] + 1) if max_order_student else 0
+            
+            new_student = JournalStudent(
                 journal_id=journal_id,
+                full_name=student_name,
                 telegram_id=data.telegram_id,
                 username=data.username,
-                first_name=data.first_name
+                first_name=data.first_name,
+                is_linked=True,
+                linked_at=datetime.utcnow(),
+                order=new_order
             )
-            await db.journal_pending_members.insert_one(pending.model_dump())
+            await db.journal_students.insert_one(new_student.model_dump())
             
-            logger.info(f"✅ User {data.telegram_id} joined journal '{journal_name}' (pending)")
+            logger.info(f"✅ User {data.telegram_id} joined journal '{journal_name}' as '{student_name}' (auto-linked)")
             return {
                 "success": True,
-                "status": "joined_pending",
-                "message": f"Вы присоединились к журналу «{journal_name}»! Ожидайте, пока староста привяжет вас к вашему ФИО.",
+                "status": "joined",
+                "message": f"Вы присоединились к журналу «{journal_name}» как «{student_name}»!",
                 "journal_id": journal_id,
-                "journal_name": journal_name
+                "journal_name": journal_name,
+                "student_name": student_name
             }
         
         elif data.invite_type == "jstudent":
