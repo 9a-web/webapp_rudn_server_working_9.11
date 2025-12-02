@@ -911,6 +911,7 @@ class JournalStudent(BaseModel):
     is_linked: bool = False              # Привязан ли к Telegram
     linked_at: Optional[datetime] = None # Когда привязан
     order: int = 0                       # Порядок в списке
+    invite_code: str = Field(default_factory=lambda: str(uuid.uuid4())[:8])  # Уникальный код для персональной ссылки
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
