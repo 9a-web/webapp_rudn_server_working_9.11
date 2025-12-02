@@ -3587,6 +3587,989 @@ async def backup_stats():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ============ API для журнала посещений (Attendance Journal) ============
+
+@api_router.post("/journals", response_model=JournalResponse)
+async def create_journal(data: JournalCreate):
+    """Создать новый журнал посещений"""
+    try:
+        journal = AttendanceJournal(
+            name=data.name,
+            group_name=data.group_name,
+            description=data.description,
+            owner_id=data.telegram_id,
+            color=data.color
+        )
+        
+        journal_dict = journal.model_dump()
+        await db.attendance_journals.insert_one(journal_dict)
+        
+        logger.info(f"Journal created: {journal.journal_id} by user {data.telegram_id}")
+        
+        return JournalResponse(
+            **journal_dict,
+            total_students=0,
+            linked_students=0,
+            total_sessions=0,
+            is_owner=True
+        )
+    except Exception as e:
+        logger.error(f"Error creating journal: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/journals/{telegram_id}", response_model=List[JournalResponse])
+async def get_user_journals(telegram_id: int):
+    """Получить все журналы пользователя (как владелец и как участник)"""
+    try:
+        journals = []
+        
+        # Журналы, где пользователь владелец
+        owned_journals = await db.attendance_journals.find(
+            {"owner_id": telegram_id}
+        ).to_list(100)
+        
+        for j in owned_journals:
+            total_students = await db.journal_students.count_documents({"journal_id": j["journal_id"]})
+            linked_students = await db.journal_students.count_documents({"journal_id": j["journal_id"], "is_linked": True})
+            total_sessions = await db.journal_sessions.count_documents({"journal_id": j["journal_id"]})
+            
+            journals.append(JournalResponse(
+                journal_id=j["journal_id"],
+                name=j["name"],
+                group_name=j["group_name"],
+                description=j.get("description"),
+                owner_id=j["owner_id"],
+                color=j.get("color", "purple"),
+                invite_token=j["invite_token"],
+                settings=JournalSettings(**j.get("settings", {})),
+                created_at=j["created_at"],
+                updated_at=j["updated_at"],
+                total_students=total_students,
+                linked_students=linked_students,
+                total_sessions=total_sessions,
+                is_owner=True
+            ))
+        
+        # Журналы, где пользователь участник (привязан к студенту)
+        linked_students = await db.journal_students.find(
+            {"telegram_id": telegram_id, "is_linked": True}
+        ).to_list(100)
+        
+        for ls in linked_students:
+            journal = await db.attendance_journals.find_one({"journal_id": ls["journal_id"]})
+            if journal and journal["owner_id"] != telegram_id:
+                total_students = await db.journal_students.count_documents({"journal_id": journal["journal_id"]})
+                linked_count = await db.journal_students.count_documents({"journal_id": journal["journal_id"], "is_linked": True})
+                total_sessions = await db.journal_sessions.count_documents({"journal_id": journal["journal_id"]})
+                
+                # Рассчитать личную посещаемость
+                my_attendance = await calculate_student_attendance(ls["id"], journal["journal_id"])
+                
+                journals.append(JournalResponse(
+                    journal_id=journal["journal_id"],
+                    name=journal["name"],
+                    group_name=journal["group_name"],
+                    description=journal.get("description"),
+                    owner_id=journal["owner_id"],
+                    color=journal.get("color", "purple"),
+                    invite_token=journal["invite_token"],
+                    settings=JournalSettings(**journal.get("settings", {})),
+                    created_at=journal["created_at"],
+                    updated_at=journal["updated_at"],
+                    total_students=total_students,
+                    linked_students=linked_count,
+                    total_sessions=total_sessions,
+                    is_owner=False,
+                    my_attendance_percent=my_attendance
+                ))
+        
+        # Также добавить журналы где пользователь в pending (ожидает привязки)
+        pending = await db.journal_pending_members.find(
+            {"telegram_id": telegram_id, "is_linked": False}
+        ).to_list(100)
+        
+        for p in pending:
+            journal = await db.attendance_journals.find_one({"journal_id": p["journal_id"]})
+            if journal and journal["owner_id"] != telegram_id:
+                # Проверить что журнал не уже добавлен
+                if not any(jj.journal_id == journal["journal_id"] for jj in journals):
+                    total_students = await db.journal_students.count_documents({"journal_id": journal["journal_id"]})
+                    linked_count = await db.journal_students.count_documents({"journal_id": journal["journal_id"], "is_linked": True})
+                    total_sessions = await db.journal_sessions.count_documents({"journal_id": journal["journal_id"]})
+                    
+                    journals.append(JournalResponse(
+                        journal_id=journal["journal_id"],
+                        name=journal["name"],
+                        group_name=journal["group_name"],
+                        description=journal.get("description"),
+                        owner_id=journal["owner_id"],
+                        color=journal.get("color", "purple"),
+                        invite_token=journal["invite_token"],
+                        settings=JournalSettings(**journal.get("settings", {})),
+                        created_at=journal["created_at"],
+                        updated_at=journal["updated_at"],
+                        total_students=total_students,
+                        linked_students=linked_count,
+                        total_sessions=total_sessions,
+                        is_owner=False,
+                        my_attendance_percent=None  # Ещё не привязан
+                    ))
+        
+        return journals
+    except Exception as e:
+        logger.error(f"Error getting user journals: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+async def calculate_student_attendance(student_id: str, journal_id: str) -> Optional[float]:
+    """Рассчитать процент посещаемости студента"""
+    try:
+        total_sessions = await db.journal_sessions.count_documents({"journal_id": journal_id})
+        if total_sessions == 0:
+            return None
+        
+        present_count = await db.attendance_records.count_documents({
+            "student_id": student_id,
+            "journal_id": journal_id,
+            "status": {"$in": ["present", "late"]}
+        })
+        
+        return round((present_count / total_sessions) * 100, 1)
+    except:
+        return None
+
+
+@api_router.get("/journals/detail/{journal_id}")
+async def get_journal_detail(journal_id: str, telegram_id: int = 0):
+    """Получить детальную информацию о журнале"""
+    try:
+        journal = await db.attendance_journals.find_one({"journal_id": journal_id})
+        if not journal:
+            raise HTTPException(status_code=404, detail="Journal not found")
+        
+        total_students = await db.journal_students.count_documents({"journal_id": journal_id})
+        linked_students = await db.journal_students.count_documents({"journal_id": journal_id, "is_linked": True})
+        total_sessions = await db.journal_sessions.count_documents({"journal_id": journal_id})
+        
+        is_owner = journal["owner_id"] == telegram_id
+        my_attendance = None
+        
+        if not is_owner and telegram_id > 0:
+            student = await db.journal_students.find_one({
+                "journal_id": journal_id,
+                "telegram_id": telegram_id,
+                "is_linked": True
+            })
+            if student:
+                my_attendance = await calculate_student_attendance(student["id"], journal_id)
+        
+        return JournalResponse(
+            journal_id=journal["journal_id"],
+            name=journal["name"],
+            group_name=journal["group_name"],
+            description=journal.get("description"),
+            owner_id=journal["owner_id"],
+            color=journal.get("color", "purple"),
+            invite_token=journal["invite_token"],
+            settings=JournalSettings(**journal.get("settings", {})),
+            created_at=journal["created_at"],
+            updated_at=journal["updated_at"],
+            total_students=total_students,
+            linked_students=linked_students,
+            total_sessions=total_sessions,
+            is_owner=is_owner,
+            my_attendance_percent=my_attendance
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting journal detail: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.put("/journals/{journal_id}")
+async def update_journal(journal_id: str, data: dict = Body(...)):
+    """Обновить журнал"""
+    try:
+        journal = await db.attendance_journals.find_one({"journal_id": journal_id})
+        if not journal:
+            raise HTTPException(status_code=404, detail="Journal not found")
+        
+        update_data = {"updated_at": datetime.utcnow()}
+        if "name" in data:
+            update_data["name"] = data["name"]
+        if "group_name" in data:
+            update_data["group_name"] = data["group_name"]
+        if "description" in data:
+            update_data["description"] = data["description"]
+        if "color" in data:
+            update_data["color"] = data["color"]
+        if "settings" in data:
+            update_data["settings"] = data["settings"]
+        
+        await db.attendance_journals.update_one(
+            {"journal_id": journal_id},
+            {"$set": update_data}
+        )
+        
+        return {"status": "success", "journal_id": journal_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating journal: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.delete("/journals/{journal_id}")
+async def delete_journal(journal_id: str, telegram_id: int):
+    """Удалить журнал (только владелец)"""
+    try:
+        journal = await db.attendance_journals.find_one({"journal_id": journal_id})
+        if not journal:
+            raise HTTPException(status_code=404, detail="Journal not found")
+        
+        if journal["owner_id"] != telegram_id:
+            raise HTTPException(status_code=403, detail="Only owner can delete journal")
+        
+        # Удалить все связанные данные
+        await db.attendance_journals.delete_one({"journal_id": journal_id})
+        await db.journal_students.delete_many({"journal_id": journal_id})
+        await db.journal_sessions.delete_many({"journal_id": journal_id})
+        await db.attendance_records.delete_many({"journal_id": journal_id})
+        await db.journal_pending_members.delete_many({"journal_id": journal_id})
+        
+        logger.info(f"Journal deleted: {journal_id}")
+        return {"status": "success"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting journal: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/journals/{journal_id}/invite-link", response_model=JournalInviteLinkResponse)
+async def generate_journal_invite_link(journal_id: str):
+    """Сгенерировать пригласительную ссылку"""
+    try:
+        journal = await db.attendance_journals.find_one({"journal_id": journal_id})
+        if not journal:
+            raise HTTPException(status_code=404, detail="Journal not found")
+        
+        bot_username = os.environ.get("TELEGRAM_BOT_USERNAME", "rudn_mosbot")
+        invite_link = f"https://t.me/{bot_username}?start=journal_{journal['invite_token']}"
+        
+        return JournalInviteLinkResponse(
+            invite_link=invite_link,
+            invite_token=journal["invite_token"],
+            journal_id=journal_id,
+            bot_username=bot_username
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating invite link: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/journals/join/{invite_token}")
+async def join_journal(invite_token: str, data: JournalJoinRequest):
+    """Присоединиться к журналу по приглашению"""
+    try:
+        journal = await db.attendance_journals.find_one({"invite_token": invite_token})
+        if not journal:
+            raise HTTPException(status_code=404, detail="Invalid invite link")
+        
+        # Проверить, не владелец ли это
+        if journal["owner_id"] == data.telegram_id:
+            return {"status": "success", "message": "You are the owner", "journal_id": journal["journal_id"]}
+        
+        # Проверить, не привязан ли уже
+        existing_link = await db.journal_students.find_one({
+            "journal_id": journal["journal_id"],
+            "telegram_id": data.telegram_id,
+            "is_linked": True
+        })
+        if existing_link:
+            return {"status": "success", "message": "Already linked", "journal_id": journal["journal_id"]}
+        
+        # Проверить, не в pending ли уже
+        existing_pending = await db.journal_pending_members.find_one({
+            "journal_id": journal["journal_id"],
+            "telegram_id": data.telegram_id
+        })
+        if existing_pending:
+            return {"status": "success", "message": "Waiting for linking", "journal_id": journal["journal_id"]}
+        
+        # Добавить в pending
+        pending = JournalPendingMember(
+            journal_id=journal["journal_id"],
+            telegram_id=data.telegram_id,
+            username=data.username,
+            first_name=data.first_name
+        )
+        await db.journal_pending_members.insert_one(pending.model_dump())
+        
+        logger.info(f"User {data.telegram_id} joined journal {journal['journal_id']} (pending)")
+        return {"status": "success", "message": "Joined, waiting for linking", "journal_id": journal["journal_id"]}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error joining journal: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ===== Студенты в журнале =====
+
+@api_router.post("/journals/{journal_id}/students", response_model=JournalStudentResponse)
+async def add_student(journal_id: str, data: JournalStudentCreate):
+    """Добавить студента в журнал"""
+    try:
+        journal = await db.attendance_journals.find_one({"journal_id": journal_id})
+        if not journal:
+            raise HTTPException(status_code=404, detail="Journal not found")
+        
+        # Получить максимальный order
+        max_order_student = await db.journal_students.find_one(
+            {"journal_id": journal_id},
+            sort=[("order", -1)]
+        )
+        next_order = (max_order_student["order"] + 1) if max_order_student else 0
+        
+        student = JournalStudent(
+            journal_id=journal_id,
+            full_name=data.full_name,
+            order=next_order
+        )
+        await db.journal_students.insert_one(student.model_dump())
+        
+        return JournalStudentResponse(
+            id=student.id,
+            journal_id=student.journal_id,
+            full_name=student.full_name,
+            telegram_id=None,
+            username=None,
+            first_name=None,
+            is_linked=False,
+            linked_at=None,
+            order=student.order
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error adding student: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/journals/{journal_id}/students/bulk")
+async def add_students_bulk(journal_id: str, data: JournalStudentBulkCreate):
+    """Массовое добавление студентов"""
+    try:
+        journal = await db.attendance_journals.find_one({"journal_id": journal_id})
+        if not journal:
+            raise HTTPException(status_code=404, detail="Journal not found")
+        
+        # Получить максимальный order
+        max_order_student = await db.journal_students.find_one(
+            {"journal_id": journal_id},
+            sort=[("order", -1)]
+        )
+        next_order = (max_order_student["order"] + 1) if max_order_student else 0
+        
+        added = []
+        for i, name in enumerate(data.names):
+            name = name.strip()
+            if not name:
+                continue
+            
+            student = JournalStudent(
+                journal_id=journal_id,
+                full_name=name,
+                order=next_order + i
+            )
+            await db.journal_students.insert_one(student.model_dump())
+            added.append(student.full_name)
+        
+        return {"status": "success", "added_count": len(added), "names": added}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error adding students bulk: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/journals/{journal_id}/students", response_model=List[JournalStudentResponse])
+async def get_journal_students(journal_id: str):
+    """Получить список студентов журнала"""
+    try:
+        students = await db.journal_students.find(
+            {"journal_id": journal_id}
+        ).sort("order", 1).to_list(200)
+        
+        total_sessions = await db.journal_sessions.count_documents({"journal_id": journal_id})
+        
+        result = []
+        for s in students:
+            # Рассчитать статистику посещаемости
+            present_count = await db.attendance_records.count_documents({
+                "student_id": s["id"], "status": "present"
+            })
+            absent_count = await db.attendance_records.count_documents({
+                "student_id": s["id"], "status": "absent"
+            })
+            excused_count = await db.attendance_records.count_documents({
+                "student_id": s["id"], "status": "excused"
+            })
+            late_count = await db.attendance_records.count_documents({
+                "student_id": s["id"], "status": "late"
+            })
+            
+            attendance_percent = None
+            if total_sessions > 0:
+                attended = present_count + late_count
+                attendance_percent = round((attended / total_sessions) * 100, 1)
+            
+            result.append(JournalStudentResponse(
+                id=s["id"],
+                journal_id=s["journal_id"],
+                full_name=s["full_name"],
+                telegram_id=s.get("telegram_id"),
+                username=s.get("username"),
+                first_name=s.get("first_name"),
+                is_linked=s.get("is_linked", False),
+                linked_at=s.get("linked_at"),
+                order=s.get("order", 0),
+                attendance_percent=attendance_percent,
+                present_count=present_count,
+                absent_count=absent_count,
+                excused_count=excused_count,
+                late_count=late_count,
+                total_sessions=total_sessions
+            ))
+        
+        return result
+    except Exception as e:
+        logger.error(f"Error getting students: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.put("/journals/{journal_id}/students/{student_id}")
+async def update_student(journal_id: str, student_id: str, data: dict = Body(...)):
+    """Обновить студента"""
+    try:
+        student = await db.journal_students.find_one({"id": student_id, "journal_id": journal_id})
+        if not student:
+            raise HTTPException(status_code=404, detail="Student not found")
+        
+        update_data = {}
+        if "full_name" in data:
+            update_data["full_name"] = data["full_name"]
+        if "order" in data:
+            update_data["order"] = data["order"]
+        
+        if update_data:
+            await db.journal_students.update_one(
+                {"id": student_id},
+                {"$set": update_data}
+            )
+        
+        return {"status": "success"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating student: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.delete("/journals/{journal_id}/students/{student_id}")
+async def delete_student(journal_id: str, student_id: str):
+    """Удалить студента из журнала"""
+    try:
+        result = await db.journal_students.delete_one({"id": student_id, "journal_id": journal_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Student not found")
+        
+        # Удалить записи посещаемости
+        await db.attendance_records.delete_many({"student_id": student_id})
+        
+        return {"status": "success"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting student: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/journals/{journal_id}/students/{student_id}/link")
+async def link_student(journal_id: str, student_id: str, data: JournalStudentLink):
+    """Привязать Telegram пользователя к ФИО в журнале"""
+    try:
+        student = await db.journal_students.find_one({"id": student_id, "journal_id": journal_id})
+        if not student:
+            raise HTTPException(status_code=404, detail="Student not found")
+        
+        # Обновить студента
+        await db.journal_students.update_one(
+            {"id": student_id},
+            {"$set": {
+                "telegram_id": data.telegram_id,
+                "username": data.username,
+                "first_name": data.first_name,
+                "is_linked": True,
+                "linked_at": datetime.utcnow()
+            }}
+        )
+        
+        # Обновить pending member если есть
+        await db.journal_pending_members.update_one(
+            {"journal_id": journal_id, "telegram_id": data.telegram_id},
+            {"$set": {"is_linked": True}}
+        )
+        
+        logger.info(f"Student {student_id} linked to telegram {data.telegram_id}")
+        return {"status": "success"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error linking student: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/journals/{journal_id}/pending-members")
+async def get_pending_members(journal_id: str):
+    """Получить список ожидающих привязки участников"""
+    try:
+        pending = await db.journal_pending_members.find(
+            {"journal_id": journal_id, "is_linked": False}
+        ).to_list(100)
+        
+        return [
+            {
+                "id": p["id"],
+                "telegram_id": p["telegram_id"],
+                "username": p.get("username"),
+                "first_name": p.get("first_name"),
+                "joined_at": p["joined_at"]
+            }
+            for p in pending
+        ]
+    except Exception as e:
+        logger.error(f"Error getting pending members: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ===== Занятия =====
+
+@api_router.post("/journals/{journal_id}/sessions", response_model=JournalSessionResponse)
+async def create_session(journal_id: str, data: JournalSessionCreate):
+    """Создать занятие"""
+    try:
+        journal = await db.attendance_journals.find_one({"journal_id": journal_id})
+        if not journal:
+            raise HTTPException(status_code=404, detail="Journal not found")
+        
+        session = JournalSession(
+            journal_id=journal_id,
+            date=data.date,
+            title=data.title,
+            description=data.description,
+            type=data.type,
+            created_by=data.telegram_id
+        )
+        await db.journal_sessions.insert_one(session.model_dump())
+        
+        total_students = await db.journal_students.count_documents({"journal_id": journal_id})
+        
+        return JournalSessionResponse(
+            session_id=session.session_id,
+            journal_id=session.journal_id,
+            date=session.date,
+            title=session.title,
+            description=session.description,
+            type=session.type,
+            created_at=session.created_at,
+            created_by=session.created_by,
+            attendance_filled=0,
+            total_students=total_students
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating session: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/journals/{journal_id}/sessions", response_model=List[JournalSessionResponse])
+async def get_journal_sessions(journal_id: str):
+    """Получить список занятий журнала"""
+    try:
+        sessions = await db.journal_sessions.find(
+            {"journal_id": journal_id}
+        ).sort("date", -1).to_list(200)
+        
+        total_students = await db.journal_students.count_documents({"journal_id": journal_id})
+        
+        result = []
+        for s in sessions:
+            attendance_filled = await db.attendance_records.count_documents({
+                "session_id": s["session_id"],
+                "status": {"$ne": "unmarked"}
+            })
+            present_count = await db.attendance_records.count_documents({
+                "session_id": s["session_id"],
+                "status": {"$in": ["present", "late"]}
+            })
+            absent_count = await db.attendance_records.count_documents({
+                "session_id": s["session_id"],
+                "status": "absent"
+            })
+            
+            result.append(JournalSessionResponse(
+                session_id=s["session_id"],
+                journal_id=s["journal_id"],
+                date=s["date"],
+                title=s["title"],
+                description=s.get("description"),
+                type=s.get("type", "lecture"),
+                created_at=s["created_at"],
+                created_by=s["created_by"],
+                attendance_filled=attendance_filled,
+                total_students=total_students,
+                present_count=present_count,
+                absent_count=absent_count
+            ))
+        
+        return result
+    except Exception as e:
+        logger.error(f"Error getting sessions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.put("/journals/sessions/{session_id}")
+async def update_session(session_id: str, data: dict = Body(...)):
+    """Обновить занятие"""
+    try:
+        session = await db.journal_sessions.find_one({"session_id": session_id})
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        update_data = {}
+        if "date" in data:
+            update_data["date"] = data["date"]
+        if "title" in data:
+            update_data["title"] = data["title"]
+        if "description" in data:
+            update_data["description"] = data["description"]
+        if "type" in data:
+            update_data["type"] = data["type"]
+        
+        if update_data:
+            await db.journal_sessions.update_one(
+                {"session_id": session_id},
+                {"$set": update_data}
+            )
+        
+        return {"status": "success"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating session: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.delete("/journals/sessions/{session_id}")
+async def delete_session(session_id: str):
+    """Удалить занятие"""
+    try:
+        result = await db.journal_sessions.delete_one({"session_id": session_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        # Удалить записи посещаемости для этого занятия
+        await db.attendance_records.delete_many({"session_id": session_id})
+        
+        return {"status": "success"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting session: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ===== Посещаемость =====
+
+@api_router.post("/journals/sessions/{session_id}/attendance")
+async def mark_attendance(session_id: str, data: AttendanceBulkCreate):
+    """Массовая отметка посещаемости"""
+    try:
+        session = await db.journal_sessions.find_one({"session_id": session_id})
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        journal_id = session["journal_id"]
+        
+        for record in data.records:
+            # Проверить существующую запись
+            existing = await db.attendance_records.find_one({
+                "session_id": session_id,
+                "student_id": record.student_id
+            })
+            
+            if existing:
+                # Обновить
+                await db.attendance_records.update_one(
+                    {"id": existing["id"]},
+                    {"$set": {
+                        "status": record.status,
+                        "reason": record.reason,
+                        "note": record.note,
+                        "marked_by": data.telegram_id,
+                        "marked_at": datetime.utcnow()
+                    }}
+                )
+            else:
+                # Создать новую запись
+                new_record = AttendanceRecord(
+                    journal_id=journal_id,
+                    session_id=session_id,
+                    student_id=record.student_id,
+                    status=record.status,
+                    reason=record.reason,
+                    note=record.note,
+                    marked_by=data.telegram_id
+                )
+                await db.attendance_records.insert_one(new_record.model_dump())
+        
+        return {"status": "success", "marked_count": len(data.records)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error marking attendance: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/journals/sessions/{session_id}/attendance")
+async def get_session_attendance(session_id: str):
+    """Получить посещаемость на занятии"""
+    try:
+        session = await db.journal_sessions.find_one({"session_id": session_id})
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        # Получить всех студентов журнала
+        students = await db.journal_students.find(
+            {"journal_id": session["journal_id"]}
+        ).sort("order", 1).to_list(200)
+        
+        # Получить записи посещаемости
+        records = await db.attendance_records.find(
+            {"session_id": session_id}
+        ).to_list(200)
+        
+        records_map = {r["student_id"]: r for r in records}
+        
+        result = []
+        for s in students:
+            record = records_map.get(s["id"])
+            result.append({
+                "student_id": s["id"],
+                "full_name": s["full_name"],
+                "is_linked": s.get("is_linked", False),
+                "status": record["status"] if record else "unmarked",
+                "reason": record.get("reason") if record else None,
+                "note": record.get("note") if record else None,
+                "marked_at": record.get("marked_at") if record else None
+            })
+        
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting attendance: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/journals/{journal_id}/my-attendance/{telegram_id}")
+async def get_my_attendance(journal_id: str, telegram_id: int):
+    """Получить мою посещаемость"""
+    try:
+        # Найти студента
+        student = await db.journal_students.find_one({
+            "journal_id": journal_id,
+            "telegram_id": telegram_id,
+            "is_linked": True
+        })
+        
+        if not student:
+            raise HTTPException(status_code=404, detail="Not linked to any student")
+        
+        # Получить все занятия
+        sessions = await db.journal_sessions.find(
+            {"journal_id": journal_id}
+        ).sort("date", -1).to_list(200)
+        
+        # Получить записи посещаемости
+        records = await db.attendance_records.find(
+            {"student_id": student["id"]}
+        ).to_list(200)
+        
+        records_map = {r["session_id"]: r for r in records}
+        
+        # Статистика
+        present_count = sum(1 for r in records if r["status"] in ["present", "late"])
+        absent_count = sum(1 for r in records if r["status"] == "absent")
+        excused_count = sum(1 for r in records if r["status"] == "excused")
+        late_count = sum(1 for r in records if r["status"] == "late")
+        total_sessions = len(sessions)
+        
+        attendance_percent = 0
+        if total_sessions > 0:
+            attendance_percent = round((present_count / total_sessions) * 100, 1)
+        
+        # Формируем записи
+        attendance_records = []
+        for s in sessions:
+            record = records_map.get(s["session_id"])
+            attendance_records.append({
+                "session_id": s["session_id"],
+                "date": s["date"],
+                "title": s["title"],
+                "type": s.get("type", "lecture"),
+                "status": record["status"] if record else "unmarked",
+                "reason": record.get("reason") if record else None,
+                "note": record.get("note") if record else None
+            })
+        
+        return {
+            "student_id": student["id"],
+            "full_name": student["full_name"],
+            "attendance_percent": attendance_percent,
+            "present_count": present_count,
+            "absent_count": absent_count,
+            "excused_count": excused_count,
+            "late_count": late_count,
+            "total_sessions": total_sessions,
+            "records": attendance_records
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting my attendance: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/journals/{journal_id}/stats")
+async def get_journal_stats(journal_id: str):
+    """Получить статистику журнала"""
+    try:
+        journal = await db.attendance_journals.find_one({"journal_id": journal_id})
+        if not journal:
+            raise HTTPException(status_code=404, detail="Journal not found")
+        
+        students = await db.journal_students.find(
+            {"journal_id": journal_id}
+        ).sort("order", 1).to_list(200)
+        
+        sessions = await db.journal_sessions.find(
+            {"journal_id": journal_id}
+        ).sort("date", -1).to_list(200)
+        
+        total_students = len(students)
+        linked_students = sum(1 for s in students if s.get("is_linked", False))
+        total_sessions = len(sessions)
+        
+        # Статистика по студентам
+        students_stats = []
+        total_present = 0
+        for s in students:
+            present = await db.attendance_records.count_documents({
+                "student_id": s["id"], "status": {"$in": ["present", "late"]}
+            })
+            absent = await db.attendance_records.count_documents({
+                "student_id": s["id"], "status": "absent"
+            })
+            excused = await db.attendance_records.count_documents({
+                "student_id": s["id"], "status": "excused"
+            })
+            late = await db.attendance_records.count_documents({
+                "student_id": s["id"], "status": "late"
+            })
+            
+            total_present += present
+            
+            att_percent = None
+            if total_sessions > 0:
+                att_percent = round((present / total_sessions) * 100, 1)
+            
+            students_stats.append(JournalStudentResponse(
+                id=s["id"],
+                journal_id=s["journal_id"],
+                full_name=s["full_name"],
+                telegram_id=s.get("telegram_id"),
+                username=s.get("username"),
+                first_name=s.get("first_name"),
+                is_linked=s.get("is_linked", False),
+                linked_at=s.get("linked_at"),
+                order=s.get("order", 0),
+                attendance_percent=att_percent,
+                present_count=present,
+                absent_count=absent,
+                excused_count=excused,
+                late_count=late,
+                total_sessions=total_sessions
+            ))
+        
+        # Общий процент посещаемости
+        overall_percent = 0
+        if total_students > 0 and total_sessions > 0:
+            overall_percent = round((total_present / (total_students * total_sessions)) * 100, 1)
+        
+        # Статистика по занятиям
+        sessions_stats = []
+        for sess in sessions:
+            filled = await db.attendance_records.count_documents({
+                "session_id": sess["session_id"],
+                "status": {"$ne": "unmarked"}
+            })
+            present_c = await db.attendance_records.count_documents({
+                "session_id": sess["session_id"],
+                "status": {"$in": ["present", "late"]}
+            })
+            absent_c = await db.attendance_records.count_documents({
+                "session_id": sess["session_id"],
+                "status": "absent"
+            })
+            
+            sessions_stats.append(JournalSessionResponse(
+                session_id=sess["session_id"],
+                journal_id=sess["journal_id"],
+                date=sess["date"],
+                title=sess["title"],
+                description=sess.get("description"),
+                type=sess.get("type", "lecture"),
+                created_at=sess["created_at"],
+                created_by=sess["created_by"],
+                attendance_filled=filled,
+                total_students=total_students,
+                present_count=present_c,
+                absent_count=absent_c
+            ))
+        
+        return JournalStatsResponse(
+            journal_id=journal_id,
+            total_students=total_students,
+            linked_students=linked_students,
+            total_sessions=total_sessions,
+            overall_attendance_percent=overall_percent,
+            students_stats=students_stats,
+            sessions_stats=sessions_stats
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting journal stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # Include the router in the main app
 app.include_router(api_router)
