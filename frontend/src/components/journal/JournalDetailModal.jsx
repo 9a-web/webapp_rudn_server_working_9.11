@@ -64,6 +64,7 @@ export const JournalDetailModal = ({
   const [pendingMembers, setPendingMembers] = useState([]);
   const [activeTab, setActiveTab] = useState('students');
   const [isLoading, setIsLoading] = useState(true);
+  const [copiedStudentId, setCopiedStudentId] = useState(null); // ID студента, чья ссылка скопирована
   
   // Modals
   const [showAddStudents, setShowAddStudents] = useState(false);
@@ -117,6 +118,26 @@ export const JournalDetailModal = ({
     navigator.clipboard.writeText(inviteLink);
     if (hapticFeedback?.notificationOccurred) {
       hapticFeedback.notificationOccurred('success');
+    }
+  };
+
+  // Копирование персональной ссылки студента
+  const handleCopyStudentLink = async (student) => {
+    if (!student.invite_link) return;
+    
+    try {
+      await navigator.clipboard.writeText(student.invite_link);
+      setCopiedStudentId(student.id);
+      if (hapticFeedback?.notificationOccurred) {
+        hapticFeedback.notificationOccurred('success');
+      }
+      
+      // Сбрасываем индикатор через 2 секунды
+      setTimeout(() => {
+        setCopiedStudentId(null);
+      }, 2000);
+    } catch (error) {
+      console.error('Error copying student link:', error);
     }
   };
 
