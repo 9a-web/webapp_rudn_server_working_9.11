@@ -1103,6 +1103,7 @@ class JournalStatsResponse(BaseModel):
 class JournalInviteLinkResponse(BaseModel):
     """Ответ со ссылкой приглашения"""
     invite_link: str
+    invite_link_webapp: str = ""  # Ссылка через Web App
     invite_token: str
     journal_id: str
     bot_username: str
@@ -1111,6 +1112,7 @@ class JournalInviteLinkResponse(BaseModel):
 class StudentInviteLinkResponse(BaseModel):
     """Ответ со ссылкой приглашения для конкретного студента"""
     invite_link: str
+    invite_link_webapp: str = ""  # Ссылка через Web App
     invite_code: str
     student_id: str
     student_name: str
@@ -1123,6 +1125,15 @@ class JoinStudentRequest(BaseModel):
     telegram_id: int
     username: Optional[str] = None
     first_name: Optional[str] = None
+
+
+class ProcessJournalInviteRequest(BaseModel):
+    """Запрос на обработку приглашения в журнал через Web App"""
+    telegram_id: int
+    username: Optional[str] = None
+    first_name: Optional[str] = None
+    invite_type: str  # "journal" или "jstudent"
+    invite_code: str  # invite_token для журнала или invite_code для студента
 
 
 class MyAttendanceResponse(BaseModel):
