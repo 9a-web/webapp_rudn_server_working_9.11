@@ -138,9 +138,29 @@ export const JournalDetailModal = ({
     }
   };
 
+  const handleUpdateStudent = async (studentId, data) => {
+    try {
+      const { updateStudent } = await import('../../services/journalAPI');
+      await updateStudent(journalId, studentId, data);
+      loadData();
+    } catch (error) {
+      console.error('Error updating student:', error);
+    }
+  };
+  
+  const handleUnlinkStudent = async (studentId) => {
+      try {
+        const { unlinkStudent } = await import('../../services/journalAPI');
+        await unlinkStudent(journalId, studentId);
+        loadData();
+      } catch (error) {
+        console.error('Error unlinking student:', error);
+      }
+  };
+
   const handleDeleteStudent = async (studentId) => {
-    if (!window.confirm('Удалить студента?')) return;
-    
+    // Confirmation is handled inside EditStudentModal now for this flow, 
+    // but we keep this generic handler
     try {
       await deleteStudent(journalId, studentId);
       loadData();
