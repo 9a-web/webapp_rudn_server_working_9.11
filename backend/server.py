@@ -2735,6 +2735,145 @@ async def get_referral_code(telegram_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.post("/referral/process-webapp", response_model=ProcessReferralResponse)
+async def process_referral_webapp(request: ProcessReferralRequest):
+    """
+    Обработать реферальный код через Web App.
+    Вызывается при открытии приложения по ссылке t.me/bot/app?startapp=ref_CODE
+    """
+    try:
+        telegram_id = request.telegram_id
+        referral_code = request.referral_code
+        
+        logger.info(f"🔗 Обработка реферального кода через Web App: {referral_code} для пользователя {telegram_id}")
+        
+        # Проверяем существование пользователя
+        user = await db.user_settings.find_one({"telegram_id": telegram_id})
+        
+        if not user:
+            # Новый пользователь - создаём запись
+            logger.info(f"👤 Новый пользователь {telegram_id} через реферальную ссылку Web App")
+            
+            # Ищем пригласившего по реферальному коду
+            referrer = await db.user_settings.find_one({"referral_code": referral_code})
+            
+            if not referrer:
+                logger.warning(f"⚠️ Реферальный код {referral_code} не найден")
+                return ProcessReferralResponse(
+                    success=False,
+                    message="Реферальный код не найден"
+                )
+            
+            referrer_id = referrer.get("telegram_id")
+            
+            # Проверяем, что пользователь не пытается пригласить сам себя
+            if referrer_id == telegram_id:
+                return ProcessReferralResponse(
+                    success=False,
+                    message="Нельзя использовать собственный реферальный код"
+                )
+            
+            # Создаём нового пользователя с реферальной связью
+            new_user = {
+                "id": str(uuid.uuid4()),
+                "telegram_id": telegram_id,
+                "username": request.username,
+                "first_name": request.first_name,
+                "last_name": request.last_name,
+                "referral_code": generate_referral_code(telegram_id),
+                "referred_by": referrer_id,
+                "invited_count": 0,
+                "referral_points_earned": 0,
+                "created_at": datetime.utcnow(),
+                "last_activity": datetime.utcnow()
+            }
+            
+            await db.user_settings.insert_one(new_user)
+            logger.info(f"✅ Создан новый пользователь {telegram_id} с реферером {referrer_id}")
+            
+            # Создаём реферальные связи
+            await create_referral_connections(telegram_id, referrer_id, db)
+            
+            # Начисляем бонусы пригласившему
+            bonus_points = 50
+            await award_referral_bonus(referrer_id, telegram_id, bonus_points, 1, db)
+            
+            # Увеличиваем счётчик приглашений
+            await db.user_settings.update_one(
+                {"telegram_id": referrer_id},
+                {"$inc": {"invited_count": 1}}
+            )
+            
+            referrer_name = referrer.get("first_name") or referrer.get("username") or "Пользователь"
+            
+            return ProcessReferralResponse(
+                success=True,
+                message=f"Вы присоединились по приглашению от {referrer_name}!",
+                referrer_name=referrer_name,
+                bonus_points=bonus_points
+            )
+        
+        else:
+            # Существующий пользователь
+            if user.get("referred_by"):
+                # Уже есть реферер
+                return ProcessReferralResponse(
+                    success=False,
+                    message="Вы уже присоединились по реферальной ссылке ранее"
+                )
+            
+            # Ищем пригласившего
+            referrer = await db.user_settings.find_one({"referral_code": referral_code})
+            
+            if not referrer:
+                return ProcessReferralResponse(
+                    success=False,
+                    message="Реферальный код не найден"
+                )
+            
+            referrer_id = referrer.get("telegram_id")
+            
+            if referrer_id == telegram_id:
+                return ProcessReferralResponse(
+                    success=False,
+                    message="Нельзя использовать собственный реферальный код"
+                )
+            
+            # Привязываем существующего пользователя к рефереру
+            await db.user_settings.update_one(
+                {"telegram_id": telegram_id},
+                {"$set": {"referred_by": referrer_id}}
+            )
+            
+            # Создаём реферальные связи
+            await create_referral_connections(telegram_id, referrer_id, db)
+            
+            # Начисляем бонусы
+            bonus_points = 50
+            await award_referral_bonus(referrer_id, telegram_id, bonus_points, 1, db)
+            
+            # Увеличиваем счётчик приглашений
+            await db.user_settings.update_one(
+                {"telegram_id": referrer_id},
+                {"$inc": {"invited_count": 1}}
+            )
+            
+            referrer_name = referrer.get("first_name") or referrer.get("username") or "Пользователь"
+            
+            logger.info(f"✅ Пользователь {telegram_id} привязан к рефереру {referrer_id}")
+            
+            return ProcessReferralResponse(
+                success=True,
+                message=f"Вы присоединились по приглашению от {referrer_name}!",
+                referrer_name=referrer_name,
+                bonus_points=bonus_points
+            )
+    
+    except Exception as e:
+        logger.error(f"❌ Ошибка при обработке реферального кода Web App: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 async def get_referral_level(referrer_id: int, referred_id: int, db) -> int:
     """
     Определяет уровень нового реферала в цепочке
