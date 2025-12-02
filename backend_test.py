@@ -3593,7 +3593,8 @@ class RUDNScheduleAPITester:
             # Student Personal Invite Links Tests
             self.test_student_personal_invite_links,
             # Journal WebApp Invite Processing Tests
-            self.test_journal_process_webapp_invite
+            self.test_journal_process_webapp_invite,
+            self.test_journal_process_webapp_invite_auto_link
         ]
         
         passed = 0
