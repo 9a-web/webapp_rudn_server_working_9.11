@@ -286,6 +286,74 @@ async def send_room_join_notifications(bot, room_data: dict, new_user_name: str,
             logger.warning(f"⚠️ Не удалось отправить уведомление участнику {participant_id}: {e}")
 
 
+
+async def join_user_to_journal(telegram_id: int, username: str, first_name: str, invite_token: str) -> dict:
+    """
+    Добавляет пользователя в список ожидающих участников журнала
+    """
+    import uuid
+    
+    # Находим журнал по токену
+    journal_doc = await db.attendance_journals.find_one({"invite_token": invite_token})
+    
+    if not journal_doc:
+        logger.warning(f"⚠️ Журнал с токеном {invite_token} не найден")
+        return None
+    
+    journal_id = journal_doc["journal_id"]
+    
+    # Проверяем, не является ли пользователь уже создателем
+    if journal_doc.get("owner_id") == telegram_id:
+        return {
+            "journal": journal_doc,
+            "status": "owner"
+        }
+
+    # Проверяем, не привязан ли уже студент к этому telegram_id
+    linked_student = await db.journal_students.find_one({
+        "journal_id": journal_id,
+        "telegram_id": telegram_id
+    })
+    
+    if linked_student:
+        return {
+            "journal": journal_doc,
+            "status": "already_linked",
+            "student": linked_student
+        }
+        
+    # Проверяем, есть ли уже в ожидающих
+    pending = await db.journal_pending_members.find_one({
+        "journal_id": journal_id,
+        "telegram_id": telegram_id
+    })
+    
+    if pending:
+        return {
+            "journal": journal_doc,
+            "status": "pending"
+        }
+        
+    # Добавляем в ожидающие
+    pending_member = {
+        "id": str(uuid.uuid4()),
+        "journal_id": journal_id,
+        "telegram_id": telegram_id,
+        "username": username,
+        "first_name": first_name,
+        "joined_at": datetime.utcnow(),
+        "is_linked": False
+    }
+    
+    await db.journal_pending_members.insert_one(pending_member)
+    
+    logger.info(f"✅ Пользователь {telegram_id} добавлен в ожидающие журнала {journal_id}")
+    
+    return {
+        "journal": journal_doc,
+        "status": "added_to_pending"
+    }
+
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     Обработчик команды /start
