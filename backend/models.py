@@ -1002,6 +1002,23 @@ class JournalSessionCreate(BaseModel):
     telegram_id: int                     # Кто создаёт
 
 
+class ScheduleSessionItem(BaseModel):
+    """Элемент занятия из расписания"""
+    date: str                            # YYYY-MM-DD
+    time: str                            # Время занятия (09:00-10:30)
+    discipline: str                      # Название предмета
+    lesson_type: str                     # Тип (лекция, семинар и т.д.)
+    teacher: Optional[str] = None
+    auditory: Optional[str] = None
+
+
+class CreateSessionsFromScheduleRequest(BaseModel):
+    """Запрос на создание занятий из расписания"""
+    subject_id: str                      # К какому предмету
+    telegram_id: int                     # Кто создаёт
+    sessions: List[ScheduleSessionItem]  # Список занятий из расписания
+
+
 class AttendanceRecord(BaseModel):
     """Запись посещаемости"""
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
