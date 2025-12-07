@@ -369,7 +369,6 @@ def main():
 if __name__ == "__main__":
     success = main()
     sys.exit(0 if success else 1)
-        """Test GET /api/faculties endpoint"""
         try:
             print("🔍 Testing GET /api/faculties...")
             response = self.session.get(f"{self.base_url}/faculties")
