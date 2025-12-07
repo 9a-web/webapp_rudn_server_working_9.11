@@ -122,6 +122,29 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
     }
   }, [userSettings]);
 
+  // 🚪 Обработка pendingRoomId - автоматическое открытие комнаты после присоединения по ссылке
+  useEffect(() => {
+    if (pendingRoomId && rooms.length > 0) {
+      console.log('🚪 Ищем комнату для автоматического открытия:', pendingRoomId);
+      const room = rooms.find(r => r.room_id === pendingRoomId);
+      if (room) {
+        console.log('🚪 Открываем комнату:', room.name);
+        setSelectedRoom(room);
+        setIsRoomDetailModalOpen(true);
+        // Сбрасываем pendingRoomId после обработки
+        if (onPendingRoomHandled) {
+          onPendingRoomHandled();
+        }
+      } else {
+        console.log('🚪 Комната не найдена в списке, перезагружаем комнаты...');
+        // Если комната не найдена, перезагружаем список комнат
+        loadRooms().then(() => {
+          // Попробуем снова после перезагрузки
+        });
+      }
+    }
+  }, [pendingRoomId, rooms]);
+
   const loadTasks = async () => {
     try {
       setLoading(true);
