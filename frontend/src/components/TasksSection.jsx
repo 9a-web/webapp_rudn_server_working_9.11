@@ -988,6 +988,17 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
         quickTemplate={quickTaskTemplate} // Передаем данные быстрого шаблона
       />
 
+      {/* Специальное модальное окно "Подготовиться к лекции" */}
+      <PrepareForLectureModal
+        isOpen={isPrepareForLectureModalOpen}
+        onClose={() => setIsPrepareForLectureModalOpen(false)}
+        onAddTask={handleAddTask}
+        hapticFeedback={hapticFeedback}
+        scheduleSubjects={scheduleSubjects}
+        scheduleEvents={scheduleEvents}
+        userSettings={userSettings}
+      />
+
       {/* Модальное окно редактирования задачи */}
       <EditTaskModal
         isOpen={isEditModalOpen}
