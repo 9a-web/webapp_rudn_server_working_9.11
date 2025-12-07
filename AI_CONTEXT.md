@@ -197,6 +197,18 @@ attempts: int, last_attempt_at: datetime?, error_message: str?
 created_at: datetime, sent_at: datetime?
 ```
 
+### referral_events (NEW! отслеживание реферальных переходов)
+```python
+id: UUID, event_type: str ('room_join'|'journal_join')
+telegram_id: int,  # Кто перешел по ссылке
+referrer_id: int?,  # Кто пригласил (по чьей ссылке)
+target_id: str,  # room_id или journal_id
+target_name: str,  # Название комнаты/журнала
+invite_token: str,  # Токен приглашения
+is_new_member: bool,  # Новый участник или уже был
+created_at: datetime
+```
+
 ---
 
 ## КРИТИЧЕСКИЕ ПРАВИЛА
