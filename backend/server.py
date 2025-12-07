@@ -120,7 +120,11 @@ from models import (
     JoinStudentRequest,
     ProcessJournalInviteRequest,
     MyAttendanceResponse,
-    JournalSettings
+    JournalSettings,
+    # Модели для отслеживания реферальных событий
+    ReferralEvent,
+    ReferralEventResponse,
+    ReferralStatsDetailResponse
 )
 from notifications import get_notification_service
 from scheduler import get_scheduler  # Старая система (резерв)
