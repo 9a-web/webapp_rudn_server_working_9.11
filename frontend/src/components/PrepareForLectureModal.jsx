@@ -170,7 +170,7 @@ export const PrepareForLectureModal = ({
       setSubject('');
       setPriority('medium');
       setDeadlineType('date');
-      setSelectedDate('');
+      setDeadlineDateInput('');
       setSelectedClass(null);
     }
   }, [isOpen]);
