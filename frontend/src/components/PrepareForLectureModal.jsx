@@ -646,6 +646,32 @@ export const PrepareForLectureModal = ({
                     </motion.div>
                   )}
                 </AnimatePresence>
+                
+                {/* Checkbox для привязки к дате/паре (только если выбран сегодняшний день) */}
+                {isToday && (deadlineDateInput || selectedClass) && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-3"
+                  >
+                    <label className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl cursor-pointer hover:bg-blue-100 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={useDeadlineAsTargetDate}
+                        onChange={(e) => {
+                          setUseDeadlineAsTargetDate(e.target.checked);
+                          hapticFeedback && hapticFeedback('selection');
+                        }}
+                        disabled={saving}
+                        className="w-5 h-5 rounded-md border-2 border-blue-300 text-blue-500 focus:ring-blue-400 focus:ring-offset-0"
+                      />
+                      <span className="text-sm text-blue-700">
+                        Прикрепить задачу к {deadlineType === 'class' ? 'дате пары' : 'выбранной дате'} вместо сегодня
+                      </span>
+                    </label>
+                  </motion.div>
+                )}
               </div>
 
             </form>
