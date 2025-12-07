@@ -168,32 +168,8 @@ export const Header = React.memo(({ user, userSettings, onNotificationsClick, on
           </h1>
         </motion.div>
 
-        {/* Right side - Calendar, Notifications, Menu, and Profile buttons */}
+        {/* Right side - Notifications, Menu, and Profile buttons */}
         <div className="flex items-center gap-2">
-          {/* Calendar button */}
-          <motion.button
-            onClick={() => {
-              if (hapticFeedback) hapticFeedback('impact', 'medium');
-              onCalendarClick();
-            }}
-            className="w-10 h-10 md:w-11 md:h-11 flex items-center justify-center rounded-xl border border-white/10 transition-all duration-300 relative overflow-hidden group"
-            style={{
-              backgroundColor: 'rgba(52, 52, 52, 0.6)',
-              backdropFilter: 'blur(20px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(180%)'
-            }}
-            aria-label="Open calendar"
-            custom={1}
-            initial="initial"
-            animate="animate"
-            variants={headerItemVariants}
-          >
-            {/* Gradient glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-br from-green-400/20 via-teal-400/20 to-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            
-            <Calendar className="w-5 h-5 md:w-6 md:h-6 relative z-10" style={{ color: '#E7E7E7' }} />
-          </motion.button>
-
           {/* Notifications button */}
           <motion.button
             onClick={() => {
