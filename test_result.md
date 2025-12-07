@@ -180,3 +180,15 @@ agent_communication:
       - working: true
         agent: "testing"
         comment: "✅ Successfully tested all Rooms API endpoints as requested in review. Verified: 1) POST /api/rooms creates room correctly with owner as participant and generates invite_token, 2) POST /api/rooms/{room_id}/invite-link generates proper Telegram invite link format (https://t.me/{bot}/app?startapp=room_*_ref_*), 3) POST /api/rooms/join/{invite_token} successfully adds new participants to room, 4) Handles duplicate joins correctly (no duplicate participants), 5) Returns 404 for invalid tokens. All endpoints working with test data: telegram_id=123456789, username='test_user', first_name='Test'. Bot username: rudn_pro_bot."
+
+  - task: "Group Tasks assigned_to functionality"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ Successfully tested new assigned_to functionality for group tasks as requested in review. ALL 7 test scenarios passed: 1) Created test room with 3 participants (creator + 2 participants), 2) Task creation with assigned_to: null correctly adds ALL room participants, 3) Task creation with specific assigned_to only adds specified participants + creator, 4) Task update with assigned_to: [] reassigns to ALL participants, 5) Task update with specific assigned_to removes unassigned participants while keeping creator. Creator/owner is always included regardless of assigned_to value. Backend URL: http://localhost:8001 - All functionality working as expected."
