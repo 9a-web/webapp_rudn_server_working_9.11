@@ -195,22 +195,11 @@ export const PrepareForLectureModal = ({
     const now = new Date();
     const classes = [];
     
-    // Маппинг дней недели на числа
-    const dayNameToNumber = {
-      'понедельник': 1,
-      'вторник': 2,
-      'среда': 3,
-      'четверг': 4,
-      'пятница': 5,
-      'суббота': 6,
-      'воскресенье': 0,
-    };
-    
     // Фильтруем события по выбранному предмету
     scheduleEvents.forEach(event => {
       if (event.discipline && event.discipline.toLowerCase().includes(subject.toLowerCase())) {
         // Парсим дату и время события
-        const eventDate = parseEventDate(event, dayNameToNumber);
+        const eventDate = parseEventDate(event);
         if (eventDate && eventDate > now) {
           classes.push({
             ...event,
