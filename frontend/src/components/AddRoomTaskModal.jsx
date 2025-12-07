@@ -530,10 +530,10 @@ export const AddRoomTaskModal = ({
                   e.preventDefault();
                   handleSubmit(e);
                 }}
-                disabled={!title.trim() || saving}
+                disabled={!title.trim() || saving || (!assignToAll && selectedParticipants.length === 0 && otherParticipants.length > 0)}
                 className={`
                   flex-1 px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl font-medium text-sm sm:text-base transition-all touch-manipulation
-                  ${title.trim() && !saving
+                  ${title.trim() && !saving && (assignToAll || selectedParticipants.length > 0 || otherParticipants.length === 0)
                     ? 'bg-gradient-to-r from-blue-500 to-indigo-600 active:from-blue-600 active:to-indigo-700 text-white shadow-lg shadow-blue-500/30'
                     : 'bg-gray-700 text-gray-500 cursor-not-allowed'
                   }
