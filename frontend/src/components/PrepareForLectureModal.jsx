@@ -260,22 +260,43 @@ export const PrepareForLectureModal = ({
       // Формируем текст задачи
       const taskText = `Подготовиться к лекции: ${subject}`;
       
-      // target_date ВСЕГДА берется из выбранного дня в селекторе задач
+      // deadline определяется выбором пользователя (дата или пара)
+      let deadlineISO = null;
+      let deadlineTargetDate = null; // Дата из дедлайна для target_date если выбран checkbox
+      
+      if (deadlineType === 'date' && deadlineDateInput) {
+        const deadlineDate = new Date(deadlineDateInput);
+        deadlineISO = deadlineDate.toISOString();
+        // Для target_date берем только дату без времени
+        const year = deadlineDate.getFullYear();
+        const month = String(deadlineDate.getMonth() + 1).padStart(2, '0');
+        const day = String(deadlineDate.getDate()).padStart(2, '0');
+        deadlineTargetDate = `${year}-${month}-${day}T00:00:00`;
+      } else if (deadlineType === 'class' && selectedClass) {
+        const classDate = selectedClass.parsedDate;
+        deadlineISO = classDate.toISOString();
+        // Для target_date берем только дату без времени
+        const year = classDate.getFullYear();
+        const month = String(classDate.getMonth() + 1).padStart(2, '0');
+        const day = String(classDate.getDate()).padStart(2, '0');
+        deadlineTargetDate = `${year}-${month}-${day}T00:00:00`;
+      }
+      
+      // target_date определяется:
+      // - Если сегодня и checkbox включен и есть дедлайн → берем дату из дедлайна/пары
+      // - Иначе → берем выбранный день в селекторе
       let targetDateISO = null;
-      if (taskSelectedDate) {
+      
+      if (isToday && useDeadlineAsTargetDate && deadlineTargetDate) {
+        // Привязываем к дате дедлайна/пары
+        targetDateISO = deadlineTargetDate;
+      } else if (taskSelectedDate) {
+        // Привязываем к выбранному дню в селекторе
         const targetDate = new Date(taskSelectedDate);
         const year = targetDate.getFullYear();
         const month = String(targetDate.getMonth() + 1).padStart(2, '0');
         const day = String(targetDate.getDate()).padStart(2, '0');
         targetDateISO = `${year}-${month}-${day}T00:00:00`;
-      }
-      
-      // deadline определяется выбором пользователя (дата или пара)
-      let deadlineISO = null;
-      if (deadlineType === 'date' && deadlineDateInput) {
-        deadlineISO = new Date(deadlineDateInput).toISOString();
-      } else if (deadlineType === 'class' && selectedClass) {
-        deadlineISO = selectedClass.parsedDate.toISOString();
       }
       
       const taskData = {
@@ -295,6 +316,7 @@ export const PrepareForLectureModal = ({
       setDeadlineType('date');
       setDeadlineDateInput('');
       setSelectedClass(null);
+      setUseDeadlineAsTargetDate(false);
       onClose();
     } catch (error) {
       console.error('Error adding task:', error);
