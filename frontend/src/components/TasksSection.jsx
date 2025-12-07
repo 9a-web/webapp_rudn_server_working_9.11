@@ -432,7 +432,8 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
       text: 'Подготовиться к лекции', 
       category: 'study', 
       priority: 'medium',
-      icon: '📖'
+      icon: '📖',
+      specialModal: 'prepareForLecture' // Специальное модальное окно
     },
     { 
       text: 'Сдать лабораторную работу', 
@@ -458,14 +459,22 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
   const handleQuickAction = (template) => {
     hapticFeedback && hapticFeedback('impact', 'medium');
     
+    // Закрываем панель быстрых действий
+    setShowQuickActions(false);
+    
+    // Проверяем, нужно ли открыть специальное модальное окно
+    if (template.specialModal === 'prepareForLecture') {
+      // Открываем специальное модальное окно для "Подготовиться к лекции"
+      setIsPrepareForLectureModalOpen(true);
+      return;
+    }
+    
+    // Для остальных шаблонов - стандартное поведение
     // Сохраняем данные шаблона для предзаполнения модального окна
     setQuickTaskTemplate(template);
     
-    // Открываем модальное окно
+    // Открываем стандартное модальное окно
     setIsAddModalOpen(true);
-    
-    // Закрываем панель быстрых действий
-    setShowQuickActions(false);
   };
 
   // Фильтрация и сортировка задач
