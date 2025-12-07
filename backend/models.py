@@ -1046,6 +1046,7 @@ class JournalJoinRequest(BaseModel):
     telegram_id: int
     username: Optional[str] = None
     first_name: Optional[str] = None
+    referrer_id: Optional[int] = None  # ID пользователя, который пригласил
 
 
 # ===== Response модели =====
