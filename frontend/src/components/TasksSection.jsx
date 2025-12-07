@@ -21,7 +21,7 @@ import * as roomsAPI from '../services/roomsAPI';
 // Измените на false, чтобы скрыть комнаты
 const SHOW_ROOMS_FEATURE = true;
 
-export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalStateChange }) => {
+export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalStateChange, pendingRoomId, onPendingRoomHandled }) => {
   const { user, hapticFeedback } = useTelegram();
   
   const [tasks, setTasks] = useState([]);
