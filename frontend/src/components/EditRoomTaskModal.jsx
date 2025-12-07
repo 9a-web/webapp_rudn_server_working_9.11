@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Save, Calendar, Flag, Tag as TagIcon } from 'lucide-react';
+import { X, Save, Calendar, Flag, Tag as TagIcon, Users, Check } from 'lucide-react';
 import { useTelegram } from '../contexts/TelegramContext';
 import TagsInput from './TagsInput';
 
@@ -21,7 +21,7 @@ const PRIORITIES = [
   { id: 'low', name: 'Низкий', emoji: '🟢', color: 'green' }
 ];
 
-const EditRoomTaskModal = ({ isOpen, onClose, task, onSave }) => {
+const EditRoomTaskModal = ({ isOpen, onClose, task, onSave, roomParticipants = [] }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [deadline, setDeadline] = useState('');
@@ -29,7 +29,12 @@ const EditRoomTaskModal = ({ isOpen, onClose, task, onSave }) => {
   const [priority, setPriority] = useState('medium');
   const [tags, setTags] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
-  const { webApp } = useTelegram();
+  const [assignToAll, setAssignToAll] = useState(true);
+  const [selectedParticipants, setSelectedParticipants] = useState([]);
+  const { webApp, user } = useTelegram();
+
+  // Получаем участников кроме владельца задачи
+  const otherParticipants = roomParticipants.filter(p => p.telegram_id !== task?.owner_id);
 
   useEffect(() => {
     if (isOpen && task) {
@@ -49,6 +54,17 @@ const EditRoomTaskModal = ({ isOpen, onClose, task, onSave }) => {
       setPriority(task.priority || 'medium');
       setTags(task.tags || []);
       
+      // Определяем текущий режим назначения участников
+      const currentParticipantIds = (task.participants || [])
+        .filter(p => p.role !== 'owner')
+        .map(p => p.telegram_id);
+      const allOtherIds = otherParticipants.map(p => p.telegram_id);
+      
+      // Если все участники комнаты есть в задаче - режим "Для всех"
+      const isAllAssigned = allOtherIds.every(id => currentParticipantIds.includes(id));
+      setAssignToAll(isAllAssigned || currentParticipantIds.length === allOtherIds.length);
+      setSelectedParticipants(isAllAssigned ? [] : currentParticipantIds);
+      
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -57,7 +73,7 @@ const EditRoomTaskModal = ({ isOpen, onClose, task, onSave }) => {
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isOpen, task]);
+  }, [isOpen, task, roomParticipants.length]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
