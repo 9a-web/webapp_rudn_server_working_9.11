@@ -27,15 +27,15 @@ export const JournalCard = ({ journal, onClick, hapticFeedback }) => {
       onClick={handleClick}
       className="bg-gray-50 rounded-2xl p-4 border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
     >
-      <div className="flex items-start gap-3">
+      <div className="flex flex-col items-center text-center">
         {/* Icon */}
-        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center flex-shrink-0`}>
+        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center mb-3`}>
           <FileCheck className="w-6 h-6 text-white" />
         </div>
         
         {/* Content */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
+        <div className="w-full">
+          <div className="flex items-center justify-center gap-2">
             <h3 className="font-semibold text-[#1C1C1E] truncate">{journal.group_name}</h3>
             {journal.is_owner && (
               <Crown className="w-4 h-4 text-yellow-500 flex-shrink-0" />
