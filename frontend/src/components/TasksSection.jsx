@@ -111,9 +111,9 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
   useEffect(() => {
     if (onModalStateChange) {
       const roomModals = SHOW_ROOMS_FEATURE ? (isCreateRoomModalOpen || isRoomDetailModalOpen) : false;
-      onModalStateChange(isAddModalOpen || isEditModalOpen || roomModals);
+      onModalStateChange(isAddModalOpen || isEditModalOpen || isPrepareForLectureModalOpen || roomModals);
     }
-  }, [isAddModalOpen, isEditModalOpen, isCreateRoomModalOpen, isRoomDetailModalOpen, onModalStateChange]);
+  }, [isAddModalOpen, isEditModalOpen, isPrepareForLectureModalOpen, isCreateRoomModalOpen, isRoomDetailModalOpen, onModalStateChange]);
 
   // Загрузка комнат при монтировании
   useEffect(() => {
