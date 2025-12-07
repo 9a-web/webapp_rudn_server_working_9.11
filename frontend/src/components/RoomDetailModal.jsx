@@ -771,6 +771,7 @@ const TasksTab = ({
             );
           })}
         </Reorder.Group>
+        </div>
       )}
     </div>
   );
