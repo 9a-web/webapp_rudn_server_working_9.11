@@ -6,6 +6,7 @@ import { groupTasksAPI } from '../services/groupTasksAPI';
 import { useTelegram } from '../contexts/TelegramContext';
 import { AddTaskModal } from './AddTaskModal';
 import { EditTaskModal } from './EditTaskModal';
+import { PrepareForLectureModal } from './PrepareForLectureModal';
 import { WeekDateSelector } from './WeekDateSelector';
 import { tasksCompleteConfetti } from '../utils/confetti';
 import { GroupTaskCard } from './GroupTaskCard';
