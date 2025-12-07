@@ -1,19 +1,24 @@
 #!/usr/bin/env python3
 """
-Comprehensive Backend API Tests for RUDN Schedule API
-Tests all endpoints with real data and proper error handling
+Backend API Testing Script for assigned_to functionality in group tasks
+Tests the new assigned_to functionality for group tasks as requested in the review.
 """
 
 import requests
 import json
-import time
 import sys
-from typing import Dict, List, Optional
+from datetime import datetime, timedelta
 
-# Configuration
-# Backend is accessible on localhost:8001 internally
-BACKEND_URL = "http://localhost:8001/api"
-TIMEOUT = 30  # 30 seconds timeout for API calls
+# Backend URL from review request
+BACKEND_URL = "https://class-progress-1.preview.emergentagent.com"
+API_BASE = f"{BACKEND_URL}/api"
+
+# Test data
+TEST_CREATOR_ID = 123456789
+TEST_PARTICIPANT_1 = 987654321
+TEST_PARTICIPANT_2 = 555666777
+TEST_ROOM_NAME = "Test Room for assigned_to functionality"
+TEST_ROOM_COLOR = "blue"
 
 class RUDNScheduleAPITester:
     def __init__(self):
