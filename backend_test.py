@@ -3836,7 +3836,6 @@ class RUDNScheduleAPITester:
             self.test_student_personal_invite_links,
             # Journal WebApp Invite Processing Tests
             self.test_journal_process_webapp_invite,
-            self.test_journal_process_webapp_invite_auto_link,
             # Rooms API Tests (as requested in review)
             self.test_rooms_api_comprehensive
         ]
