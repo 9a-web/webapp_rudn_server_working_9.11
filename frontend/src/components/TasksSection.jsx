@@ -32,6 +32,7 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editingText, setEditingText] = useState('');
   const [scheduleSubjects, setScheduleSubjects] = useState([]);
+  const [scheduleEvents, setScheduleEvents] = useState([]); // Все события расписания для поиска ближайших пар
   
   // Выбранная дата для отображения задач (по умолчанию - сегодня)
   const [tasksSelectedDate, setTasksSelectedDate] = useState(() => {
@@ -49,6 +50,9 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
   // Шаблоны быстрых действий
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [quickTaskTemplate, setQuickTaskTemplate] = useState(null); // Данные из быстрого шаблона для предзаполнения
+  
+  // Модальное окно "Подготовиться к лекции"
+  const [isPrepareForLectureModalOpen, setIsPrepareForLectureModalOpen] = useState(false);
   
   // Комнаты (Rooms)
   const [rooms, setRooms] = useState([]);
