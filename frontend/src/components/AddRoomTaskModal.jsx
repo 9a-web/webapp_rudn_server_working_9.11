@@ -104,6 +104,8 @@ export const AddRoomTaskModal = ({
     setTags([]);
     setTagInput('');
     setDragY(0);
+    setAssignToAll(true);
+    setSelectedParticipants([]);
   };
 
   const handleClose = () => {
@@ -123,6 +125,23 @@ export const AddRoomTaskModal = ({
       setDragY(0);
     }
   };
+
+  // Переключение выбора участника
+  const toggleParticipant = (participantId) => {
+    if (webApp?.HapticFeedback) {
+      webApp.HapticFeedback.selectionChanged();
+    }
+    setSelectedParticipants(prev => {
+      if (prev.includes(participantId)) {
+        return prev.filter(id => id !== participantId);
+      } else {
+        return [...prev, participantId];
+      }
+    });
+  };
+
+  // Получаем участников кроме текущего пользователя
+  const otherParticipants = participants.filter(p => p.telegram_id !== user?.id);
 
   const handleAddTag = () => {
     if (tagInput.trim() && tags.length < 5) {
