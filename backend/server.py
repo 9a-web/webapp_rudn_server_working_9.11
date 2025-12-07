@@ -443,6 +443,90 @@ async def delete_user_settings(telegram_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.delete("/user/{telegram_id}", response_model=SuccessResponse)
+async def delete_user_account(telegram_id: int):
+    """
+    Полное удаление аккаунта пользователя и всех связанных данных.
+    Удаляет: настройки, статистику, достижения, задачи, участие в комнатах.
+    """
+    try:
+        deleted_counts = {}
+        
+        # 1. Удаляем настройки пользователя
+        result = await db.user_settings.delete_one({"telegram_id": telegram_id})
+        deleted_counts["user_settings"] = result.deleted_count
+        
+        # 2. Удаляем статистику
+        result = await db.user_stats.delete_one({"telegram_id": telegram_id})
+        deleted_counts["user_stats"] = result.deleted_count
+        
+        # 3. Удаляем достижения
+        result = await db.user_achievements.delete_many({"telegram_id": telegram_id})
+        deleted_counts["user_achievements"] = result.deleted_count
+        
+        # 4. Удаляем личные задачи
+        result = await db.tasks.delete_many({"telegram_id": telegram_id})
+        deleted_counts["tasks"] = result.deleted_count
+        
+        # 5. Удаляем из участников комнат
+        await db.rooms.update_many(
+            {"participants.telegram_id": telegram_id},
+            {"$pull": {"participants": {"telegram_id": telegram_id}}}
+        )
+        
+        # 6. Удаляем комнаты где пользователь владелец (и все связанные задачи)
+        owned_rooms = await db.rooms.find({"owner_id": telegram_id}).to_list(None)
+        for room in owned_rooms:
+            await db.group_tasks.delete_many({"room_id": room["room_id"]})
+        result = await db.rooms.delete_many({"owner_id": telegram_id})
+        deleted_counts["owned_rooms"] = result.deleted_count
+        
+        # 7. Удаляем из участников групповых задач
+        await db.group_tasks.update_many(
+            {"participants.telegram_id": telegram_id},
+            {"$pull": {"participants": {"telegram_id": telegram_id}}}
+        )
+        
+        # 8. Удаляем из pending members журналов
+        await db.journal_pending_members.delete_many({"telegram_id": telegram_id})
+        
+        # 9. Удаляем связи со студентами журналов
+        await db.journal_students.update_many(
+            {"telegram_id": telegram_id},
+            {"$set": {"telegram_id": None, "is_linked": False}}
+        )
+        
+        # 10. Удаляем журналы где пользователь владелец
+        owned_journals = await db.attendance_journals.find({"owner_id": telegram_id}).to_list(None)
+        for journal in owned_journals:
+            await db.journal_students.delete_many({"journal_id": journal["journal_id"]})
+            await db.journal_sessions.delete_many({"journal_id": journal["journal_id"]})
+            await db.attendance_records.delete_many({"journal_id": journal["journal_id"]})
+        result = await db.attendance_journals.delete_many({"owner_id": telegram_id})
+        deleted_counts["owned_journals"] = result.deleted_count
+        
+        # 11. Удаляем реферальные события
+        await db.referral_events.delete_many({"telegram_id": telegram_id})
+        
+        # 12. Удаляем реферальные связи
+        await db.referral_connections.delete_many({
+            "$or": [
+                {"referrer_telegram_id": telegram_id},
+                {"referred_telegram_id": telegram_id}
+            ]
+        })
+        
+        logger.info(f"✅ Аккаунт пользователя {telegram_id} полностью удален. Статистика: {deleted_counts}")
+        
+        return SuccessResponse(
+            success=True, 
+            message=f"Аккаунт и все данные удалены. Удалено записей: {sum(deleted_counts.values())}"
+        )
+    except Exception as e:
+        logger.error(f"Ошибка при удалении аккаунта пользователя {telegram_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.get("/schedule-cached/{group_id}/{week_number}", response_model=Optional[ScheduleResponse])
 async def get_cached_schedule(group_id: str, week_number: int):
     """Получить кэшированное расписание"""
