@@ -463,7 +463,7 @@ export const CreateSessionModal = ({
                     <div className="text-center py-8">
                       <CalendarRange className="w-12 h-12 text-gray-600 mx-auto mb-3" />
                       <p className="text-gray-400 text-sm">
-                        Занятий по предмету "{subjectName}" не найдено
+                        Занятий по предмету «{subjectName}» не найдено
                       </p>
                       <p className="text-gray-500 text-xs mt-1">
                         Попробуйте выбрать другую неделю или добавьте занятие вручную
