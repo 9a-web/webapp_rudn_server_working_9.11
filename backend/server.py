@@ -4823,10 +4823,10 @@ async def get_subject_detail(subject_id: str):
         if not subject:
             raise HTTPException(status_code=404, detail="Subject not found")
         
-        # Получаем занятия предмета
+        # Получаем занятия предмета (сортировка по дате создания - новые первыми)
         sessions = await db.journal_sessions.find(
             {"subject_id": subject_id}
-        ).sort("date", -1).to_list(200)
+        ).sort("created_at", -1).to_list(200)
         
         total_students = await db.journal_students.count_documents({
             "journal_id": subject["journal_id"]
