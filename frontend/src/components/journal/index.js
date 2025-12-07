@@ -7,3 +7,4 @@ export { CreateSubjectModal } from './CreateSubjectModal';
 export { SubjectDetailModal } from './SubjectDetailModal';
 export { AttendanceModal } from './AttendanceModal';
 export { LinkStudentModal } from './LinkStudentModal';
+export { JournalStatsTab } from './JournalStatsTab';
