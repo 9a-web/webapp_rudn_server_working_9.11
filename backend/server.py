@@ -1753,9 +1753,9 @@ async def generate_room_invite_link(room_id: str, telegram_id: int = Body(..., e
         bot_info = await bot.get_me()
         bot_username = bot_info.username
         
-        # Формируем ссылку с реферальным кодом
+        # Формируем ссылку с реферальным кодом (Web App формат для прямого открытия приложения)
         invite_token = room_doc.get("invite_token")
-        invite_link = f"https://t.me/{bot_username}?start=room_{invite_token}_ref_{telegram_id}"
+        invite_link = f"https://t.me/{bot_username}/app?startapp=room_{invite_token}_ref_{telegram_id}"
         
         return RoomInviteLinkResponse(
             invite_link=invite_link,
