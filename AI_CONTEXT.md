@@ -123,6 +123,19 @@ PUT    /api/group-tasks/{task_id}  - обновить
 DELETE /api/group-tasks/{task_id}  - удалить
 ```
 
+### Админ статистика
+```
+GET /api/admin/stats            - общая статистика (users, tasks, rooms, referrals)
+GET /api/admin/referral-stats   - детальная статистика реферальных переходов
+GET /api/admin/users-activity   - активность пользователей
+GET /api/admin/hourly-activity  - активность по часам
+GET /api/admin/weekly-activity  - недельная активность
+GET /api/admin/feature-usage    - использование функций
+GET /api/admin/top-users        - топ пользователей
+GET /api/admin/faculty-stats    - статистика по факультетам
+GET /api/admin/course-stats     - статистика по курсам
+```
+
 ### Прочее
 ```
 GET /api/weather    - погода в Москве
