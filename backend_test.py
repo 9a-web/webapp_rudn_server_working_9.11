@@ -22,186 +22,208 @@ def log_test(test_name, status, details=""):
     if details:
         print(f"    {details}")
     print()
-def test_referral_event_tracking():
-    """Test the new referral event tracking system as requested in review"""
+def test_sessions_from_schedule():
+    """Test the new sessions/from-schedule endpoint as requested in review"""
     print("=" * 80)
-    print("🔍 TESTING REFERRAL EVENT TRACKING SYSTEM")
+    print("🔍 TESTING SESSIONS FROM SCHEDULE ENDPOINT")
     print("=" * 80)
     
     # Test data as specified in review request
-    creator_telegram_id = 123456789
-    creator_name = "Тестер"
-    room_name = "Тестовая комната"
-    
-    joiner_telegram_id = 987654321
-    joiner_name = "Новый участник"
+    telegram_id = 123456789
     
     try:
-        # Step 1: Create room (POST /api/rooms)
-        log_test("Step 1: Creating room", "INFO", f"Creating room with telegram_id={creator_telegram_id}")
+        # Step 1: Create test journal (POST /api/journals)
+        log_test("Step 1: Creating test journal", "INFO", f"Creating journal with telegram_id={telegram_id}")
         
-        room_data = {
-            "telegram_id": creator_telegram_id,
-            "name": room_name,
-            "first_name": creator_name
+        journal_data = {
+            "telegram_id": telegram_id,
+            "name": "Тестовый журнал",
+            "group_name": "ИВТ-101"
         }
         
-        response = requests.post(f"{API_BASE}/rooms", json=room_data, timeout=10)
+        response = requests.post(f"{API_BASE}/journals", json=journal_data, timeout=10)
         
         if response.status_code != 200:
-            log_test("POST /api/rooms", "FAIL", f"Status: {response.status_code}, Response: {response.text}")
+            log_test("POST /api/journals", "FAIL", f"Status: {response.status_code}, Response: {response.text}")
             return False
             
-        room_response = response.json()
-        room_id = room_response.get("room_id")
+        journal_response = response.json()
+        journal_id = journal_response.get("journal_id")
         
-        if not room_id:
-            log_test("POST /api/rooms", "FAIL", "No room_id in response")
+        if not journal_id:
+            log_test("POST /api/journals", "FAIL", "No journal_id in response")
             return False
             
-        log_test("POST /api/rooms", "PASS", f"Room created successfully. ID: {room_id}")
+        log_test("POST /api/journals", "PASS", f"Journal created successfully. ID: {journal_id}")
         
-        # Step 2: Generate invite link (POST /api/rooms/{room_id}/invite-link)
-        log_test("Step 2: Generating invite link", "INFO", f"Generating invite link for room {room_id}")
+        # Step 2: Create subject in journal (POST /api/journals/{journal_id}/subjects)
+        log_test("Step 2: Creating subject in journal", "INFO", f"Creating subject for journal {journal_id}")
         
-        invite_data = {
-            "telegram_id": creator_telegram_id
+        subject_data = {
+            "name": "Математический анализ",
+            "description": "Тестовый предмет",
+            "color": "blue",
+            "telegram_id": telegram_id
         }
         
-        response = requests.post(f"{API_BASE}/rooms/{room_id}/invite-link", json=invite_data, timeout=10)
+        response = requests.post(f"{API_BASE}/journals/{journal_id}/subjects", json=subject_data, timeout=10)
         
         if response.status_code != 200:
-            log_test("POST /api/rooms/{room_id}/invite-link", "FAIL", f"Status: {response.status_code}, Response: {response.text}")
+            log_test("POST /api/journals/{journal_id}/subjects", "FAIL", f"Status: {response.status_code}, Response: {response.text}")
             return False
             
-        invite_response = response.json()
-        invite_token = invite_response.get("invite_token")
-        invite_link = invite_response.get("invite_link")
+        subject_response = response.json()
+        subject_id = subject_response.get("subject_id")
         
-        if not invite_token:
-            log_test("POST /api/rooms/{room_id}/invite-link", "FAIL", "No invite_token in response")
+        if not subject_id:
+            log_test("POST /api/journals/{journal_id}/subjects", "FAIL", "No subject_id in response")
             return False
             
-        log_test("POST /api/rooms/{room_id}/invite-link", "PASS", f"Invite link generated. Token: {invite_token}")
-        print(f"    Invite link: {invite_link}")
+        log_test("POST /api/journals/{journal_id}/subjects", "PASS", f"Subject created successfully. ID: {subject_id}")
         
-        # Step 3: Join by link with referral tracking (POST /api/rooms/join/{invite_token})
-        log_test("Step 3: Joining room via invite link", "INFO", f"User {joiner_telegram_id} joining via token {invite_token}")
+        # Step 3: Test sessions/from-schedule endpoint with 3 different lesson types
+        log_test("Step 3: Testing sessions/from-schedule endpoint", "INFO", f"Creating sessions from schedule")
         
-        join_data = {
-            "telegram_id": joiner_telegram_id,
-            "first_name": joiner_name,
-            "referral_code": creator_telegram_id  # ID of the inviter as specified in review
+        sessions_data = {
+            "subject_id": subject_id,
+            "telegram_id": telegram_id,
+            "sessions": [
+                {
+                    "date": "2025-01-20",
+                    "time": "09:00-10:30",
+                    "discipline": "Математика",
+                    "lesson_type": "Лекция",
+                    "teacher": "Иванов И.И.",
+                    "auditory": "101"
+                },
+                {
+                    "date": "2025-01-21",
+                    "time": "11:00-12:30",
+                    "discipline": "Математика",
+                    "lesson_type": "Семинар",
+                    "teacher": "Петров П.П.",
+                    "auditory": "102"
+                },
+                {
+                    "date": "2025-01-22",
+                    "time": "14:00-15:30",
+                    "discipline": "Математика",
+                    "lesson_type": "Лабораторная",
+                    "teacher": "Сидоров С.С.",
+                    "auditory": "103"
+                }
+            ]
         }
         
-        response = requests.post(f"{API_BASE}/rooms/join/{invite_token}", json=join_data, timeout=10)
+        response = requests.post(f"{API_BASE}/journals/{journal_id}/sessions/from-schedule", json=sessions_data, timeout=10)
         
         if response.status_code != 200:
-            log_test("POST /api/rooms/join/{invite_token}", "FAIL", f"Status: {response.status_code}, Response: {response.text}")
+            log_test("POST /api/journals/{journal_id}/sessions/from-schedule", "FAIL", f"Status: {response.status_code}, Response: {response.text}")
             return False
             
-        join_response = response.json()
+        sessions_response = response.json()
         
-        # Check if the user was successfully added to participants
-        participants = join_response.get("participants", [])
-        user_found = False
-        for participant in participants:
-            if participant.get("telegram_id") == joiner_telegram_id:
-                user_found = True
-                break
-        
-        if not user_found:
-            log_test("POST /api/rooms/join/{invite_token}", "FAIL", f"User not found in participants: {join_response}")
+        # Verify response structure
+        if sessions_response.get("status") != "success":
+            log_test("Sessions Response Validation", "FAIL", f"Expected status=success, got {sessions_response.get('status')}")
             return False
             
-        log_test("POST /api/rooms/join/{invite_token}", "PASS", f"Successfully joined room. User added to participants.")
+        created_count = sessions_response.get("created_count", 0)
+        skipped_count = sessions_response.get("skipped_count", 0)
+        created_sessions = sessions_response.get("sessions", [])
         
-        # Wait a moment for the referral event to be processed
-        time.sleep(1)
+        if created_count != 3:
+            log_test("Sessions Count Validation", "FAIL", f"Expected created_count=3, got {created_count}")
+            return False
+            
+        if len(created_sessions) != 3:
+            log_test("Sessions Array Validation", "FAIL", f"Expected 3 sessions in array, got {len(created_sessions)}")
+            return False
+            
+        log_test("POST /api/journals/{journal_id}/sessions/from-schedule", "PASS", f"Sessions created successfully. Count: {created_count}, Skipped: {skipped_count}")
         
-        # Step 4: Check general stats (GET /api/admin/stats)
-        log_test("Step 4: Checking general admin stats", "INFO", "Verifying room join statistics")
+        # Step 4: Verify session types and content
+        log_test("Step 4: Verifying session types and content", "INFO", "Checking session details")
         
-        response = requests.get(f"{API_BASE}/admin/stats", timeout=10)
+        expected_types = ["lecture", "seminar", "lab"]
+        expected_times = ["09:00-10:30", "11:00-12:30", "14:00-15:30"]
+        expected_teachers = ["Иванов И.И.", "Петров П.П.", "Сидоров С.С."]
+        expected_auditories = ["101", "102", "103"]
+        
+        for i, session in enumerate(created_sessions):
+            # Check session type mapping
+            if session.get("type") != expected_types[i]:
+                log_test("Session Type Validation", "FAIL", f"Session {i}: Expected type={expected_types[i]}, got {session.get('type')}")
+                return False
+                
+            # Check title contains time and type
+            title = session.get("title", "")
+            if expected_times[i] not in title:
+                log_test("Session Title Validation", "FAIL", f"Session {i}: Time {expected_times[i]} not found in title: {title}")
+                return False
+                
+            # Check description contains teacher and auditory
+            description = session.get("description", "")
+            if expected_teachers[i] not in description:
+                log_test("Session Description Validation", "FAIL", f"Session {i}: Teacher {expected_teachers[i]} not found in description: {description}")
+                return False
+                
+            if expected_auditories[i] not in description:
+                log_test("Session Description Validation", "FAIL", f"Session {i}: Auditory {expected_auditories[i]} not found in description: {description}")
+                return False
+                
+        log_test("Session Content Validation", "PASS", "All sessions have correct types, titles, and descriptions")
+        
+        # Step 5: Test duplicate prevention
+        log_test("Step 5: Testing duplicate prevention", "INFO", "Sending same sessions again")
+        
+        response = requests.post(f"{API_BASE}/journals/{journal_id}/sessions/from-schedule", json=sessions_data, timeout=10)
         
         if response.status_code != 200:
-            log_test("GET /api/admin/stats", "FAIL", f"Status: {response.status_code}, Response: {response.text}")
+            log_test("Duplicate Prevention Test", "FAIL", f"Status: {response.status_code}, Response: {response.text}")
             return False
             
-        stats_response = response.json()
+        duplicate_response = response.json()
         
-        total_room_joins = stats_response.get("total_room_joins", 0)
-        room_joins_today = stats_response.get("room_joins_today", 0)
+        duplicate_created = duplicate_response.get("created_count", 0)
+        duplicate_skipped = duplicate_response.get("skipped_count", 0)
         
-        log_test("GET /api/admin/stats", "PASS", f"Stats retrieved successfully")
-        print(f"    Total room joins: {total_room_joins}")
-        print(f"    Room joins today: {room_joins_today}")
-        
-        # Verify expected values
-        if total_room_joins < 1:
-            log_test("Admin Stats Validation", "FAIL", f"Expected total_room_joins >= 1, got {total_room_joins}")
+        if duplicate_created != 0:
+            log_test("Duplicate Prevention Validation", "FAIL", f"Expected created_count=0 for duplicates, got {duplicate_created}")
             return False
             
-        if room_joins_today < 1:
-            log_test("Admin Stats Validation", "FAIL", f"Expected room_joins_today >= 1, got {room_joins_today}")
+        if duplicate_skipped != 3:
+            log_test("Duplicate Prevention Validation", "FAIL", f"Expected skipped_count=3 for duplicates, got {duplicate_skipped}")
             return False
             
-        log_test("Admin Stats Validation", "PASS", "Room join statistics are correct")
+        log_test("Duplicate Prevention Test", "PASS", f"Duplicates correctly prevented. Skipped: {duplicate_skipped}")
         
-        # Step 5: Check detailed referral stats (GET /api/admin/referral-stats)
-        log_test("Step 5: Checking detailed referral stats", "INFO", "Verifying referral event tracking")
+        # Step 6: Verify sessions via GET endpoint
+        log_test("Step 6: Verifying sessions via GET endpoint", "INFO", f"Getting sessions for journal {journal_id}")
         
-        response = requests.get(f"{API_BASE}/admin/referral-stats", timeout=10)
+        response = requests.get(f"{API_BASE}/journals/{journal_id}/sessions", timeout=10)
         
         if response.status_code != 200:
-            log_test("GET /api/admin/referral-stats", "FAIL", f"Status: {response.status_code}, Response: {response.text}")
+            log_test("GET /api/journals/{journal_id}/sessions", "FAIL", f"Status: {response.status_code}, Response: {response.text}")
             return False
             
-        referral_stats = response.json()
+        get_sessions_response = response.json()
         
-        total_events = referral_stats.get("total_events", 0)
-        recent_events = referral_stats.get("recent_events", [])
-        top_referrers = referral_stats.get("top_referrers", [])
-        
-        log_test("GET /api/admin/referral-stats", "PASS", f"Referral stats retrieved successfully")
-        print(f"    Total events: {total_events}")
-        print(f"    Recent events count: {len(recent_events)}")
-        print(f"    Top referrers count: {len(top_referrers)}")
-        
-        # Verify expected values
-        if total_events < 1:
-            log_test("Referral Stats Validation", "FAIL", f"Expected total_events >= 1, got {total_events}")
+        if len(get_sessions_response) < 3:
+            log_test("GET Sessions Validation", "FAIL", f"Expected at least 3 sessions, got {len(get_sessions_response)}")
             return False
             
-        # Check for room_join event in recent events
-        room_join_found = False
-        for event in recent_events:
-            if (event.get("event_type") == "room_join" and 
-                event.get("telegram_id") == joiner_telegram_id and
-                event.get("referrer_id") == creator_telegram_id):
-                room_join_found = True
-                log_test("Recent Events Validation", "PASS", f"Found room_join event: {event}")
-                break
+        # Verify that our created sessions are in the list
+        our_session_ids = {session.get("session_id") for session in created_sessions}
+        retrieved_session_ids = {session.get("session_id") for session in get_sessions_response}
         
-        if not room_join_found:
-            log_test("Recent Events Validation", "FAIL", "No matching room_join event found in recent_events")
-            print(f"    Recent events: {recent_events}")
+        if not our_session_ids.issubset(retrieved_session_ids):
+            log_test("GET Sessions Validation", "FAIL", "Not all created sessions found in GET response")
             return False
+            
+        log_test("GET /api/journals/{journal_id}/sessions", "PASS", f"All sessions retrieved successfully. Total: {len(get_sessions_response)}")
         
-        # Check for referrer in top_referrers
-        referrer_found = False
-        for referrer in top_referrers:
-            if referrer.get("telegram_id") == creator_telegram_id:
-                referrer_found = True
-                log_test("Top Referrers Validation", "PASS", f"Found referrer {creator_telegram_id} in top_referrers: {referrer}")
-                break
-        
-        if not referrer_found:
-            log_test("Top Referrers Validation", "FAIL", f"Referrer {creator_telegram_id} not found in top_referrers")
-            print(f"    Top referrers: {top_referrers}")
-            return False
-        
-        log_test("Referral Event Tracking System", "PASS", "All referral tracking functionality working correctly!")
+        log_test("Sessions From Schedule Endpoint", "PASS", "All functionality working correctly!")
         
         return True
         
