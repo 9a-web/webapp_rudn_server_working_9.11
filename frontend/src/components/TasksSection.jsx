@@ -1062,6 +1062,7 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
             room={selectedRoom}
             userSettings={userSettings}
             onRoomDeleted={handleRoomDeleted}
+            onRoomUpdated={handleRoomUpdated}
           />
         </>
       )}
