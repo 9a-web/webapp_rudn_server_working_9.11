@@ -697,7 +697,14 @@ export const JournalDetailModal = ({
           isOpen={showCreateSubject}
           onClose={() => setShowCreateSubject(false)}
           onCreate={handleCreateSubject}
+          onCreateMultiple={async (subjectsData) => {
+            for (const subjectData of subjectsData) {
+              await handleCreateSubject(subjectData);
+            }
+          }}
           hapticFeedback={hapticFeedback}
+          userSettings={userSettings}
+          existingSubjects={subjects}
         />
 
         {showSubjectDetail && (
