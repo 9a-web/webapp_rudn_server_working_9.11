@@ -3691,6 +3691,35 @@ async def get_admin_stats(days: Optional[int] = None):
     ]).to_list(1)
     total_schedule_views = schedule_views_result[0]["total"] if schedule_views_result else 0
 
+    # 7. Referral events statistics (room joins)
+    total_room_joins = await db.referral_events.count_documents({"event_type": "room_join", "is_new_member": True})
+    room_joins_today = await db.referral_events.count_documents({
+        "event_type": "room_join", 
+        "is_new_member": True,
+        "created_at": {"$gte": today_start}
+    })
+    room_joins_week = await db.referral_events.count_documents({
+        "event_type": "room_join", 
+        "is_new_member": True,
+        "created_at": {"$gte": week_ago}
+    })
+    
+    # 8. Referral events statistics (journal joins)
+    total_journal_joins = await db.referral_events.count_documents({"event_type": "journal_join", "is_new_member": True})
+    journal_joins_today = await db.referral_events.count_documents({
+        "event_type": "journal_join", 
+        "is_new_member": True,
+        "created_at": {"$gte": today_start}
+    })
+    journal_joins_week = await db.referral_events.count_documents({
+        "event_type": "journal_join", 
+        "is_new_member": True,
+        "created_at": {"$gte": week_ago}
+    })
+    
+    # 9. Total journals
+    total_journals = await db.attendance_journals.count_documents(date_filter("created_at"))
+
     return AdminStatsResponse(
         total_users=total_users,
         active_users_today=active_users_today,
@@ -3703,7 +3732,15 @@ async def get_admin_stats(days: Optional[int] = None):
         total_completed_tasks=total_completed_tasks,
         total_achievements_earned=total_achievements_earned,
         total_rooms=total_rooms,
-        total_schedule_views=total_schedule_views
+        total_schedule_views=total_schedule_views,
+        # Referral statistics
+        total_room_joins=total_room_joins,
+        room_joins_today=room_joins_today,
+        room_joins_week=room_joins_week,
+        total_journal_joins=total_journal_joins,
+        journal_joins_today=journal_joins_today,
+        journal_joins_week=journal_joins_week,
+        total_journals=total_journals
     )
 
 
