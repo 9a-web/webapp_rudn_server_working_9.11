@@ -147,6 +147,7 @@ class RoomsAPITester:
             join_first_name = "Joining"
             
             join_payload = {
+                "invite_token": invite_token,
                 "telegram_id": join_telegram_id,
                 "username": join_username,
                 "first_name": join_first_name,
