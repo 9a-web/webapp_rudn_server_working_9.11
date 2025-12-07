@@ -375,3 +375,16 @@ export const unlinkStudent = async (journalId, studentId) => {
     throw error;
   }
 };
+
+// ===== Занятия из расписания =====
+
+// Создать занятия из расписания (массовое создание)
+export const createSessionsFromSchedule = async (journalId, data) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/api/journals/${journalId}/sessions/from-schedule`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating sessions from schedule:', error);
+    throw error;
+  }
+};
