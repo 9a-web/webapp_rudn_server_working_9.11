@@ -219,6 +219,12 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
     setSelectedRoom(null);
   };
 
+  // Обновление комнаты в списке (после изменений)
+  const handleRoomUpdated = (updatedRoom) => {
+    setRooms(prev => prev.map(r => r.room_id === updatedRoom.room_id ? updatedRoom : r));
+    setSelectedRoom(updatedRoom);
+  };
+
   // Обновление порядка задач после перетаскивания в карточке "Сегодня"
   const handleReorderTasks = async (newOrder) => {
     console.log('🔄 Reorder triggered!', {
