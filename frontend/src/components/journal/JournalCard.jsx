@@ -27,7 +27,7 @@ export const JournalCard = ({ journal, onClick, hapticFeedback }) => {
       onClick={handleClick}
       className="bg-gray-50 rounded-2xl p-4 border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
     >
-      <div className="flex items-center justify-center gap-3">
+      <div className="flex items-center justify-start gap-3">
         {/* Icon */}
         <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center flex-shrink-0`}>
           <FileCheck className="w-6 h-6 text-white" />
