@@ -513,7 +513,7 @@ export const PrepareForLectureModal = ({
                     whileTap={{ scale: 0.98 }}
                     onClick={() => {
                       setDeadlineType('class');
-                      setSelectedDate('');
+                      setDeadlineDateInput('');
                       hapticFeedback && hapticFeedback('selection');
                     }}
                     disabled={saving || !subject}
@@ -542,8 +542,8 @@ export const PrepareForLectureModal = ({
                     >
                       <input
                         type="datetime-local"
-                        value={selectedDate}
-                        onChange={(e) => setSelectedDate(e.target.value)}
+                        value={deadlineDateInput}
+                        onChange={(e) => setDeadlineDateInput(e.target.value)}
                         disabled={saving}
                         className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl sm:rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent text-[#1C1C1E] text-sm sm:text-base disabled:opacity-50"
                       />
