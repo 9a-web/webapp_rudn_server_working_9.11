@@ -18,6 +18,9 @@ export const ProfileModal = ({
   const [loading, setLoading] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [showReferrals, setShowReferrals] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Загрузка реферальных данных при открытии
   useEffect(() => {
