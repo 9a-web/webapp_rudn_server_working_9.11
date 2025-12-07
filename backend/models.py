@@ -630,11 +630,10 @@ class RoomInviteLinkResponse(BaseModel):
 
 class RoomJoinRequest(BaseModel):
     """Запрос на присоединение к комнате по токену"""
-    invite_token: str
     telegram_id: int
     username: Optional[str] = None
     first_name: str
-    referral_code: Optional[str] = None
+    referral_code: Optional[int] = None  # ID пользователя, который пригласил
 
 
 class RoomTaskCreate(BaseModel):
