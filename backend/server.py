@@ -4166,8 +4166,22 @@ async def join_journal(invite_token: str, data: JournalJoinRequest):
         if not journal:
             raise HTTPException(status_code=404, detail="Invalid invite link")
         
+        is_new_member = True
+        
         # Проверить, не владелец ли это
         if journal["owner_id"] == data.telegram_id:
+            is_new_member = False
+            # Логируем событие даже для владельца (переход по собственной ссылке)
+            referral_event = ReferralEvent(
+                event_type="journal_join",
+                telegram_id=data.telegram_id,
+                referrer_id=data.referrer_id,
+                target_id=journal["journal_id"],
+                target_name=journal.get("name", ""),
+                invite_token=invite_token,
+                is_new_member=False
+            )
+            await db.referral_events.insert_one(referral_event.model_dump())
             return {"status": "success", "message": "You are the owner", "journal_id": journal["journal_id"]}
         
         # Проверить, не привязан ли уже
@@ -4177,6 +4191,18 @@ async def join_journal(invite_token: str, data: JournalJoinRequest):
             "is_linked": True
         })
         if existing_link:
+            is_new_member = False
+            # Логируем событие даже для уже привязанного пользователя
+            referral_event = ReferralEvent(
+                event_type="journal_join",
+                telegram_id=data.telegram_id,
+                referrer_id=data.referrer_id,
+                target_id=journal["journal_id"],
+                target_name=journal.get("name", ""),
+                invite_token=invite_token,
+                is_new_member=False
+            )
+            await db.referral_events.insert_one(referral_event.model_dump())
             return {"status": "success", "message": "Already linked", "journal_id": journal["journal_id"]}
         
         # Проверить, не в pending ли уже
@@ -4185,6 +4211,18 @@ async def join_journal(invite_token: str, data: JournalJoinRequest):
             "telegram_id": data.telegram_id
         })
         if existing_pending:
+            is_new_member = False
+            # Логируем событие даже для уже ожидающего пользователя
+            referral_event = ReferralEvent(
+                event_type="journal_join",
+                telegram_id=data.telegram_id,
+                referrer_id=data.referrer_id,
+                target_id=journal["journal_id"],
+                target_name=journal.get("name", ""),
+                invite_token=invite_token,
+                is_new_member=False
+            )
+            await db.referral_events.insert_one(referral_event.model_dump())
             return {"status": "success", "message": "Waiting for linking", "journal_id": journal["journal_id"]}
         
         # Добавить в pending
@@ -4195,6 +4233,19 @@ async def join_journal(invite_token: str, data: JournalJoinRequest):
             first_name=data.first_name
         )
         await db.journal_pending_members.insert_one(pending.model_dump())
+        
+        # Логируем реферальное событие (новый участник)
+        referral_event = ReferralEvent(
+            event_type="journal_join",
+            telegram_id=data.telegram_id,
+            referrer_id=data.referrer_id,
+            target_id=journal["journal_id"],
+            target_name=journal.get("name", ""),
+            invite_token=invite_token,
+            is_new_member=True
+        )
+        await db.referral_events.insert_one(referral_event.model_dump())
+        logger.info(f"Referral event logged: journal_join, user={data.telegram_id}, referrer={data.referrer_id}, journal={journal['journal_id']}")
         
         logger.info(f"User {data.telegram_id} joined journal {journal['journal_id']} (pending)")
         return {"status": "success", "message": "Joined, waiting for linking", "journal_id": journal["journal_id"]}
