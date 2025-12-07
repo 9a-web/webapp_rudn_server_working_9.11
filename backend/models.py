@@ -646,6 +646,7 @@ class RoomTaskCreate(BaseModel):
     telegram_id: int  # создатель задачи
     tags: List[str] = []  # Теги для задачи
     subtasks: List[str] = []  # Названия подзадач
+    assigned_to: Optional[List[int]] = None  # Список telegram_id участников (None = все участники)
 
 
 class SubtaskCreate(BaseModel):
