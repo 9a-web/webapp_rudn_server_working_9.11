@@ -75,11 +75,22 @@ export const PrepareForLectureModal = ({
     const now = new Date();
     const classes = [];
     
+    // Маппинг дней недели на числа
+    const dayNameToNumber = {
+      'понедельник': 1,
+      'вторник': 2,
+      'среда': 3,
+      'четверг': 4,
+      'пятница': 5,
+      'суббота': 6,
+      'воскресенье': 0,
+    };
+    
     // Фильтруем события по выбранному предмету
     scheduleEvents.forEach(event => {
       if (event.discipline && event.discipline.toLowerCase().includes(subject.toLowerCase())) {
         // Парсим дату и время события
-        const eventDate = parseEventDate(event);
+        const eventDate = parseEventDate(event, dayNameToNumber);
         if (eventDate && eventDate > now) {
           classes.push({
             ...event,
@@ -93,11 +104,23 @@ export const PrepareForLectureModal = ({
     
     // Сортируем по дате и берем ближайшие 5
     classes.sort((a, b) => a.parsedDate - b.parsedDate);
-    return classes.slice(0, 5);
+    
+    // Удаляем дубликаты по дате и времени
+    const uniqueClasses = [];
+    const seenDates = new Set();
+    classes.forEach(cls => {
+      const key = cls.parsedDate.toISOString();
+      if (!seenDates.has(key)) {
+        seenDates.add(key);
+        uniqueClasses.push(cls);
+      }
+    });
+    
+    return uniqueClasses.slice(0, 5);
   }, [subject, scheduleEvents]);
   
   // Парсинг даты события
-  const parseEventDate = (event) => {
+  const parseEventDate = (event, dayNameToNumber) => {
     try {
       // event.date может быть в формате "2025-01-15" или событие может иметь dayOfWeek
       if (event.date) {
@@ -108,7 +131,55 @@ export const PrepareForLectureModal = ({
         return new Date(year, month - 1, day, hours, minutes);
       }
       
-      // Если есть dayOfWeek, вычисляем ближайшую дату
+      // Если есть day (название дня недели на русском) - новый формат РУДН API
+      if (event.day) {
+        const dayLower = event.day.toLowerCase();
+        const targetDayNum = dayNameToNumber[dayLower];
+        
+        if (targetDayNum !== undefined) {
+          const today = new Date();
+          const currentDay = today.getDay();
+          
+          // Вычисляем разницу в днях
+          let daysUntil = targetDayNum - currentDay;
+          
+          // Если день уже прошел на этой неделе, берем следующую неделю
+          if (daysUntil < 0) {
+            daysUntil += 7;
+          }
+          
+          // Если сегодня, проверяем время
+          if (daysUntil === 0) {
+            const timeMatch = event.time?.match(/(\d{1,2}):(\d{2})/);
+            if (timeMatch) {
+              const eventHours = parseInt(timeMatch[1]);
+              const eventMinutes = parseInt(timeMatch[2]);
+              const eventTimeToday = new Date(today);
+              eventTimeToday.setHours(eventHours, eventMinutes, 0, 0);
+              
+              // Если время уже прошло, берем следующую неделю
+              if (eventTimeToday <= today) {
+                daysUntil += 7;
+              }
+            }
+          }
+          
+          const targetDate = new Date(today);
+          targetDate.setDate(today.getDate() + daysUntil);
+          
+          // Устанавливаем время
+          const timeMatch = event.time?.match(/(\d{1,2}):(\d{2})/);
+          if (timeMatch) {
+            targetDate.setHours(parseInt(timeMatch[1]), parseInt(timeMatch[2]), 0, 0);
+          } else {
+            targetDate.setHours(9, 0, 0, 0); // По умолчанию 9:00
+          }
+          
+          return targetDate;
+        }
+      }
+      
+      // Если есть dayOfWeek, вычисляем ближайшую дату (старый формат)
       if (event.dayOfWeek !== undefined) {
         const today = new Date();
         const currentDay = today.getDay();
