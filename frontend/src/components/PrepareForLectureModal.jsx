@@ -537,7 +537,7 @@ export const PrepareForLectureModal = ({
                             Не найдено ближайших пар по этому предмету
                           </p>
                           <p className="text-xs text-amber-600 mt-1">
-                            Используйте вкладку "К дате"
+                            Используйте вкладку «К дате»
                           </p>
                         </div>
                       )}
