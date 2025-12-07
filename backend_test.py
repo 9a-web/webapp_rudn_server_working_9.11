@@ -235,19 +235,19 @@ def test_sessions_from_schedule():
         return False
 def main():
     """Main test execution"""
-    print("🚀 Starting Backend API Testing for Referral Event Tracking System")
+    print("🚀 Starting Backend API Testing for Sessions From Schedule Endpoint")
     print(f"Backend URL: {BACKEND_URL}")
     print(f"Test started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print()
     
-    # Test referral event tracking system
-    success = test_referral_event_tracking()
+    # Test sessions from schedule endpoint
+    success = test_sessions_from_schedule()
     
     print("=" * 80)
     if success:
-        print("🎉 ALL TESTS PASSED - Referral Event Tracking System Working Correctly!")
+        print("🎉 ALL TESTS PASSED - Sessions From Schedule Endpoint Working Correctly!")
     else:
-        print("💥 TESTS FAILED - Issues found in Referral Event Tracking System")
+        print("💥 TESTS FAILED - Issues found in Sessions From Schedule Endpoint")
     print("=" * 80)
     
     return 0 if success else 1
