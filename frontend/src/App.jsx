@@ -730,6 +730,7 @@ const Home = () => {
                     groupName={userSettings?.group_name}
                     onChangeGroup={handleChangeGroup}
                     onDateSelect={handleDateSelect}
+                    onCalendarClick={handleCalendarClick}
                     hapticFeedback={hapticFeedback}
                     telegramId={user?.id}
                     onShareModalStateChange={setIsShareModalOpen}
