@@ -1,53 +1,27 @@
 #!/usr/bin/env python3
 """
-Backend API Testing Script for assigned_to functionality in group tasks
-Tests the new assigned_to functionality for group tasks as requested in the review.
+Comprehensive Backend API Testing Script for РУДН Schedule App
+Testing referral event tracking system as requested in review
 """
 
 import requests
 import json
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
+import time
 
-# Backend URL - using local backend since external URL is not accessible
+# Backend URL configuration
 BACKEND_URL = "http://localhost:8001"
 API_BASE = f"{BACKEND_URL}/api"
 
-# Test data
-TEST_CREATOR_ID = 123456789
-TEST_PARTICIPANT_1 = 987654321
-TEST_PARTICIPANT_2 = 555666777
-TEST_ROOM_NAME = "Test Room for assigned_to functionality"
-TEST_ROOM_COLOR = "blue"
-
 def log_test(test_name, status, details=""):
-    """Log test results"""
-    status_symbol = "✅" if status == "PASS" else "❌"
-    print(f"{status_symbol} {test_name}")
+    """Log test results with timestamp"""
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    status_emoji = "✅" if status == "PASS" else "❌" if status == "FAIL" else "⚠️"
+    print(f"[{timestamp}] {status_emoji} {test_name}")
     if details:
-        print(f"   {details}")
+        print(f"    {details}")
     print()
-
-def make_request(method, endpoint, data=None, expected_status=200):
-    """Make HTTP request and handle errors"""
-    url = f"{API_BASE}{endpoint}"
-    try:
-        if method == "GET":
-            response = requests.get(url)
-        elif method == "POST":
-            response = requests.post(url, json=data)
-        elif method == "PUT":
-            response = requests.put(url, json=data)
-        elif method == "DELETE":
-            response = requests.delete(url, json=data)
-        else:
-            raise ValueError(f"Unsupported method: {method}")
-        
-        print(f"   {method} {endpoint} -> {response.status_code}")
-        
-        if response.status_code != expected_status:
-            print(f"   Expected {expected_status}, got {response.status_code}")
-            print(f"   Response: {response.text}")
             return None
         
         return response.json() if response.content else {}
