@@ -747,6 +747,14 @@ class AdminStatsResponse(BaseModel):
     total_achievements_earned: int
     total_rooms: int
     total_schedule_views: int
+    # Новые поля для отслеживания присоединений
+    total_room_joins: int = 0  # Всего присоединений к комнатам
+    room_joins_today: int = 0  # Присоединений к комнатам сегодня
+    room_joins_week: int = 0  # Присоединений к комнатам за неделю
+    total_journal_joins: int = 0  # Всего присоединений к журналам
+    journal_joins_today: int = 0  # Присоединений к журналам сегодня
+    journal_joins_week: int = 0  # Присоединений к журналам за неделю
+    total_journals: int = 0  # Всего журналов
 
 
 class UserActivityPoint(BaseModel):
