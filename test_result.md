@@ -166,3 +166,15 @@ agent_communication:
       - working: true
         agent: "testing"
         comment: "✅ Successfully tested POST /api/journals/process-webapp-invite endpoint. Verified: 1) Creates test journal and returns journal_id and invite_token, 2) Processes webapp invite correctly returning success=true, journal_id, and status (joined_pending), 3) User can access journal after processing invite via GET /api/journals/{telegram_id}, 4) Handles invalid invite codes correctly (returns success=false, status=not_found), 5) Handles duplicate invites gracefully. All required response fields present and working as expected for journal auto-opening functionality."
+
+  - task: "Rooms API - Create, Invite Link, Join by Token"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ Successfully tested all Rooms API endpoints as requested in review. Verified: 1) POST /api/rooms creates room correctly with owner as participant and generates invite_token, 2) POST /api/rooms/{room_id}/invite-link generates proper Telegram invite link format (https://t.me/{bot}/app?startapp=room_*_ref_*), 3) POST /api/rooms/join/{invite_token} successfully adds new participants to room, 4) Handles duplicate joins correctly (no duplicate participants), 5) Returns 404 for invalid tokens. All endpoints working with test data: telegram_id=123456789, username='test_user', first_name='Test'. Bot username: rudn_pro_bot."
