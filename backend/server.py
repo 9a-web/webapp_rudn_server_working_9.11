@@ -105,6 +105,8 @@ from models import (
     JournalSubjectCreate,
     JournalSession,
     JournalSessionCreate,
+    ScheduleSessionItem,
+    CreateSessionsFromScheduleRequest,
     AttendanceRecord,
     AttendanceRecordCreate,
     AttendanceBulkCreate,
