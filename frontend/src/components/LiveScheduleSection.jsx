@@ -18,6 +18,7 @@ export const LiveScheduleSection = ({
   onChangeGroup,
   hapticFeedback,
   onDateSelect, // Добавляем коллбек для изменения даты
+  onCalendarClick, // Коллбек для открытия календаря
   telegramId, // Telegram ID для трекинга
   onShareModalStateChange, // Коллбек для уведомления родителя о состоянии ShareScheduleModal
   user, // User для проверки admin ID
