@@ -97,7 +97,7 @@ const WelcomeScreen = ({ onGetStarted }) => {
         <img 
           src="/button-rudn-go.png"
           alt="Погрузиться в RUDN GO"
-          style={{ width: '320px', height: 'auto' }}
+          style={{ width: '280px', height: 'auto' }}
           className="object-contain"
         />
       </motion.button>
