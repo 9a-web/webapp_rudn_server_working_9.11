@@ -318,13 +318,19 @@ def test_journal_statistics_api():
         # Validate attendance calculations
         log_test("Step 6.4: Validating attendance calculations", "INFO", "Checking attendance math")
         
+        # Debug: Print actual student stats
+        print("DEBUG: Actual student stats:")
+        for i, student_stat in enumerate(students_stats):
+            print(f"  Student {i} ({student_stat['full_name']}): present={student_stat['present_count']}, absent={student_stat['absent_count']}, late={student_stat['late_count']}, excused={student_stat['excused_count']}")
+        
         # Calculate expected values based on our attendance patterns
+        # Note: In the backend code, present_count includes both "present" and "late" statuses
         expected_student_stats = {
-            student_ids[0]: {"present": 3, "absent": 1, "late": 0, "excused": 0},  # Иванов Иван
-            student_ids[1]: {"present": 3, "absent": 1, "late": 0, "excused": 0},  # Петров Петр  
-            student_ids[2]: {"present": 2, "absent": 1, "late": 0, "excused": 1},  # Сидорова Анна
-            student_ids[3]: {"present": 2, "absent": 1, "late": 1, "excused": 0},  # Козлов Дмитрий
-            student_ids[4]: {"present": 2, "absent": 1, "late": 2, "excused": 0},  # Николаева Мария
+            student_ids[0]: {"present": 3, "absent": 1, "late": 0, "excused": 0},  # Иванов Иван: present, present, absent, present
+            student_ids[1]: {"present": 3, "absent": 1, "late": 0, "excused": 0},  # Петров Петр: present, absent, present, present
+            student_ids[2]: {"present": 2, "absent": 1, "late": 0, "excused": 1},  # Сидорова Анна: present, present, absent, excused
+            student_ids[3]: {"present": 3, "absent": 1, "late": 1, "excused": 0},  # Козлов Дмитрий: late, present, present, absent
+            student_ids[4]: {"present": 3, "absent": 1, "late": 2, "excused": 0},  # Николаева Мария: absent, late, present, late
         }
         
         for student_stat in students_stats:
