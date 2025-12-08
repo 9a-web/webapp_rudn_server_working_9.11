@@ -117,6 +117,17 @@ frontend:
     needs_retesting: false
     status_history:
       - working: true
+  - task: "Journal: Confirmation before adding sessions from schedule"
+    implemented: true
+    working: true
+    file: "frontend/src/components/journal/CreateSessionModal.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Implemented: Added confirmation step when creating sessions from schedule. Users can now edit teacher and auditory fields before confirming the addition of sessions."
         agent: "main"
         comment: "Implemented: Bottom menu is now hidden when Create Journal modal or Journal Detail modal (which contains all editing/settings) is open."
 metadata:
