@@ -36,7 +36,7 @@ const WelcomeScreen = ({ onGetStarted }) => {
 
       {/* Welcome Text */}
       <motion.div
-        className="mt-8 text-center"
+        className="mt-3 text-center"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
@@ -57,7 +57,7 @@ const WelcomeScreen = ({ onGetStarted }) => {
 
       {/* Bot Username */}
       <motion.p
-        className="mt-4 text-[16px]"
+        className="mt-1 text-[16px]"
         style={{ 
           fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif", 
           fontWeight: 500,
