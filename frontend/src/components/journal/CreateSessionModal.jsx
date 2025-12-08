@@ -162,10 +162,15 @@ export const CreateSessionModal = ({
     
     const subjectLower = subjectName.toLowerCase();
     
+    // Определяем какую неделю расписания использовать (чётная/нечётная)
+    // weekOffset: 0 = текущая, 1 = следующая, -1 = прошлая, etc.
+    // Для РУДН: week_number чередуется (1 или 2)
+    const currentWeekNum = Math.abs(weekOffset) % 2 === 0 ? 1 : 2;
+    
     return scheduleEvents
       .filter(e => {
-        // Фильтр по неделе
-        if (e.week !== selectedWeek) return false;
+        // Фильтр по неделе (чётная/нечётная)
+        if (e.week !== currentWeekNum) return false;
         
         // Фильтр по предмету (нечёткий поиск)
         const disciplineLower = e.discipline.toLowerCase();
@@ -176,8 +181,9 @@ export const CreateSessionModal = ({
       })
       .map(e => ({
         ...e,
-        date: getDateForDay(e.day, selectedWeek - 1),
-        uniqueKey: `${e.day}-${e.time}-${e.week}`
+        date: getDateForDay(e.day, weekOffset),
+        uniqueKey: `${e.day}-${e.time}-${weekOffset}`,
+        isPast: isPastDate(getDateForDay(e.day, weekOffset))
       }))
       .filter(e => e.date) // Только с валидной датой
       .sort((a, b) => {
@@ -185,7 +191,7 @@ export const CreateSessionModal = ({
         if (a.date !== b.date) return a.date.localeCompare(b.date);
         return a.time.localeCompare(b.time);
       });
-  }, [scheduleEvents, subjectName, selectedWeek]);
+  }, [scheduleEvents, subjectName, weekOffset]);
 
   const toggleEventSelection = (uniqueKey) => {
     if (hapticFeedback?.selectionChanged) {
