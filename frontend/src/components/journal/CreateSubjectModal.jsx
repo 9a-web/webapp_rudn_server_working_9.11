@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, BookOpen, Palette, CalendarRange, Check, Loader2, AlertCircle } from 'lucide-react';
+import { X, BookOpen, Palette, CalendarRange, Check, Loader2, AlertCircle, ArrowLeft, Edit3, Trash2 } from 'lucide-react';
 import { scheduleAPI } from '../../services/api';
 
 const SUBJECT_COLORS = [
@@ -27,6 +27,7 @@ export const CreateSubjectModal = ({
   existingSubjects = []
 }) => {
   const [activeTab, setActiveTab] = useState('manual'); // 'manual' | 'schedule'
+  const [step, setStep] = useState('select'); // 'select' | 'confirm' - для вкладки расписания
   
   // Manual tab state
   const [name, setName] = useState('');
@@ -40,6 +41,10 @@ export const CreateSubjectModal = ({
   const [scheduleError, setScheduleError] = useState(null);
   const [selectedSubjects, setSelectedSubjects] = useState(new Set());
   const [creatingFromSchedule, setCreatingFromSchedule] = useState(false);
+  
+  // Confirmation step state - список предметов для редактирования перед созданием
+  const [subjectsToConfirm, setSubjectsToConfirm] = useState([]);
+  const [editingSubjectIndex, setEditingSubjectIndex] = useState(null);
 
   // Загружаем расписание при открытии вкладки
   useEffect(() => {
