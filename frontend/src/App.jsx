@@ -852,6 +852,7 @@ const Home = () => {
               userSettings={userSettings}
               pendingJournalId={pendingJournalId}
               onPendingJournalHandled={() => setPendingJournalId(null)}
+              onModalStateChange={setIsJournalModalOpen}
             />
           </div>
         )}
