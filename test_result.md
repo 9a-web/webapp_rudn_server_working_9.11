@@ -1,3 +1,4 @@
+
 backend:
   - task: "GET /api/admin/stats - общая статистика"
     implemented: true
@@ -95,6 +96,18 @@ backend:
         agent: "testing"
         comment: "✅ Successfully tested course stats endpoint. Returns array with course and users_count fields. Data structure valid and sorted by course. Found 5 courses with proper data."
 
+  - task: "SCALABILITY OPTIMIZATION (1000+ users)"
+    implemented: true
+    working: true
+    file: "backend/server.py, backend/rudn_parser.py, backend/scheduler_v2.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "✅ Implemented critical scalability fixes: 1) Added MongoDB indexes for all collections to prevent full scans. 2) Offloaded CPU-heavy HTML parsing to thread executor to unblock event loop. 3) Optimized Scheduler V2 to use batch processing (50 users/batch) instead of loading all users into memory."
+
 frontend:
   - task: "Admin Panel Frontend Integration"
     implemented: true
@@ -143,8 +156,8 @@ frontend:
         comment: "Implemented: Bottom menu is now hidden when Create Journal modal or Journal Detail modal (which contains all editing/settings) is open."
 metadata:
   created_by: "testing_agent"
-  version: "1.0"
-  test_sequence: 1
+  version: "1.1"
+  test_sequence: 2
   run_ui: false
 
 test_plan:
@@ -154,118 +167,5 @@ test_plan:
   test_priority: "high_first"
 
 agent_communication:
-  - agent: "testing"
-    message: "✅ COMPLETED: Comprehensive testing of all Admin API endpoints for РУДН Schedule App. ALL 8 endpoints working correctly and returning proper data formats as expected by frontend. Key findings: 1) Hour format in hourly-activity correctly returns integers 0-23 as required, 2) All endpoints return non-empty data with proper structure, 3) Top-users endpoint supports metrics: points, achievements, tasks, schedule_views (correctly rejects unsupported metrics), 4) All data types and field names match frontend expectations. Backend URL: http://localhost:8001 - Admin panel should populate correctly."
-  - agent: "testing"
-    message: "✅ COMPLETED: Student Personal Invite Links testing for Attendance Journal. ALL functionality working correctly: 1) Students get unique 8-character invite_code and proper Telegram invite_link format (https://t.me/rudn_mosbot?start=jstudent_{code}), 2) Join endpoint handles all scenarios correctly (valid/invalid codes, already linked, occupied students), 3) Unlink endpoint properly resets student data. Comprehensive test covered all edge cases and API requirements. Feature ready for production use."
-  - agent: "testing"
-    message: "✅ COMPLETED: Journal WebApp Invite Processing testing. POST /api/journals/process-webapp-invite endpoint working correctly: 1) Successfully creates test journal with journal_id and invite_token, 2) Processes webapp invites returning required fields (success=true, journal_id, status), 3) User gains access to journal after processing invite, 4) Handles invalid codes (success=false, status=not_found), 5) Manages duplicate invites gracefully. Critical journal_id field present in response for auto-opening functionality. Backend URL: http://localhost:8001 - Ready for production use."
-  - agent: "testing"
-    message: "✅ COMPLETED: Rooms API comprehensive testing as requested in review. ALL 3 endpoints working correctly: 1) POST /api/rooms creates room with proper owner participant and invite_token, 2) POST /api/rooms/{room_id}/invite-link generates correct Telegram format (https://t.me/rudn_pro_bot/app?startapp=room_*_ref_*), 3) POST /api/rooms/join/{invite_token} successfully adds participants and handles duplicates/invalid tokens. Tested with specified data: telegram_id=123456789, username='test_user', first_name='Test'. All functionality working as expected for room invitation system."
-  - agent: "testing"
-    message: "✅ COMPLETED: Group Tasks assigned_to functionality testing as requested in review. ALL functionality working correctly: 1) Task creation with assigned_to: null adds ALL room participants (creator + all members), 2) Task creation with specific assigned_to only includes specified participants + creator, 3) Task update with assigned_to: [] reassigns task to ALL participants, 4) Task update with specific assigned_to removes unassigned participants while preserving creator. Key verification: Creator/owner is ALWAYS included in task participants regardless of assigned_to value. Tested with 3-participant room setup. Backend endpoints POST /api/rooms/{room_id}/tasks and PUT /api/group-tasks/{task_id}/update working as expected."
-  - agent: "testing"
-    message: "✅ COMPLETED: Referral Event Tracking System testing as requested in review. ALL functionality working correctly: 1) POST /api/rooms creates room with specified test data (telegram_id=123456789, name='Тестовая комната', first_name='Тестер'), 2) POST /api/rooms/{room_id}/invite-link generates proper invite link with token, 3) POST /api/rooms/join/{invite_token} successfully processes join with referral_code=123456789 for user 987654321, 4) GET /api/admin/stats correctly shows room join statistics (total_room_joins and room_joins_today incremented), 5) GET /api/admin/referral-stats shows proper referral event tracking with total_events, recent_events containing room_join event, and top_referrers containing the referrer. Referral event logging system working as expected for room invitations. Backend URL: http://localhost:8001"
-  - agent: "testing"
-    message: "✅ COMPLETED: Sessions From Schedule Endpoint testing as requested in review. ALL functionality working correctly: 1) POST /api/journals creates test journal (telegram_id=123456789, name='Тестовый журнал', group_name='ИВТ-101'), 2) POST /api/journals/{journal_id}/subjects creates subject 'Математический анализ', 3) POST /api/journals/{journal_id}/sessions/from-schedule successfully creates 3 sessions with proper type mapping (Лекция→lecture, Семинар→seminar, Лабораторная→lab), 4) Session titles correctly contain time and lesson type, descriptions include teacher and auditory info, 5) Duplicate prevention works (skipped_count=3 on repeat request), 6) GET /api/journals/{journal_id}/sessions retrieves all created sessions. Session creation, type mapping, content formatting, and duplicate prevention all working as expected. Backend URL: http://localhost:8001"
-  - agent: "testing"
-    message: "✅ COMPLETED: Journal Statistics API testing as requested in review. ALL functionality working correctly: 1) Complete attendance journal workflow tested - journal creation, bulk student addition (5 students), subject creation, multiple session creation (4 sessions), attendance marking with mixed statuses (present, absent, late, excused), 2) GET /api/journals/{journal_id}/stats endpoint returns comprehensive statistics with all required fields: journal_id, total_students=5, linked_students, total_sessions=4, overall_attendance_percent=70.0, 3) students_stats array contains proper attendance data for each student (id, full_name, attendance_percent, present_count, absent_count, excused_count, late_count, total_sessions), 4) sessions_stats array contains session attendance data (session_id, date, title, type, present_count, absent_count, attendance_filled, total_students), 5) All calculations validated and data types correct. Statistics API ready for production use. Backend URL: http://localhost:8001"
-
-  - task: "Journal API Flow (Create, Invite, Stats)"
-    implemented: true
-    working: true
-    file: "backend/server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "user"
-        comment: "✅ Verified Journal creation, invite link generation (Telegram format), and stats endpoint via custom test script."
-
-  - task: "Student Personal Invite Links - API endpoints"
-    implemented: true
-    working: true
-    file: "backend/server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: "needs_testing"
-        agent: "main"
-        comment: "NEW: Implemented student personal invite links. Each student gets unique invite_code, API returns invite_link. New endpoints: POST /api/journals/join-student/{invite_code}, POST /api/journals/{id}/students/{sid}/unlink. Telegram bot handles jstudent_{code} format."
-      - working: true
-        agent: "testing"
-        comment: "✅ Successfully tested all Student Personal Invite Links functionality. Verified: 1) GET/POST /api/journals/{journal_id}/students returns students with unique invite_code (8 chars) and invite_link (Telegram format), 2) POST /api/journals/join-student/{invite_code} handles all scenarios: valid code links student, invalid code returns 404, already linked returns success, different student returns already_linked, occupied student returns occupied, 3) POST /api/journals/{journal_id}/students/{student_id}/unlink successfully resets telegram fields and is_linked status. All test cases passed including edge cases."
-
-  - task: "POST /api/journals/process-webapp-invite - обработка приглашений в журнал"
-    implemented: true
-    working: true
-    file: "backend/server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "✅ Successfully tested POST /api/journals/process-webapp-invite endpoint. Verified: 1) Creates test journal and returns journal_id and invite_token, 2) Processes webapp invite correctly returning success=true, journal_id, and status (joined_pending), 3) User can access journal after processing invite via GET /api/journals/{telegram_id}, 4) Handles invalid invite codes correctly (returns success=false, status=not_found), 5) Handles duplicate invites gracefully. All required response fields present and working as expected for journal auto-opening functionality."
-
-  - task: "Rooms API - Create, Invite Link, Join by Token"
-    implemented: true
-    working: true
-    file: "backend/server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "✅ Successfully tested all Rooms API endpoints as requested in review. Verified: 1) POST /api/rooms creates room correctly with owner as participant and generates invite_token, 2) POST /api/rooms/{room_id}/invite-link generates proper Telegram invite link format (https://t.me/{bot}/app?startapp=room_*_ref_*), 3) POST /api/rooms/join/{invite_token} successfully adds new participants to room, 4) Handles duplicate joins correctly (no duplicate participants), 5) Returns 404 for invalid tokens. All endpoints working with test data: telegram_id=123456789, username='test_user', first_name='Test'. Bot username: rudn_pro_bot."
-
-  - task: "Group Tasks assigned_to functionality"
-    implemented: true
-    working: true
-    file: "backend/server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "✅ Successfully tested new assigned_to functionality for group tasks as requested in review. ALL 7 test scenarios passed: 1) Created test room with 3 participants (creator + 2 participants), 2) Task creation with assigned_to: null correctly adds ALL room participants, 3) Task creation with specific assigned_to only adds specified participants + creator, 4) Task update with assigned_to: [] reassigns to ALL participants, 5) Task update with specific assigned_to removes unassigned participants while keeping creator. Creator/owner is always included regardless of assigned_to value. Backend URL: http://localhost:8001 - All functionality working as expected."
-
-  - task: "Referral Event Tracking System"
-    implemented: true
-    working: true
-    file: "backend/server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "✅ Successfully tested new referral event tracking system as requested in review. ALL 5 test steps passed: 1) POST /api/rooms creates room with telegram_id=123456789, name='Тестовая комната', first_name='Тестер', 2) POST /api/rooms/{room_id}/invite-link generates invite link with proper token, 3) POST /api/rooms/join/{invite_token} successfully joins user 987654321 with referral_code=123456789, 4) GET /api/admin/stats shows total_room_joins >= 1 and room_joins_today >= 1, 5) GET /api/admin/referral-stats shows total_events >= 1, recent_events contains room_join event with correct referrer_id, and top_referrers contains referrer 123456789. Referral event logging working correctly for room joins. Backend URL: http://localhost:8001"
-
-  - task: "POST /api/journals/{journal_id}/sessions/from-schedule - создание занятий из расписания"
-    implemented: true
-    working: true
-    file: "backend/server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "✅ Successfully tested new sessions/from-schedule endpoint as requested in review. ALL 6 test steps passed: 1) POST /api/journals creates test journal with telegram_id=123456789, name='Тестовый журнал', group_name='ИВТ-101', 2) POST /api/journals/{journal_id}/subjects creates subject 'Математический анализ', 3) POST /api/journals/{journal_id}/sessions/from-schedule creates 3 sessions with different types (Лекция→lecture, Семинар→seminar, Лабораторная→lab), 4) Verified session titles contain time and type, descriptions contain teacher and auditory, 5) Duplicate prevention works correctly (skipped_count=3 on repeat), 6) GET /api/journals/{journal_id}/sessions retrieves all created sessions. Session type mapping, title formatting, and duplicate prevention all working as expected. Backend URL: http://localhost:8001"
-
-  - task: "GET /api/journals/{journal_id}/stats - статистика журнала посещаемости"
-    implemented: true
-    working: true
-    file: "backend/server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "✅ Successfully tested Journal Statistics API as requested in review. ALL 6 test steps passed: 1) POST /api/journals creates test journal (telegram_id=123456789, name='Тестовый журнал статистики', group_name='ИВТ-102'), 2) POST /api/journals/{journal_id}/students/bulk adds 5 students (Иванов Иван, Петров Петр, Сидорова Анна, Козлов Дмитрий, Николаева Мария), 3) POST /api/journals/{journal_id}/subjects creates subject 'Математика', 4) POST /api/journals/{journal_id}/sessions creates 4 sessions with different types and dates, 5) POST /api/journals/sessions/{session_id}/attendance marks attendance with mixed statuses (present, absent, late, excused), 6) GET /api/journals/{journal_id}/stats returns complete statistics with all required fields: journal_id, total_students=5, linked_students, total_sessions=4, overall_attendance_percent=70.0, students_stats array with attendance details, sessions_stats array with session attendance data. All calculations and data types validated. Backend URL: http://localhost:8001"
+  - agent: "main"
+    message: "✅ COMPLETED: Scalability optimization. Added indexes, async parsing, and batch scheduler processing."
