@@ -5840,6 +5840,15 @@ async def get_journal_stats(journal_id: str):
                 global_numerator += numerator
                 global_denominator += effective_sessions
             
+            # IMPLICIT ABSENT FIX:
+            # Чтобы в UI (present / present+absent) совпадало с процентом,
+            # считаем "неотмеченные" (unmarked) как прогулы для отображения
+            # absent_count = (Total Valid - Excused) - (Present + Late)
+            implicit_absent = effective_sessions - (present + late)
+            # Если вдруг отрицательное (из-за рассинхрона дат), ставим 0
+            if implicit_absent < 0:
+                implicit_absent = 0
+            
             students_stats.append(JournalStudentResponse(
                 id=s["id"],
                 journal_id=s["journal_id"],
@@ -5851,11 +5860,11 @@ async def get_journal_stats(journal_id: str):
                 linked_at=s.get("linked_at"),
                 order=s.get("order", 0),
                 attendance_percent=att_percent,
-                present_count=present + late, # В API present_count обычно включает и опоздания для простоты UI, или можно разделить
-                absent_count=absent,
+                present_count=present + late, 
+                absent_count=implicit_absent, # UPDATED: Includes explicit absent + unmarked
                 excused_count=excused,
                 late_count=late,
-                total_sessions=valid_sessions_count # Показываем, сколько занятий он "захватил"
+                total_sessions=valid_sessions_count 
             ))
             
         # 5. Общий процент по журналу
