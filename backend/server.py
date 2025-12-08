@@ -498,6 +498,30 @@ async def delete_user_settings(telegram_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+
+@api_router.get("/user-settings/{telegram_id}/history", response_model=NotificationHistoryResponse)
+async def get_notification_history(telegram_id: int, limit: int = 20, offset: int = 0):
+    """Получить историю уведомлений пользователя"""
+    try:
+        total = await db.notification_history.count_documents({"telegram_id": telegram_id})
+        
+        history_cursor = db.notification_history.find({"telegram_id": telegram_id}) \
+            .sort("sent_at", -1) \
+            .skip(offset) \
+            .limit(limit)
+            
+        history = await history_cursor.to_list(None)
+        
+        # Конвертируем _id
+        for item in history:
+            if "_id" in item:
+                del item["_id"]
+                
+        return NotificationHistoryResponse(history=history, count=total)
+    except Exception as e:
+        logger.error(f"Ошибка при получении истории уведомлений: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.delete("/user/{telegram_id}", response_model=SuccessResponse)
 async def delete_user_account(telegram_id: int):
     """
