@@ -163,7 +163,9 @@ async def get_schedule(
                     logger.warning("Получен пустой ответ от сервера")
                     return []
                 
-                return parse_html_schedule(html, week_number)
+                # Выполняем CPU-емкий парсинг в отдельном потоке, чтобы не блокировать event loop
+                loop = asyncio.get_running_loop()
+                return await loop.run_in_executor(None, parse_html_schedule, html, week_number)
     except aiohttp.ClientError as e:
         logger.error(f"Ошибка подключения при получении расписания: {e}")
         return []
