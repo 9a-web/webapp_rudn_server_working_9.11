@@ -238,6 +238,14 @@ export const NotificationSettings = ({
           </div>
         )}
 
+        {/* История уведомлений */}
+        {enabled && (
+          <div className="bg-gray-900 rounded-2xl p-4 mb-6">
+            <NotificationHistory telegramId={telegramId} />
+          </div>
+        )}
+
+
         {/* Info */}
         <div className="bg-blue-50 rounded-xl p-4 mb-6">
           <p className="text-sm text-blue-900 mb-2">
