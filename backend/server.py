@@ -213,6 +213,56 @@ async def add_cors_headers(request, call_next):
         
     return response
 
+
+# ============ Database Indexes Optimization ============
+async def create_indexes():
+    """Create indexes for all collections to ensure scalability"""
+    try:
+        # User Settings
+        await db.user_settings.create_index("telegram_id", unique=True)
+        await db.user_settings.create_index("group_id")
+        
+        # Tasks (Compound index for filtering by user and completion status)
+        await db.tasks.create_index([("telegram_id", 1), ("completed", 1)])
+        
+        # Rooms
+        await db.rooms.create_index("owner_id")
+        await db.rooms.create_index("participants.telegram_id")
+        await db.rooms.create_index("invite_token", unique=True)
+        
+        # Group Tasks
+        await db.group_tasks.create_index("room_id")
+        await db.group_tasks.create_index([("participants.telegram_id", 1), ("completed", 1)])
+        
+        # Journals & Attendance
+        await db.journals.create_index("owner_id")
+        await db.journals.create_index("invite_token", unique=True)
+        
+        await db.journal_students.create_index("journal_id")
+        await db.journal_students.create_index("telegram_id")
+        await db.journal_students.create_index("invite_code", unique=True)
+        
+        # Compound index for fast attendance lookups
+        await db.attendance_records.create_index([("journal_id", 1), ("session_id", 1)])
+        await db.attendance_records.create_index([("journal_id", 1), ("student_id", 1)])
+        
+        # Scheduled Notifications
+        await db.scheduled_notifications.create_index("notification_key", unique=True)
+        await db.scheduled_notifications.create_index([("date", 1), ("status", 1)])
+        
+        # Referral System
+        await db.referral_events.create_index("telegram_id")
+        await db.referral_events.create_index("referrer_id")
+        
+        logger.info("✅ Database indexes created successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to create database indexes: {e}")
+
+@app.on_event("startup")
+async def startup_event():
+    # Start background tasks
+    asyncio.create_task(create_indexes())
+
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
