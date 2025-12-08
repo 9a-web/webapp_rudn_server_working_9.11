@@ -403,7 +403,16 @@ export const JournalDetailModal = ({
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        {students.map((student, index) => (
+                        {[...students]
+                          .sort((a, b) => {
+                            // Сортировка по фамилии (первое слово в full_name)
+                            const getLastName = (name) => {
+                              if (!name) return '';
+                              return name.trim().split(' ')[0].toLowerCase();
+                            };
+                            return getLastName(a.full_name).localeCompare(getLastName(b.full_name), 'ru');
+                          })
+                          .map((student, index) => (
                           <motion.div
                             key={student.id}
                             initial={{ opacity: 0, y: 10 }}
