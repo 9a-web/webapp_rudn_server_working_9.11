@@ -181,16 +181,37 @@ export const CreateSubjectModal = ({
       hapticFeedback.impactOccurred('medium');
     }
     
+    // Формируем список предметов для подтверждения
+    const subjects = availableSubjects
+      .filter(s => selectedSubjects.has(s.name))
+      .map((s, index) => ({
+        name: s.name,
+        description: s.teachers.length > 0 ? `Преподаватель: ${s.teachers[0]}` : '',
+        color: getColorByIndex(existingSubjects.length + index),
+        teachers: s.teachers,
+        lessonsCount: s.lessonsCount
+      }));
+    
+    setSubjectsToConfirm(subjects);
+    setStep('confirm');
+  };
+
+  // Подтверждение и создание предметов
+  const handleConfirmCreate = async () => {
+    if (subjectsToConfirm.length === 0) return;
+    
+    if (hapticFeedback?.impactOccurred) {
+      hapticFeedback.impactOccurred('medium');
+    }
+    
     setCreatingFromSchedule(true);
     
     try {
-      const subjectsToCreate = availableSubjects
-        .filter(s => selectedSubjects.has(s.name))
-        .map((s, index) => ({
-          name: s.name,
-          description: s.teachers.length > 0 ? `Преподаватель: ${s.teachers[0]}` : null,
-          color: getColorByIndex(existingSubjects.length + index)
-        }));
+      const subjectsToCreate = subjectsToConfirm.map(s => ({
+        name: s.name,
+        description: s.description.trim() || null,
+        color: s.color
+      }));
       
       if (onCreateMultiple) {
         await onCreateMultiple(subjectsToCreate);
@@ -202,12 +223,43 @@ export const CreateSubjectModal = ({
       }
       
       setSelectedSubjects(new Set());
+      setSubjectsToConfirm([]);
+      setStep('select');
       onClose();
     } catch (error) {
       console.error('Error creating subjects from schedule:', error);
     } finally {
       setCreatingFromSchedule(false);
     }
+  };
+
+  // Обновление предмета в списке подтверждения
+  const updateSubjectToConfirm = (index, field, value) => {
+    setSubjectsToConfirm(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  // Удаление предмета из списка подтверждения
+  const removeSubjectFromConfirm = (index) => {
+    if (hapticFeedback?.impactOccurred) {
+      hapticFeedback.impactOccurred('light');
+    }
+    setSubjectsToConfirm(prev => prev.filter((_, i) => i !== index));
+    if (subjectsToConfirm.length <= 1) {
+      setStep('select');
+    }
+  };
+
+  // Возврат к выбору
+  const handleBackToSelect = () => {
+    if (hapticFeedback?.impactOccurred) {
+      hapticFeedback.impactOccurred('light');
+    }
+    setStep('select');
+    setEditingSubjectIndex(null);
   };
 
   if (!isOpen) return null;
