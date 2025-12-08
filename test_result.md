@@ -222,3 +222,15 @@ agent_communication:
       - working: true
         agent: "testing"
         comment: "✅ Successfully tested new sessions/from-schedule endpoint as requested in review. ALL 6 test steps passed: 1) POST /api/journals creates test journal with telegram_id=123456789, name='Тестовый журнал', group_name='ИВТ-101', 2) POST /api/journals/{journal_id}/subjects creates subject 'Математический анализ', 3) POST /api/journals/{journal_id}/sessions/from-schedule creates 3 sessions with different types (Лекция→lecture, Семинар→seminar, Лабораторная→lab), 4) Verified session titles contain time and type, descriptions contain teacher and auditory, 5) Duplicate prevention works correctly (skipped_count=3 on repeat), 6) GET /api/journals/{journal_id}/sessions retrieves all created sessions. Session type mapping, title formatting, and duplicate prevention all working as expected. Backend URL: http://localhost:8001"
+
+  - task: "GET /api/journals/{journal_id}/stats - статистика журнала посещаемости"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ Successfully tested Journal Statistics API as requested in review. ALL 6 test steps passed: 1) POST /api/journals creates test journal (telegram_id=123456789, name='Тестовый журнал статистики', group_name='ИВТ-102'), 2) POST /api/journals/{journal_id}/students/bulk adds 5 students (Иванов Иван, Петров Петр, Сидорова Анна, Козлов Дмитрий, Николаева Мария), 3) POST /api/journals/{journal_id}/subjects creates subject 'Математика', 4) POST /api/journals/{journal_id}/sessions creates 4 sessions with different types and dates, 5) POST /api/journals/sessions/{session_id}/attendance marks attendance with mixed statuses (present, absent, late, excused), 6) GET /api/journals/{journal_id}/stats returns complete statistics with all required fields: journal_id, total_students=5, linked_students, total_sessions=4, overall_attendance_percent=70.0, students_stats array with attendance details, sessions_stats array with session attendance data. All calculations and data types validated. Backend URL: http://localhost:8001"
