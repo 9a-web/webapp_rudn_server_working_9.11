@@ -440,28 +440,90 @@ export const CreateSessionModal = ({
                 </div>
               )}
 
-              {/* Выбор недели */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setSelectedWeek(1)}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                    selectedWeek === 1
-                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
-                      : 'bg-white/5 text-gray-400 border border-white/10'
-                  }`}
-                >
-                  Текущая неделя
-                </button>
-                <button
-                  onClick={() => setSelectedWeek(2)}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                    selectedWeek === 2
-                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
-                      : 'bg-white/5 text-gray-400 border border-white/10'
-                  }`}
-                >
-                  Следующая неделя
-                </button>
+              {/* Переключатель недель */}
+              <div className="space-y-2">
+                {/* Навигация по неделям */}
+                <div className="flex items-center justify-between bg-white/5 rounded-xl p-2">
+                  <button
+                    onClick={() => setWeekOffset(prev => prev - 1)}
+                    disabled={weekOffset <= -8} // Максимум 8 недель назад
+                    className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  
+                  <div className="text-center flex-1">
+                    <p className="text-white font-medium text-sm">
+                      {weekOffset === 0 ? 'Текущая неделя' : 
+                       weekOffset === 1 ? 'Следующая неделя' :
+                       weekOffset === -1 ? 'Прошлая неделя' :
+                       weekOffset > 1 ? `Через ${weekOffset} нед.` :
+                       `${Math.abs(weekOffset)} нед. назад`}
+                    </p>
+                    <p className="text-xs text-gray-500">{getWeekRange(weekOffset)}</p>
+                  </div>
+                  
+                  <button
+                    onClick={() => setWeekOffset(prev => prev + 1)}
+                    disabled={weekOffset >= 4} // Максимум 4 недели вперёд
+                    className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Быстрые кнопки */}
+                <div className="flex gap-2">
+                  {showPastWeeks && (
+                    <button
+                      onClick={() => setWeekOffset(-1)}
+                      className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-1 ${
+                        weekOffset === -1
+                          ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                          : 'bg-white/5 text-gray-500 border border-white/10'
+                      }`}
+                    >
+                      <History className="w-3 h-3" />
+                      Прошлая
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setWeekOffset(0)}
+                    className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all ${
+                      weekOffset === 0
+                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                        : 'bg-white/5 text-gray-500 border border-white/10'
+                    }`}
+                  >
+                    Текущая
+                  </button>
+                  <button
+                    onClick={() => setWeekOffset(1)}
+                    className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all ${
+                      weekOffset === 1
+                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                        : 'bg-white/5 text-gray-500 border border-white/10'
+                    }`}
+                  >
+                    Следующая
+                  </button>
+                </div>
+
+                {/* Кнопка показа прошлых недель */}
+                {!showPastWeeks && (
+                  <button
+                    onClick={() => {
+                      setShowPastWeeks(true);
+                      if (hapticFeedback?.impactOccurred) {
+                        hapticFeedback.impactOccurred('light');
+                      }
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-2 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                  >
+                    <History className="w-3.5 h-3.5" />
+                    Показать прошедшие пары
+                  </button>
+                )}
               </div>
 
               {/* Loading */}
