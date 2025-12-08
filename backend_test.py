@@ -70,15 +70,28 @@ def test_journal_statistics_api():
             return False
             
         students_response = response.json()
-        print(f"DEBUG: Students response: {students_response}")
-        students = students_response.get("students", [])
+        
+        if students_response.get("added_count") != 5:
+            log_test("Students Bulk Create Validation", "FAIL", f"Expected added_count=5, got {students_response.get('added_count')}")
+            return False
+            
+        log_test("POST /api/journals/{journal_id}/students/bulk", "PASS", f"5 students added successfully")
+        
+        # Get the actual students to get their IDs
+        response = requests.get(f"{API_BASE}/journals/{journal_id}/students", timeout=10)
+        
+        if response.status_code != 200:
+            log_test("GET /api/journals/{journal_id}/students", "FAIL", f"Status: {response.status_code}, Response: {response.text}")
+            return False
+            
+        students = response.json()
         
         if len(students) != 5:
-            log_test("Students Bulk Create Validation", "FAIL", f"Expected 5 students, got {len(students)}. Response: {students_response}")
+            log_test("Students GET Validation", "FAIL", f"Expected 5 students, got {len(students)}")
             return False
             
         student_ids = [student["id"] for student in students]
-        log_test("POST /api/journals/{journal_id}/students/bulk", "PASS", f"5 students added successfully. IDs: {student_ids}")
+        log_test("GET /api/journals/{journal_id}/students", "PASS", f"Retrieved 5 students. IDs: {student_ids}")
         
         # Step 3: Create subject (POST /api/journals/{journal_id}/subjects)
         log_test("Step 3: Creating subject", "INFO", f"Creating subject for journal {journal_id}")
