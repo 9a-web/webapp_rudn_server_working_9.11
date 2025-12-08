@@ -12,6 +12,14 @@ export const JournalSection = ({ telegramId, hapticFeedback, userSettings, pendi
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedJournal, setSelectedJournal] = useState(null);
 
+  // Сообщаем родительскому компоненту об открытии модальных окон
+  useEffect(() => {
+    if (onModalStateChange) {
+      onModalStateChange(showCreateModal || !!selectedJournal);
+    }
+  }, [showCreateModal, selectedJournal, onModalStateChange]);
+
+
   const loadJournals = useCallback(async () => {
     if (!telegramId) return;
     
