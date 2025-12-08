@@ -263,7 +263,7 @@ const GroupSelector = ({ onGroupSelected, onCancel }) => {
         </div>
       ) : (
         /* List of items */
-        <div className="space-y-2">
+        <div className="space-y-2 pb-32">
           {getCurrentList().length === 0 ? (
             <div className="text-center py-12 text-white/50">
               {t('groupSelector.noOptions')}
