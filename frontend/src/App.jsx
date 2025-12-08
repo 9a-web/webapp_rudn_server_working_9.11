@@ -125,6 +125,8 @@ const Home = () => {
     return savedTab || 'home';
   });
   
+  // Состояние для отслеживания модальных окон журнала
+  const [isJournalModalOpen, setIsJournalModalOpen] = useState(false);
   // Состояние для отслеживания модального окна AddTaskModal из TasksSection
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   // Состояния для модальных окон в Header (для отслеживания)
