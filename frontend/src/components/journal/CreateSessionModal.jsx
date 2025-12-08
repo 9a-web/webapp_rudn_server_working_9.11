@@ -589,14 +589,18 @@ export const CreateSessionModal = ({
                               whileTap={{ scale: 0.98 }}
                               className={`w-full text-left p-3 rounded-xl border transition-all ${
                                 isSelected
-                                  ? 'bg-blue-500/20 border-blue-500/50'
-                                  : 'bg-white/5 border-white/10 hover:bg-white/10'
+                                  ? event.isPast 
+                                    ? 'bg-orange-500/20 border-orange-500/50'
+                                    : 'bg-blue-500/20 border-blue-500/50'
+                                  : event.isPast
+                                    ? 'bg-orange-500/5 border-orange-500/20 hover:bg-orange-500/10'
+                                    : 'bg-white/5 border-white/10 hover:bg-white/10'
                               }`}
                             >
                               <div className="flex items-start gap-3">
                                 <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5 ${
                                   isSelected
-                                    ? 'bg-blue-500'
+                                    ? event.isPast ? 'bg-orange-500' : 'bg-blue-500'
                                     : 'bg-white/10 border border-white/20'
                                 }`}>
                                   {isSelected && <Check className="w-3 h-3 text-white" />}
@@ -607,8 +611,16 @@ export const CreateSessionModal = ({
                                     <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-gray-300">
                                       {event.lessonType || 'Занятие'}
                                     </span>
+                                    {event.isPast && (
+                                      <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 flex items-center gap-1">
+                                        <History className="w-2.5 h-2.5" />
+                                        Прошло
+                                      </span>
+                                    )}
                                   </div>
-                                  <p className="text-sm text-gray-400 mb-1">{formatDate(event.date)}</p>
+                                  <p className={`text-sm mb-1 ${event.isPast ? 'text-orange-400/70' : 'text-gray-400'}`}>
+                                    {formatDate(event.date)}
+                                  </p>
                                   {(event.teacher || event.auditory) && (
                                     <p className="text-xs text-gray-500 truncate">
                                       {[event.teacher, event.auditory].filter(Boolean).join(' • ')}
