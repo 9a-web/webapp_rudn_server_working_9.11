@@ -80,7 +80,7 @@ const WelcomeScreen = ({ onGetStarted }) => {
         <img 
           src="/shapes-rudn-go.png"
           alt="RUDN GO Shapes"
-          style={{ width: '350px', height: '157px' }}
+          style={{ width: '420px', height: '188px' }}
           className="object-contain"
         />
       </motion.div>
