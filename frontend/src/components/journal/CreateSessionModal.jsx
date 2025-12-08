@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, BookOpen, GraduationCap, FlaskConical, FileText, CalendarRange, Check, Loader2, AlertCircle } from 'lucide-react';
+import { X, Calendar, BookOpen, GraduationCap, FlaskConical, FileText, CalendarRange, Check, Loader2, AlertCircle, ChevronLeft, ChevronRight, History } from 'lucide-react';
 import { scheduleAPI } from '../../services/api';
 import { createSessionsFromSchedule } from '../../services/journalAPI';
 
@@ -22,7 +22,7 @@ const DAYS_MAP = {
   'воскресенье': 0,
 };
 
-// Получить дату для дня недели на указанной неделе
+// Получить дату для дня недели на указанной неделе (weekOffset: -N = прошлые, 0 = текущая, +N = будущие)
 const getDateForDay = (dayName, weekOffset = 0) => {
   const dayIndex = DAYS_MAP[dayName.toLowerCase()];
   if (dayIndex === undefined) return null;
@@ -48,6 +48,31 @@ const formatDate = (dateStr) => {
   const date = new Date(dateStr);
   const options = { weekday: 'short', day: 'numeric', month: 'short' };
   return date.toLocaleDateString('ru-RU', options);
+};
+
+// Получить диапазон дат недели
+const getWeekRange = (weekOffset) => {
+  const today = new Date();
+  const currentDay = today.getDay();
+  const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
+  
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + mondayOffset + (weekOffset * 7));
+  
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  
+  const formatShort = (d) => d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+  
+  return `${formatShort(monday)} — ${formatShort(sunday)}`;
+};
+
+// Проверить, прошла ли дата
+const isPastDate = (dateStr) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const date = new Date(dateStr);
+  return date < today;
 };
 
 export const CreateSessionModal = ({ 
