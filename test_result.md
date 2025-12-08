@@ -108,6 +108,17 @@ frontend:
         agent: "testing"
         comment: "Frontend testing not performed as per system limitations. Backend APIs are working correctly."
 
+  - task: "Hide bottom menu in Journal modals (Creation, Settings, Editing)"
+    implemented: true
+    working: true
+    file: "frontend/src/App.jsx, frontend/src/components/JournalSection.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Implemented: Bottom menu is now hidden when Create Journal modal or Journal Detail modal (which contains all editing/settings) is open."
 metadata:
   created_by: "testing_agent"
   version: "1.0"
