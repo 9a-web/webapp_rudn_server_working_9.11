@@ -17,154 +17,228 @@ async def create_test_data():
     
     print("🚀 Создание тестовых данных...")
     
-    # Очистка существующих данных (опционально)
+    # Очистка для чистого теста (опционально раскомментировать)
     # await db.user_settings.delete_many({})
-    # await db.user_stats.delete_many({})
-    # await db.tasks.delete_many({})
-    # await db.user_achievements.delete_many({})
-    # await db.rooms.delete_many({})
+    # await db.attendance_journals.delete_many({})
+    # await db.journal_students.delete_many({})
+    # await db.journal_sessions.delete_many({})
+    # await db.attendance_records.delete_many({})
     
     # Тестовые факультеты и группы
     faculties = [
         {"id": "1", "name": "Инженерная академия"},
         {"id": "2", "name": "Экономический факультет"},
         {"id": "3", "name": "Юридический институт"},
-        {"id": "4", "name": "Факультет физико-математических наук"},
     ]
     
-    groups = [
-        "НМб-21-1-о", "НМб-22-1-о", "НМб-23-1-о",
-        "ЭБ-21-1-о", "ЭБ-22-1-о", "ЭБ-23-1-о",
-        "ЮМ-21-1-о", "ЮМ-22-1-о", "ЮМ-23-1-о",
-        "ФМб-21-1-о", "ФМб-22-1-о", "ФМб-23-1-о",
-    ]
+    groups = ["НМб-21-1-о", "ЭБ-21-1-о", "ЮМ-21-1-о"]
     
-    # Создаём 15 тестовых пользователей
+    # Создаём 5 тестовых пользователей
     base_date = datetime.utcnow()
-    users_count = 15
+    users_count = 5
+    telegram_ids = []
     
     for i in range(1, users_count + 1):
         telegram_id = 100000 + i
+        telegram_ids.append(telegram_id)
         
-        # Случайный факультет и группа
-        faculty = random.choice(faculties)
-        group_name = random.choice(groups)
-        kurs = group_name.split('-')[1]
-        
-        # Дата регистрации (последние 30 дней)
-        days_ago = random.randint(0, 30)
-        created_at = base_date - timedelta(days=days_ago)
-        
-        # Последняя активность
-        last_activity_days = random.randint(0, days_ago)
-        last_activity = base_date - timedelta(days=last_activity_days, hours=random.randint(0, 23))
-        
-        # User settings
-        user_settings = {
-            "id": str(uuid.uuid4()),
-            "telegram_id": telegram_id,
-            "username": f"test_user_{i}",
-            "first_name": f"Тестовый{i}",
-            "last_name": f"Пользователь{i}",
-            "group_id": f"group_{i}",
-            "group_name": group_name,
-            "facultet_id": faculty["id"],
-            "facultet_name": faculty["name"],
-            "level_id": "1",
-            "kurs": kurs,
-            "form_code": "1",
-            "notifications_enabled": random.choice([True, False]),
-            "notification_time": random.choice([5, 10, 15, 20, 30]),
-            "referral_code": f"ref_{telegram_id}",
-            "referred_by": None,
-            "invited_count": random.randint(0, 5),
-            "created_at": created_at,
-            "last_activity": last_activity
-        }
-        
-        await db.user_settings.insert_one(user_settings)
-        
-        # User stats
-        user_stats = {
-            "telegram_id": telegram_id,
-            "groups_viewed": random.randint(1, 10),
-            "friends_invited": random.randint(0, 5),
-            "schedule_views": random.randint(10, 100),
-            "night_usage_count": random.randint(0, 10),
-            "early_usage_count": random.randint(0, 10),
-            "total_points": random.randint(100, 1000),
-            "achievements_count": random.randint(0, 10),
-            "analytics_views": random.randint(0, 20),
-            "calendar_opens": random.randint(0, 30),
-            "notifications_configured": 1 if user_settings["notifications_enabled"] else 0,
-            "schedule_shares": random.randint(0, 5),
-            "menu_items_visited": random.randint(5, 20),
-            "active_days": random.randint(1, 30),
-            "created_at": created_at
-        }
-        
-        await db.user_stats.insert_one(user_stats)
-        
-        # Создаём несколько задач для каждого пользователя
-        tasks_count = random.randint(2, 8)
-        for j in range(tasks_count):
-            task = {
+        # Проверяем, есть ли юзер
+        existing = await db.user_settings.find_one({"telegram_id": telegram_id})
+        if not existing:
+            user_settings = {
                 "id": str(uuid.uuid4()),
                 "telegram_id": telegram_id,
-                "text": f"Тестовая задача {j+1} для пользователя {i}",
-                "completed": random.choice([True, False]),
-                "category": random.choice(["учеба", "личное", "спорт", "проекты"]),
-                "priority": random.choice(["high", "medium", "low"]),
-                "deadline": None,
-                "target_date": None,
-                "notes": "",
-                "tags": [],
-                "order": j,
-                "created_at": created_at + timedelta(days=random.randint(0, days_ago)),
-                "updated_at": created_at + timedelta(days=random.randint(0, days_ago))
+                "username": f"test_user_{i}",
+                "first_name": f"Студент {i}",
+                "last_name": f"Тестовый",
+                "group_id": "group_1",
+                "group_name": groups[0],
+                "facultet_id": "1",
+                "facultet_name": faculties[0]["name"],
+                "level_id": "1",
+                "kurs": "3",
+                "form_code": "1",
+                "created_at": base_date,
+                "updated_at": base_date
             }
-            await db.tasks.insert_one(task)
-        
-        # Случайные достижения
-        achievements_count = random.randint(0, 5)
-        for j in range(achievements_count):
-            achievement = {
-                "telegram_id": telegram_id,
-                "achievement_id": f"achievement_{j+1}",
-                "earned_at": created_at + timedelta(days=random.randint(0, days_ago)),
-                "seen": random.choice([True, False])
-            }
-            await db.user_achievements.insert_one(achievement)
-        
-        print(f"✅ Создан пользователь {i}/{users_count}: {user_settings['first_name']} {user_settings['last_name']} (@{user_settings['username']})")
+            await db.user_settings.insert_one(user_settings)
+            print(f"✅ Создан пользователь {telegram_id}")
+
+    # === СОЗДАНИЕ ЖУРНАЛА ===
+    owner_id = telegram_ids[0] # Первый юзер - староста
+    journal_id = str(uuid.uuid4())
     
-    # Создаём несколько комнат
-    for i in range(1, 6):
-        room = {
+    journal = {
+        "journal_id": journal_id,
+        "name": "Математический анализ",
+        "group_name": groups[0],
+        "description": "Осенний семестр 2025",
+        "owner_id": owner_id,
+        "color": "purple",
+        "invite_token": str(uuid.uuid4())[:12],
+        "settings": {
+            "allow_self_mark": False,
+            "show_group_stats": True,
+            "absence_reasons": ["Болезнь", "Уважительная", "Работа"]
+        },
+        "created_at": base_date,
+        "updated_at": base_date
+    }
+    
+    await db.attendance_journals.insert_one(journal)
+    print(f"✅ Создан журнал: {journal['name']}")
+    
+    # === СОЗДАНИЕ СТУДЕНТОВ В ЖУРНАЛЕ ===
+    students_ids = []
+    
+    # 1. Староста (привязан)
+    s1_id = str(uuid.uuid4())
+    await db.journal_students.insert_one({
+        "id": s1_id,
+        "journal_id": journal_id,
+        "full_name": "Студент 1 (Староста)",
+        "telegram_id": telegram_ids[0],
+        "is_linked": True,
+        "order": 1,
+        "created_at": base_date - timedelta(days=30) # Был с начала
+    })
+    students_ids.append(s1_id)
+    
+    # 2. Отличник (привязан)
+    s2_id = str(uuid.uuid4())
+    await db.journal_students.insert_one({
+        "id": s2_id,
+        "journal_id": journal_id,
+        "full_name": "Студент 2 (Отличник)",
+        "telegram_id": telegram_ids[1],
+        "is_linked": True,
+        "order": 2,
+        "created_at": base_date - timedelta(days=30)
+    })
+    students_ids.append(s2_id)
+    
+    # 3. Прогульщик (не привязан)
+    s3_id = str(uuid.uuid4())
+    await db.journal_students.insert_one({
+        "id": s3_id,
+        "journal_id": journal_id,
+        "full_name": "Студент 3 (Прогульщик)",
+        "telegram_id": None,
+        "is_linked": False,
+        "order": 3,
+        "created_at": base_date - timedelta(days=30)
+    })
+    students_ids.append(s3_id)
+    
+    # 4. "Болеющий" (с уважительными причинами)
+    s4_id = str(uuid.uuid4())
+    await db.journal_students.insert_one({
+        "id": s4_id,
+        "journal_id": journal_id,
+        "full_name": "Студент 4 (Болеет)",
+        "telegram_id": telegram_ids[2],
+        "is_linked": True,
+        "order": 4,
+        "created_at": base_date - timedelta(days=30)
+    })
+    students_ids.append(s4_id)
+    
+    # 5. Новичок (пришел недавно)
+    s5_id = str(uuid.uuid4())
+    await db.journal_students.insert_one({
+        "id": s5_id,
+        "journal_id": journal_id,
+        "full_name": "Студент 5 (Новичок)",
+        "telegram_id": telegram_ids[3],
+        "is_linked": True,
+        "order": 5,
+        "created_at": base_date - timedelta(days=2) # Пришел 2 дня назад
+    })
+    students_ids.append(s5_id)
+    
+    # === СОЗДАНИЕ ЗАНЯТИЙ И ОТМЕТОК ===
+    # Создадим 10 занятий за последние 20 дней (через день)
+    
+    for i in range(10):
+        session_date = base_date - timedelta(days=20 - (i*2))
+        session_id = str(uuid.uuid4())
+        
+        await db.journal_sessions.insert_one({
+            "session_id": session_id,
+            "journal_id": journal_id,
+            "subject_id": "subj_1",
+            "date": session_date.strftime("%Y-%m-%d"),
+            "title": f"Лекция {i+1}",
+            "type": "lecture",
+            "created_at": session_date,
+            "created_by": owner_id
+        })
+        
+        # Проставляем посещаемость
+        
+        # Студент 1 (Староста) - всегда был
+        await db.attendance_records.insert_one({
             "id": str(uuid.uuid4()),
-            "name": f"Тестовая комната {i}",
-            "color": random.choice(["purple", "blue", "green", "orange", "pink"]),
-            "emoji": random.choice(["📚", "💻", "🎯", "🚀", "🎨"]),
-            "description": f"Описание комнаты {i}",
-            "owner_id": 100001,
-            "created_at": base_date - timedelta(days=random.randint(0, 30)),
-            "total_participants": random.randint(2, 8),
-            "total_tasks": random.randint(5, 20),
-            "completed_tasks": random.randint(0, 15)
-        }
-        await db.rooms.insert_one(room)
-    
-    print(f"\n🎉 Создано:")
-    total_users = await db.user_settings.count_documents({})
-    total_tasks = await db.tasks.count_documents({})
-    total_achievements = await db.user_achievements.count_documents({})
-    total_rooms = await db.rooms.count_documents({})
-    
-    print(f"   - {total_users} пользователей")
-    print(f"   - {total_tasks} задач")
-    print(f"   - {total_achievements} достижений")
-    print(f"   - {total_rooms} комнат")
-    
+            "journal_id": journal_id,
+            "session_id": session_id,
+            "student_id": s1_id,
+            "status": "present",
+            "marked_by": owner_id,
+            "marked_at": base_date
+        })
+        
+        # Студент 2 (Отличник) - иногда опаздывал
+        status = "late" if i % 3 == 0 else "present"
+        await db.attendance_records.insert_one({
+            "id": str(uuid.uuid4()),
+            "journal_id": journal_id,
+            "session_id": session_id,
+            "student_id": s2_id,
+            "status": status,
+            "marked_by": owner_id,
+            "marked_at": base_date
+        })
+        
+        # Студент 3 (Прогульщик) - 50/50
+        status = "absent" if i % 2 == 0 else "present"
+        await db.attendance_records.insert_one({
+            "id": str(uuid.uuid4()),
+            "journal_id": journal_id,
+            "session_id": session_id,
+            "student_id": s3_id,
+            "status": status,
+            "marked_by": owner_id,
+            "marked_at": base_date
+        })
+        
+        # Студент 4 (Болеет) - половина по уважительной
+        status = "excused" if i < 5 else "present"
+        await db.attendance_records.insert_one({
+            "id": str(uuid.uuid4()),
+            "journal_id": journal_id,
+            "session_id": session_id,
+            "student_id": s4_id,
+            "status": status,
+            "marked_by": owner_id,
+            "marked_at": base_date
+        })
+        
+        # Студент 5 (Новичок) - отмечаем ТОЛЬКО если дата занятия >= дата создания студента
+        # Он создан 2 дня назад, значит попадет только на последние 1-2 занятия
+        student_created = base_date - timedelta(days=2)
+        if session_date >= student_created:
+            await db.attendance_records.insert_one({
+                "id": str(uuid.uuid4()),
+                "journal_id": journal_id,
+                "session_id": session_id,
+                "student_id": s5_id,
+                "status": "present",
+                "marked_by": owner_id,
+                "marked_at": base_date
+            })
+            
+    print("✅ Созданы записи посещаемости")
+    print("🏁 Тестовые данные журнала готовы!")
     client.close()
 
 if __name__ == "__main__":
