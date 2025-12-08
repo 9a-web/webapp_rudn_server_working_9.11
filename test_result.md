@@ -108,6 +108,18 @@ backend:
         agent: "main"
         comment: "✅ Implemented critical scalability fixes: 1) Added MongoDB indexes for all collections to prevent full scans. 2) Offloaded CPU-heavy HTML parsing to thread executor to unblock event loop. 3) Optimized Scheduler V2 to use batch processing (50 users/batch) instead of loading all users into memory."
 
+  - task: "Notification History System"
+    implemented: true
+    working: true
+    file: "backend/server.py, backend/scheduler_v2.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Implemented: 1) NotificationHistoryItem model, 2) Scheduler saves sent notifications to history, 3) History API endpoint, 4) Frontend component."
+
 frontend:
   - task: "Admin Panel Frontend Integration"
     implemented: true
@@ -154,10 +166,23 @@ frontend:
         comment: "Implemented: Added confirmation step when creating sessions from schedule. Users can now edit teacher and auditory fields before confirming the addition of sessions."
         agent: "main"
         comment: "Implemented: Bottom menu is now hidden when Create Journal modal or Journal Detail modal (which contains all editing/settings) is open."
+  
+  - task: "Notification History UI"
+    implemented: true
+    working: true
+    file: "frontend/src/components/NotificationSettings.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Implemented: Added NotificationHistory component inside NotificationSettings. Shows history when notifications are enabled."
+
 metadata:
   created_by: "testing_agent"
-  version: "1.1"
-  test_sequence: 2
+  version: "1.2"
+  test_sequence: 3
   run_ui: false
 
 test_plan:
@@ -168,4 +193,4 @@ test_plan:
 
 agent_communication:
   - agent: "main"
-    message: "✅ COMPLETED: Scalability optimization. Added indexes, async parsing, and batch scheduler processing."
+    message: "✅ COMPLETED: Notification History feature. History persists forever in DB, visible in UI when notifications enabled."
