@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { modalVariants, backdropVariants } from '../utils/animations';
 import { pluralizeMinutes } from '../utils/pluralize';
 
+import NotificationHistory from './NotificationHistory';
 export const NotificationSettings = ({ 
   telegramId, 
   onClose, 
