@@ -70,10 +70,11 @@ def test_journal_statistics_api():
             return False
             
         students_response = response.json()
+        print(f"DEBUG: Students response: {students_response}")
         students = students_response.get("students", [])
         
         if len(students) != 5:
-            log_test("Students Bulk Create Validation", "FAIL", f"Expected 5 students, got {len(students)}")
+            log_test("Students Bulk Create Validation", "FAIL", f"Expected 5 students, got {len(students)}. Response: {students_response}")
             return False
             
         student_ids = [student["id"] for student in students]
