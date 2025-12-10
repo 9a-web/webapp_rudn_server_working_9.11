@@ -5952,6 +5952,49 @@ async def get_my_attendance(journal_id: str, telegram_id: int):
         logger.error(f"Error getting my attendance: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/journals/{journal_id}/viewers")
+async def update_journal_viewers(journal_id: str, data: JournalViewerUpdate):
+    """
+    Manage journal viewers (add/remove)
+    Only owner can perform this.
+    """
+    try:
+        journal = await db.attendance_journals.find_one({"journal_id": journal_id})
+        if not journal:
+            raise HTTPException(status_code=404, detail="Journal not found")
+        
+        if journal["owner_id"] != data.telegram_id:
+            raise HTTPException(status_code=403, detail="Only owner can manage viewers")
+        
+        if data.action == "add":
+            # Ensure viewer_ids exists
+            if "viewer_ids" not in journal:
+                 await db.attendance_journals.update_one(
+                    {"journal_id": journal_id},
+                    {"$set": {"viewer_ids": []}}
+                 )
+            
+            if data.target_user_id not in journal.get("viewer_ids", []):
+                await db.attendance_journals.update_one(
+                    {"journal_id": journal_id},
+                    {"$push": {"viewer_ids": data.target_user_id}}
+                )
+        elif data.action == "remove":
+            await db.attendance_journals.update_one(
+                {"journal_id": journal_id},
+                {"$pull": {"viewer_ids": data.target_user_id}}
+            )
+        else:
+             raise HTTPException(status_code=400, detail="Invalid action")
+        
+        return {"status": "success"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating journal viewers: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 @api_router.get("/journals/{journal_id}/stats", response_model=JournalStatsResponse)
 async def get_journal_stats(journal_id: str, telegram_id: int = 0):
