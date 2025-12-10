@@ -5954,7 +5954,7 @@ async def get_my_attendance(journal_id: str, telegram_id: int):
 
 
 @api_router.get("/journals/{journal_id}/stats", response_model=JournalStatsResponse)
-async def get_journal_stats(journal_id: str):
+async def get_journal_stats(journal_id: str, telegram_id: int = 0):
     """
     Получить статистику журнала
     ОПТИМИЗИРОВАНО: Uses Aggregation Pipeline + Smart Logic
@@ -5964,6 +5964,13 @@ async def get_journal_stats(journal_id: str):
         journal = await db.attendance_journals.find_one({"journal_id": journal_id})
         if not journal:
             raise HTTPException(status_code=404, detail="Journal not found")
+
+        # Check permissions: Owner OR Viewer
+        if telegram_id == 0:
+             raise HTTPException(status_code=401, detail="Authentication required")
+
+        if journal["owner_id"] != telegram_id and telegram_id not in journal.get("viewer_ids", []):
+             raise HTTPException(status_code=403, detail="Access denied")
         
         # 2. Получаем всех студентов и занятия одним запросом (без лимитов для точности)
         students = await db.journal_students.find(
