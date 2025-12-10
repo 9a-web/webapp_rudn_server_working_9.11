@@ -133,6 +133,7 @@ from models import (
     NotificationHistoryResponse
 )
 from notifications import get_notification_service
+    JournalViewerUpdate,
 from scheduler import get_scheduler  # Старая система (резерв)
 from scheduler_v2 import get_scheduler_v2  # Новая улучшенная система
 from cache import cache
