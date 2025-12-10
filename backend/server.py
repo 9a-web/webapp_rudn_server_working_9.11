@@ -1165,6 +1165,130 @@ async def delete_task(task_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.get("/tasks/{telegram_id}/productivity-stats", response_model=TaskProductivityStats)
+async def get_productivity_stats(telegram_id: int):
+    """Получить статистику продуктивности по задачам пользователя"""
+    try:
+        now = datetime.utcnow()
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Начало недели (понедельник)
+        week_start = today_start - timedelta(days=today_start.weekday())
+        
+        # Начало месяца
+        month_start = today_start.replace(day=1)
+        
+        # Получаем все выполненные задачи пользователя
+        completed_tasks = await db.tasks.find({
+            "telegram_id": telegram_id,
+            "completed": True
+        }).to_list(length=None)
+        
+        total_completed = len(completed_tasks)
+        
+        # Подсчёт выполненных за разные периоды
+        completed_today = 0
+        completed_this_week = 0
+        completed_this_month = 0
+        
+        # Собираем уникальные даты выполнения для расчёта streak
+        completion_dates = set()
+        
+        for task in completed_tasks:
+            completed_at = task.get("completed_at")
+            if completed_at:
+                if isinstance(completed_at, str):
+                    completed_at = datetime.fromisoformat(completed_at.replace('Z', '+00:00'))
+                
+                # Дата выполнения (без времени)
+                completion_date = completed_at.replace(hour=0, minute=0, second=0, microsecond=0)
+                completion_dates.add(completion_date.date())
+                
+                # Подсчёт по периодам
+                if completed_at >= today_start:
+                    completed_today += 1
+                if completed_at >= week_start:
+                    completed_this_week += 1
+                if completed_at >= month_start:
+                    completed_this_month += 1
+        
+        # Расчёт streak (серии дней подряд)
+        current_streak = 0
+        best_streak = 0
+        streak_dates = []
+        
+        if completion_dates:
+            # Сортируем даты по убыванию (от самой новой)
+            sorted_dates = sorted(completion_dates, reverse=True)
+            
+            # Проверяем текущий streak (начиная с сегодня или вчера)
+            today = now.date()
+            yesterday = (now - timedelta(days=1)).date()
+            
+            # Начинаем считать streak если сегодня или вчера была выполнена задача
+            if sorted_dates[0] == today or sorted_dates[0] == yesterday:
+                current_streak = 1
+                streak_dates.append(sorted_dates[0].isoformat())
+                
+                # Считаем последовательные дни
+                for i in range(1, len(sorted_dates)):
+                    expected_date = sorted_dates[i-1] - timedelta(days=1)
+                    if sorted_dates[i] == expected_date:
+                        current_streak += 1
+                        streak_dates.append(sorted_dates[i].isoformat())
+                    else:
+                        break
+            
+            # Находим лучший streak за всё время
+            temp_streak = 1
+            for i in range(1, len(sorted_dates)):
+                expected_date = sorted_dates[i-1] - timedelta(days=1)
+                if sorted_dates[i] == expected_date:
+                    temp_streak += 1
+                else:
+                    best_streak = max(best_streak, temp_streak)
+                    temp_streak = 1
+            best_streak = max(best_streak, temp_streak, current_streak)
+        
+        # Статистика по последним 7 дням
+        daily_stats = []
+        for i in range(6, -1, -1):
+            day = (today_start - timedelta(days=i)).date()
+            day_name = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'][day.weekday()]
+            count = 1 if day in completion_dates else 0
+            
+            # Подсчитываем количество выполненных задач за этот день
+            day_count = 0
+            for task in completed_tasks:
+                completed_at = task.get("completed_at")
+                if completed_at:
+                    if isinstance(completed_at, str):
+                        completed_at = datetime.fromisoformat(completed_at.replace('Z', '+00:00'))
+                    if completed_at.date() == day:
+                        day_count += 1
+            
+            daily_stats.append({
+                "date": day.isoformat(),
+                "day_name": day_name,
+                "count": day_count,
+                "has_completed": day in completion_dates
+            })
+        
+        return TaskProductivityStats(
+            total_completed=total_completed,
+            completed_today=completed_today,
+            completed_this_week=completed_this_week,
+            completed_this_month=completed_this_month,
+            current_streak=current_streak,
+            best_streak=best_streak,
+            streak_dates=streak_dates,
+            daily_stats=daily_stats
+        )
+    except Exception as e:
+        logger.error(f"Ошибка при получении статистики продуктивности: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ============ API для групповых задач ============
 
 @api_router.post("/group-tasks", response_model=GroupTaskResponse)
