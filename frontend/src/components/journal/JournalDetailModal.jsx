@@ -552,6 +552,7 @@ export const JournalDetailModal = ({
                 {activeTab === 'stats' && isOwner && (
                   <JournalStatsTab
                     journalId={journalId}
+                    telegramId={telegramId}
                     students={students}
                     subjects={subjects}
                     pendingMembers={pendingMembers}
