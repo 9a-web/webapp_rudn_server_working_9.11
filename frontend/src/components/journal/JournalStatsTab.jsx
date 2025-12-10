@@ -63,7 +63,8 @@ export const JournalStatsTab = ({
   students, 
   subjects, 
   pendingMembers,
-  gradient = 'from-purple-400 to-pink-400'
+  gradient = 'from-purple-400 to-pink-400',
+  isOwner = false
 }) => {
   const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
