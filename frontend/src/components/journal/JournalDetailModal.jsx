@@ -562,8 +562,8 @@ export const JournalDetailModal = ({
                   </div>
                 )}
 
-                {/* Stats Tab */}
-                {activeTab === 'stats' && isOwner && (
+                {/* Stats Tab - показываем владельцу или пользователям с доступом */}
+                {activeTab === 'stats' && canViewStats && (
                   <JournalStatsTab
                     journalId={journalId}
                     telegramId={telegramId}
@@ -571,11 +571,12 @@ export const JournalDetailModal = ({
                     subjects={subjects}
                     pendingMembers={pendingMembers}
                     gradient={gradient}
+                    isOwner={isOwner}
                   />
                 )}
 
-                {/* Non-owner view - My Attendance */}
-                {!isOwner && journal && (
+                {/* Non-owner view - My Attendance (только если нет доступа к статистике) */}
+                {!isOwner && !canViewStats && journal && (
                   <MyAttendanceView journal={journal} telegramId={telegramId} />
                 )}
               </div>
