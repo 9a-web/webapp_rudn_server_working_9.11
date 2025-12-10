@@ -549,8 +549,8 @@ const Home = () => {
       try {
         const result = await achievementsAPI.trackAction(user.id, actionType);
         if (result.new_achievements && result.new_achievements.length > 0) {
-          // Показываем первое новое достижение
-          setNewAchievement(result.new_achievements[0]);
+          // Показываем первое новое достижение через очередь
+          showAchievementInQueue(result.new_achievements[0]);
           // Обновляем данные достижений
           loadAchievementsData();
         }
