@@ -150,6 +150,18 @@ backend:
         agent: "testing"
         comment: "✅ Successfully tested complete Study Streaks functionality. All test scenarios passed: 1) Task creation (POST /api/tasks) with telegram_id 999888777, 2) Task completion (PUT /api/tasks/{task_id} with completed: true) correctly sets completed_at timestamp, 3) Productivity stats (GET /api/tasks/{telegram_id}/productivity-stats) shows current_streak >= 1 and completed_today >= 1, 4) Counter increments work correctly when completing additional tasks, 5) Task uncompletion (completed: false) properly clears completed_at and updates statistics, 6) All data validation passed including streak calculations, daily_stats structure (7 elements with Russian day names), and proper data types. Study Streaks system is fully functional."
 
+  - task: "Achievements System (Система достижений) - Complete Testing"
+    implemented: true
+    working: false
+    file: "backend/server.py, backend/achievements.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ MINOR ISSUE FOUND: Achievements system mostly working correctly but has 24 achievements instead of expected 25. All endpoints functional: 1) GET /api/achievements returns 24 achievements with correct structure (id, name, description, emoji, points, type, requirement), 2) GET /api/user-stats/{telegram_id} returns proper user statistics, 3) GET /api/user-achievements/{telegram_id} returns user achievements correctly, 4) POST /api/track-action works for all tested actions (select_group→first_group, view_analytics→analyst, open_calendar→organizer, configure_notifications→settings_master, create_task→first_task, night_usage→night_owl, early_usage→early_bird, share_schedule→knowledge_sharer), 5) POST /api/user-achievements/{telegram_id}/mark-seen works correctly, 6) Duplicate action prevention working. Only discrepancy: 24 vs 25 achievements count."
+
 frontend:
   - task: "Admin Panel Frontend Integration"
     implemented: true
