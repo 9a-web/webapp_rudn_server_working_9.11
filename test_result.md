@@ -1,5 +1,17 @@
 
 backend:
+  - task: "GET /api/tasks/{telegram_id}/productivity-stats - статистика продуктивности"
+    implemented: true
+    working: needs_testing
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: needs_testing
+        agent: "main"
+        comment: "Реализован endpoint для получения статистики продуктивности: total_completed, completed_today, completed_this_week, current_streak, best_streak, daily_stats"
+
   - task: "GET /api/admin/stats - общая статистика"
     implemented: true
     working: true
