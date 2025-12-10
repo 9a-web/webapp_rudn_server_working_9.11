@@ -1,8 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Calendar, Clock, MapPin, ChevronDown } from 'lucide-react';
-import axios from 'axios';
+import { Bell, ChevronDown } from 'lucide-react';
+import api from '../services/api';
 
 const NotificationHistory = ({ telegramId }) => {
   const [history, setHistory] = useState([]);
@@ -15,7 +15,7 @@ const NotificationHistory = ({ telegramId }) => {
 
   const fetchHistory = async () => {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/user-settings/${telegramId}/history?limit=10`);
+      const response = await api.get(`/user-settings/${telegramId}/history?limit=10`);
       setHistory(response.data.history);
     } catch (error) {
       console.error('Failed to fetch history:', error);
