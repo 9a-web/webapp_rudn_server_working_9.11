@@ -344,12 +344,23 @@ export const getMyAttendance = async (journalId, telegramId) => {
 };
 
 // Получить статистику журнала
-export const getJournalStats = async (journalId) => {
+export const getJournalStats = async (journalId, telegramId = 0) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/journals/${journalId}/stats`);
+    const response = await axios.get(`${API_BASE_URL}/api/journals/${journalId}/stats?telegram_id=${telegramId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching journal stats:', error);
+    throw error;
+  }
+};
+
+// Управление доступом к статистике
+export const updateJournalViewers = async (journalId, data) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/api/journals/${journalId}/viewers`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating journal viewers:', error);
     throw error;
   }
 };
