@@ -50,6 +50,7 @@ from models import (
     TaskCreate,
     TaskUpdate,
     TaskResponse,
+    TaskProductivityStats,
     TaskReorderItem,
     TaskReorderRequest,
     GroupTask,
