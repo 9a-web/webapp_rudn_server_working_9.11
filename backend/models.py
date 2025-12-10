@@ -19,9 +19,10 @@ class FilterDataResponse(BaseModel):
     levels: List[FilterOption] = []
 
 class FilterDataRequest(BaseModel):
-    faculty_id: str
-    course: Optional[int] = None
-    level: Optional[int] = None
+    facultet_id: str
+    level_id: Optional[str] = None
+    kurs: Optional[str] = None
+    form_code: Optional[str] = None
 
 class ScheduleRequest(BaseModel):
     group_name: str
