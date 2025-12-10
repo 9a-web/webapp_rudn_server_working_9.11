@@ -26,20 +26,28 @@ class FilterDataRequest(BaseModel):
     form_code: Optional[str] = None
 
 class ScheduleRequest(BaseModel):
-    group_name: str
-    date_start: Optional[str] = None
-    date_end: Optional[str] = None
+    facultet_id: str
+    level_id: str
+    kurs: Union[str, int]
+    form_code: str
+    group_id: str
+    group_name: Optional[str] = None  # Optional, может не передаваться
+    week_number: int = 1
 
 class ScheduleEvent(BaseModel):
     discipline: str
     time: str
     auditory: Optional[str] = None
     teacher: Optional[str] = None
-    lesson_type: Optional[str] = None
+    lessonType: Optional[str] = None  # Соответствует выводу парсера
+    day: Optional[str] = None
+    week: Optional[int] = None
     date: Optional[str] = None
 
 class ScheduleResponse(BaseModel):
     events: List[ScheduleEvent]
+    group_id: Optional[str] = None
+    week_number: Optional[int] = None
 
 # --- User Settings ---
 class UserSettings(BaseModel):
