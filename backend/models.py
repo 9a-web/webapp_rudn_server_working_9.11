@@ -642,9 +642,13 @@ class BotInfo(BaseModel):
     version: str
 
 class WeatherResponse(BaseModel):
-    temp: float
+    temperature: int
+    feels_like: int
+    humidity: int
+    wind_speed: int
     description: str
-    city: str
+    icon: str
+    city: str = "Москва"
 
 
 class JournalViewerUpdate(BaseModel):
