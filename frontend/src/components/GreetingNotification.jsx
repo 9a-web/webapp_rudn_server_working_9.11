@@ -113,7 +113,9 @@ export const GreetingNotification = ({ userFirstName, testHour = null, onRequest
             } else if (import.meta.env.REACT_APP_BACKEND_URL) {
               backendUrl = import.meta.env.REACT_APP_BACKEND_URL;
             }
-          } catch (e) {}
+          } catch (e) {
+            // Ignore environment variable access errors
+          }
           
           if (!backendUrl || backendUrl.trim() === '') {
             if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
