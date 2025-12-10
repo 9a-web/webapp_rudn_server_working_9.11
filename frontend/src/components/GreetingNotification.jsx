@@ -88,19 +88,30 @@ export const GreetingNotification = ({ userFirstName, testHour = null, onRequest
     // Check if we already showed greeting this session (skip check if testing)
     if (!testHour && sessionStorage.getItem('greetingShown')) return;
 
-    const checkTime = () => {
+    const checkTime = async () => {
       const now = new Date();
       const hour = testHour !== null ? testHour : now.getHours();
       
       let type = null;
       let title = "";
       let message = "";
+      let weather = null;
 
       // Morning: 04:00 - 11:59
       if (hour >= 4 && hour < 12) {
         type = 'morning';
         title = userFirstName ? `Доброе утро, ${userFirstName}!` : 'Доброе утро!';
         message = 'Желаем продуктивного дня и отличного настроения ✨';
+        
+        // Загружаем погоду для утреннего уведомления
+        try {
+          const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL}/api/weather`);
+          if (response.ok) {
+            weather = await response.json();
+          }
+        } catch (err) {
+          console.error('Error loading weather for greeting:', err);
+        }
       } 
       // Night: 22:00 - 04:59
       else if (hour >= 22 || hour < 4) {
@@ -110,7 +121,7 @@ export const GreetingNotification = ({ userFirstName, testHour = null, onRequest
       }
 
       if (type) {
-        const greetingData = { type, title, message };
+        const greetingData = { type, title, message, weather };
         
         if (!testHour) {
           sessionStorage.setItem('greetingShown', 'true');
@@ -124,7 +135,7 @@ export const GreetingNotification = ({ userFirstName, testHour = null, onRequest
           setGreeting(greetingData);
           setTimeout(() => {
             setGreeting(null);
-          }, 6000);
+          }, 8000); // Увеличим время показа т.к. теперь больше информации
         }
       }
     };
