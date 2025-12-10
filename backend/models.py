@@ -624,3 +624,9 @@ class WeatherResponse(BaseModel):
     temp: float
     description: str
     city: str
+
+
+class JournalViewerUpdate(BaseModel):
+    telegram_id: int
+    target_user_id: int
+    action: str # "add" or "remove"
