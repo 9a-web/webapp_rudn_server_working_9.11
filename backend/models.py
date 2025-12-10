@@ -17,6 +17,7 @@ class FilterDataResponse(BaseModel):
     courses: List[FilterOption] = []
     groups: List[FilterOption] = []
     levels: List[FilterOption] = []
+    forms: List[FilterOption] = []
 
 class FilterDataRequest(BaseModel):
     facultet_id: str
