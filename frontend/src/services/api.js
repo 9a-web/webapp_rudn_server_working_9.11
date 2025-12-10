@@ -458,6 +458,19 @@ export const tasksAPI = {
       handleError(error);
     }
   },
+
+  /**
+   * Получить статистику продуктивности пользователя
+   * @param {number} telegramId - Telegram ID пользователя
+   */
+  getProductivityStats: async (telegramId) => {
+    try {
+      const response = await api.get(`/tasks/${telegramId}/productivity-stats`);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
 };
 
 export default api;
