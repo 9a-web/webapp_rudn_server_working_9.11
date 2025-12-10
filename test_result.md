@@ -233,6 +233,19 @@ frontend:
       - working: true
         agent: "main"
         comment: "Implemented: GreetingNotification component that shows 'Good Morning' (04-12) or 'Good Night' (22-04) based on local time. Uses sessionStorage to show only once per session."
+
+  - task: "Journal Stats Access Control (Admin Panel)"
+    implemented: true
+    working: needs_testing
+    file: "frontend/src/components/journal/JournalDetailModal.jsx, frontend/src/components/journal/JournalAccessModal.jsx, backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: needs_testing
+        agent: "main"
+        comment: "Implemented access control for journal statistics: 1) Only journal owner (starosta) can see stats by default, 2) Owner can add other users to viewer_ids via JournalAccessModal (Shield button in header), 3) Users in viewer_ids can also view the stats tab, 4) Backend returns viewer_ids in JournalResponse, 5) Backend checks permissions in /api/journals/{journal_id}/stats endpoint"
+
 metadata:
   created_by: "testing_agent"
   version: "1.2"
