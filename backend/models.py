@@ -6,8 +6,8 @@ import uuid
 # --- RUDN Parser Models ---
 class Faculty(BaseModel):
     name: str
-    code: str
-    id: Optional[str] = None
+    id: str
+    code: Optional[str] = None  # Optional - not all sources provide this
 
 class FilterOption(BaseModel):
     label: str
