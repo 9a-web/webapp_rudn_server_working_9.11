@@ -698,6 +698,17 @@ export const JournalDetailModal = ({
             userSettings={userSettings}
           />
         )}
+
+        {/* Access Management Modal - только для владельца */}
+        <JournalAccessModal
+          isOpen={showAccessModal}
+          onClose={() => setShowAccessModal(false)}
+          journalId={journalId}
+          students={students}
+          currentViewerIds={journal?.viewer_ids || []}
+          telegramId={telegramId}
+          onUpdate={loadData}
+        />
       </motion.div>
     </AnimatePresence>
   );
