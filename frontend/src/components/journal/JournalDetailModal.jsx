@@ -328,14 +328,17 @@ export const JournalDetailModal = ({
             </div>
           ) : (
             <>
-              {/* Tabs */}
-              {isOwner && (
+              {/* Tabs - показываем владельцу или пользователям с доступом к статистике */}
+              {(isOwner || canViewStats) && (
                 <div className="flex gap-2 p-4 bg-[#0D0D0D] sticky top-[140px] z-10">
-                  {[
+                  {(isOwner ? [
                     { id: 'students', label: 'Студенты', icon: Users },
                     { id: 'sessions', label: 'Занятия', icon: Calendar },
                     { id: 'stats', label: 'Статистика', icon: BarChart3 },
-                  ].map((tab) => {
+                  ] : [
+                    // Для не-владельцев с доступом показываем только статистику
+                    { id: 'stats', label: 'Статистика', icon: BarChart3 },
+                  ]).map((tab) => {
                     const Icon = tab.icon;
                     return (
                       <button
