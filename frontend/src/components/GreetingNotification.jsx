@@ -63,7 +63,9 @@ export const GreetingNotification = ({ userFirstName, testHour = null }) => {
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className="fixed top-4 left-0 right-0 mx-auto z-[90] w-[95%] md:w-auto md:max-w-md flex justify-center pointer-events-none"
       >
-        <div className={`pointer-events-auto w-full max-w-sm backdrop-blur-md px-4 py-3 rounded-2xl shadow-lg flex items-center gap-3 border 
+        <div 
+          onClick={() => setGreeting(null)}
+          className={`cursor-pointer active:scale-95 transition-transform pointer-events-auto w-full max-w-sm backdrop-blur-md px-4 py-3 rounded-2xl shadow-lg flex items-center gap-3 border 
           ${isMorning 
             ? 'bg-gradient-to-r from-orange-500/90 to-amber-500/90 border-orange-200/20 text-white' 
             : 'bg-gradient-to-r from-indigo-900/90 to-blue-900/90 border-indigo-200/20 text-white'
