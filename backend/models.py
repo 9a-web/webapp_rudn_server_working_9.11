@@ -587,9 +587,12 @@ class ProcessJournalInviteRequest(BaseModel):
 
 class JournalStatsResponse(BaseModel):
     journal_id: str
-    students: List[Any]
-    sessions: List[Any]
-    attendance: Dict[str, Any]
+    total_students: int = 0
+    linked_students: int = 0
+    total_sessions: int = 0
+    overall_attendance_percent: float = 0
+    students_stats: List[Any] = []
+    sessions_stats: List[Any] = []
 
 class JournalInviteLinkResponse(BaseModel):
     invite_link: str
