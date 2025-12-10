@@ -292,6 +292,13 @@ export const JournalDetailModal = ({
               {isOwner && (
                 <div className="flex gap-2">
                   <button
+                    onClick={() => setShowAccessModal(true)}
+                    className="p-2 rounded-full bg-black/20 backdrop-blur-sm"
+                    title="Управление доступом к статистике"
+                  >
+                    <Shield className="w-5 h-5 text-white" />
+                  </button>
+                  <button
                     onClick={handleGenerateInviteLink}
                     className="p-2 rounded-full bg-black/20 backdrop-blur-sm"
                   >
