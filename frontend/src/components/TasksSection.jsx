@@ -109,6 +109,7 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
     if (user) {
       loadTasks();
       loadScheduleSubjects();
+      loadProductivityStats();
     }
   }, [user, userSettings, weekNumber]);
 
