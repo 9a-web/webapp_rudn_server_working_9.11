@@ -2,15 +2,18 @@
 backend:
   - task: "GET /api/tasks/{telegram_id}/productivity-stats - статистика продуктивности"
     implemented: true
-    working: needs_testing
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: needs_testing
         agent: "main"
         comment: "Реализован endpoint для получения статистики продуктивности: total_completed, completed_today, completed_this_week, current_streak, best_streak, daily_stats"
+      - working: true
+        agent: "testing"
+        comment: "✅ Successfully tested productivity stats endpoint. All test scenarios passed: 1) Non-existent telegram_id returns empty stats with all numeric fields = 0, 2) daily_stats contains exactly 7 elements, 3) Russian day names (Пн, Вт, Ср, Чт, Пт, Сб, Вс) are correctly formatted, 4) All numeric fields are non-negative integers. Endpoint structure and data validation working correctly."
 
   - task: "GET /api/admin/stats - общая статистика"
     implemented: true
