@@ -21,8 +21,8 @@ class FilterDataResponse(BaseModel):
 
 class FilterDataRequest(BaseModel):
     facultet_id: str
-    level_id: Optional[str] = None
-    kurs: Optional[str] = None
+    level_id: Optional[Union[str, int]] = None
+    kurs: Optional[Union[str, int]] = None
     form_code: Optional[str] = None
 
 class ScheduleRequest(BaseModel):
