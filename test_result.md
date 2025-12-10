@@ -209,3 +209,5 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: "✅ COMPLETED: Notification History feature. History persists forever in DB, visible in UI when notifications enabled."
+  - agent: "testing"
+    message: "✅ PRODUCTIVITY STATS API TESTING COMPLETED: GET /api/tasks/{telegram_id}/productivity-stats endpoint fully tested and working correctly. All test scenarios passed including non-existent user handling, daily_stats structure (7 elements), Russian day names validation, and numeric field validation. Ready for production use."
