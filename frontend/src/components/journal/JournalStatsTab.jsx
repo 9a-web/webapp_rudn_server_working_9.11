@@ -59,6 +59,7 @@ const PieTooltip = ({ active, payload }) => {
 
 export const JournalStatsTab = ({ 
   journalId, 
+  telegramId,
   students, 
   subjects, 
   pendingMembers,
@@ -75,7 +76,7 @@ export const JournalStatsTab = ({
       
       setIsLoading(true);
       try {
-        const data = await getJournalStats(journalId);
+        const data = await getJournalStats(journalId, telegramId);
         setStats(data);
       } catch (error) {
         console.error('Error loading journal stats:', error);
@@ -85,7 +86,7 @@ export const JournalStatsTab = ({
     };
 
     loadStats();
-  }, [journalId]);
+  }, [journalId, telegramId]);
 
   if (isLoading) {
     return (
