@@ -21,16 +21,16 @@ export const GreetingNotificationContent = ({ greeting, onClose }) => {
     >
       <div 
         onClick={onClose}
-        className={`cursor-pointer active:scale-95 transition-transform pointer-events-auto w-full max-w-sm backdrop-blur-md px-4 py-3 rounded-2xl shadow-lg border 
+        className={`cursor-pointer active:scale-95 transition-transform pointer-events-auto w-full max-w-sm backdrop-blur-xl px-4 py-3 rounded-2xl shadow-2xl border 
         ${greeting.type === 'morning' 
-          ? 'bg-gradient-to-r from-orange-500/90 to-amber-500/90 border-orange-200/20 text-white' 
-          : 'bg-gradient-to-r from-indigo-900/90 to-blue-900/90 border-indigo-200/20 text-white'
+          ? 'bg-gradient-to-br from-orange-500 to-amber-500 border-orange-300/30 text-white shadow-orange-500/25' 
+          : 'bg-gradient-to-br from-indigo-800 to-blue-900 border-indigo-400/30 text-white shadow-indigo-500/25'
         }`}
       >
         <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-full flex-shrink-0 ${greeting.type === 'morning' ? 'bg-white/20' : 'bg-white/10'}`}>
+          <div className={`p-2 rounded-full flex-shrink-0 ${greeting.type === 'morning' ? 'bg-white/25' : 'bg-white/15'}`}>
             {greeting.type === 'morning' ? (
-              <Sun className="w-6 h-6 text-yellow-200" />
+              <Sun className="w-6 h-6 text-yellow-100" />
             ) : (
               <Moon className="w-6 h-6 text-blue-200" />
             )}
@@ -40,7 +40,7 @@ export const GreetingNotificationContent = ({ greeting, onClose }) => {
             <h3 className="font-bold text-sm truncate">
               {greeting.title}
             </h3>
-            <p className="text-xs text-white/90 leading-tight mt-0.5">
+            <p className="text-xs text-white/95 leading-tight mt-0.5">
               {greeting.message}
             </p>
           </div>
@@ -48,19 +48,19 @@ export const GreetingNotificationContent = ({ greeting, onClose }) => {
         
         {/* Погода для утреннего уведомления */}
         {hasWeather && (
-          <div className="mt-3 pt-3 border-t border-white/20">
+          <div className="mt-3 pt-3 border-t border-white/25">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">{greeting.weather.icon}</span>
                 <div>
                   <div className="flex items-baseline gap-1">
                     <span className="text-xl font-bold">{greeting.weather.temperature}°</span>
-                    <span className="text-xs text-white/70">Москва</span>
+                    <span className="text-xs text-white/80">Москва</span>
                   </div>
-                  <p className="text-xs text-white/80">{greeting.weather.description}</p>
+                  <p className="text-xs text-white/90">{greeting.weather.description}</p>
                 </div>
               </div>
-              <div className="flex gap-3 text-xs text-white/70">
+              <div className="flex gap-3 text-xs text-white/80">
                 <div className="flex items-center gap-1">
                   <Droplets className="w-3 h-3" />
                   <span>{greeting.weather.humidity}%</span>
@@ -71,7 +71,7 @@ export const GreetingNotificationContent = ({ greeting, onClose }) => {
                 </div>
               </div>
             </div>
-            <p className="text-xs text-white/60 mt-1">
+            <p className="text-xs text-white/70 mt-1">
               Ощущается как {greeting.weather.feels_like}°
             </p>
           </div>
