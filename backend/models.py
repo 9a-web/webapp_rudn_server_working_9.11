@@ -11,7 +11,7 @@ class Faculty(BaseModel):
 
 class FilterOption(BaseModel):
     label: str
-    value: str
+    value: Union[str, int]  # Can be string or int (courses come as int)
 
 class FilterDataResponse(BaseModel):
     courses: List[FilterOption] = []
