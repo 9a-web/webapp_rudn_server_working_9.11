@@ -209,6 +209,18 @@ frontend:
         agent: "main"
         comment: "Implemented: Added NotificationHistory component inside NotificationSettings. Shows history when notifications are enabled."
 
+
+  - task: "Smart Greetings (Morning/Night)"
+    implemented: true
+    working: true
+    file: "frontend/src/components/GreetingNotification.jsx, frontend/src/App.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Implemented: GreetingNotification component that shows 'Good Morning' (04-12) or 'Good Night' (22-04) based on local time. Uses sessionStorage to show only once per session."
 metadata:
   created_by: "testing_agent"
   version: "1.2"
