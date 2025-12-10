@@ -118,6 +118,19 @@ export const JournalDetailModal = ({
     }
   }, [isOpen, journalId, loadData]);
 
+  // Устанавливаем вкладку статистики для пользователей с доступом (не владельцев)
+  useEffect(() => {
+    if (journal) {
+      const isOwner = journal.is_owner;
+      const canViewStats = isOwner || (journal.viewer_ids || []).includes(telegramId);
+      
+      // Если пользователь не владелец, но имеет доступ к статистике - переключаем на stats
+      if (!isOwner && canViewStats) {
+        setActiveTab('stats');
+      }
+    }
+  }, [journal, telegramId]);
+
   const handleGenerateInviteLink = async () => {
     try {
       const result = await generateJournalInviteLink(journalId);
