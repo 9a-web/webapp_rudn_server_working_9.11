@@ -80,33 +80,39 @@ class TelegramNotificationService:
         teacher = class_info.get('teacher', '')
         auditory = class_info.get('auditory', '')
         lesson_type = class_info.get('lessonType', '')
+        group_name = class_info.get('group_name', '')
         
-        # Определяем эмодзи в зависимости от типа занятия
-        emoji_map = {
-            'Лекция': '📚',
-            'Практика': '✏️',
-            'Лабораторная': '🔬',
-            'Семинар': '💬',
-        }
-        emoji = emoji_map.get(lesson_type, '🔔')
+        # Получаем текущее время в московском часовом поясе
+        from datetime import timezone
+        import pytz
+        moscow_tz = pytz.timezone('Europe/Moscow')
+        current_time = datetime.now(moscow_tz).strftime('%H:%M:%S')
         
-        # Формируем сообщение
-        message = f"{emoji} <b>Напоминание о паре</b>\n\n"
-        message += f"<b>{discipline}</b>\n"
+        # Формируем сообщение в новом формате
+        message = "🔔 <b>Уведомление!</b>\n"
         
-        if lesson_type:
-            message += f"Тип: {lesson_type}\n"
+        if group_name:
+            message += f"👥 Группа: {group_name}\n"
+        
+        message += f"\n⏰ Через {minutes_before} минут начинается:\n\n"
         
         if time:
-            message += f"⏰ Время: {time}\n"
+            message += f"🕒 {time}\n"
+        
+        # Формируем строку с дисциплиной и типом занятия
+        if lesson_type:
+            message += f"📚 {discipline} ({lesson_type})\n"
+        else:
+            message += f"📚 {discipline}\n"
         
         if teacher:
-            message += f"👨‍🏫 Преподаватель: {teacher}\n"
+            message += f"👨‍🏫 {teacher}\n"
         
         if auditory:
-            message += f"📍 Аудитория: {auditory}\n"
+            message += f"🏫 {auditory}\n"
         
-        message += f"\n⏱ Начало через {minutes_before} минут"
+        message += f"\n🕐 Текущее время: {current_time}\n"
+        message += "💡 Не опоздай!"
         
         return message
     
