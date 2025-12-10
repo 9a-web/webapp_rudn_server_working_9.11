@@ -4528,7 +4528,8 @@ async def get_journal_detail(journal_id: str, telegram_id: int = 0):
             linked_students=linked_students,
             total_sessions=total_sessions,
             is_owner=is_owner,
-            my_attendance_percent=my_attendance
+            my_attendance_percent=my_attendance,
+            viewer_ids=journal.get("viewer_ids", [])
         )
     except HTTPException:
         raise
