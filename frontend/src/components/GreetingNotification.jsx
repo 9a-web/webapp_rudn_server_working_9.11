@@ -105,7 +105,25 @@ export const GreetingNotification = ({ userFirstName, testHour = null, onRequest
         
         // Загружаем погоду для утреннего уведомления
         try {
-          const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL}/api/weather`);
+          // Используем тот же подход для определения backend URL
+          let backendUrl = '';
+          try {
+            if (import.meta.env.VITE_BACKEND_URL) {
+              backendUrl = import.meta.env.VITE_BACKEND_URL;
+            } else if (import.meta.env.REACT_APP_BACKEND_URL) {
+              backendUrl = import.meta.env.REACT_APP_BACKEND_URL;
+            }
+          } catch (e) {}
+          
+          if (!backendUrl || backendUrl.trim() === '') {
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+              backendUrl = 'http://localhost:8001';
+            } else {
+              backendUrl = window.location.origin;
+            }
+          }
+          
+          const response = await fetch(`${backendUrl}/api/weather`);
           if (response.ok) {
             weather = await response.json();
           }
