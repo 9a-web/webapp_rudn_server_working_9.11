@@ -261,6 +261,8 @@ export const JournalDetailModal = ({
 
   const gradient = journal ? COLORS[journal.color] || COLORS.purple : COLORS.purple;
   const isOwner = journal?.is_owner;
+  // Проверяем, может ли пользователь просматривать статистику (владелец или добавлен в viewer_ids)
+  const canViewStats = isOwner || (journal?.viewer_ids || []).includes(telegramId);
   const unlinkedStudents = students.filter(s => !s.is_linked);
 
   return (
