@@ -15,4 +15,5 @@ class JournalResponse(BaseModel):
     total_sessions: int = 0
     is_owner: bool = False
     my_attendance_percent: Optional[float] = None
+    viewer_ids: List[int] = []
     viewer_ids: List[int] = []  # Список пользователей с доступом к статистике
