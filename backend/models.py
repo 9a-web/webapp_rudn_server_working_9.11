@@ -55,15 +55,23 @@ class UserSettings(BaseModel):
     username: Optional[str] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    group_name: Optional[str] = None
-    facultet_name: Optional[str] = None
-    level: Optional[str] = None
-    course: Optional[int] = None
+    # Данные для получения расписания
+    group_id: Optional[str] = None  # UUID группы в API РУДН
+    group_name: Optional[str] = None  # Название группы
+    facultet_id: Optional[str] = None  # UUID факультета
+    facultet_name: Optional[str] = None  # Название факультета
+    level_id: Optional[str] = None  # UUID уровня образования
+    level: Optional[str] = None  # Название уровня (Бакалавриат и т.д.)
+    kurs: Optional[Union[str, int]] = None  # Курс
+    form_code: Optional[str] = None  # Код формы обучения (д, з, в)
+    course: Optional[int] = None  # Номер курса (для отображения)
     notifications_enabled: bool = False
     notification_time: int = 15
     referral_code: Optional[str] = None
     referred_by: Optional[int] = None
+    invited_count: int = 0  # Количество приглашенных пользователей
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    last_activity: Optional[datetime] = None
 
 class UserSettingsCreate(UserSettings):
     pass
