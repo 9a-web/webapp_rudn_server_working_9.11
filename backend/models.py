@@ -406,6 +406,7 @@ class TaskResponse(BaseModel):
     telegram_id: int
     text: str
     completed: bool
+    completed_at: Optional[datetime] = None
     category: Optional[str] = None
     priority: Optional[str] = 'medium'
     deadline: Optional[datetime] = None
@@ -415,6 +416,18 @@ class TaskResponse(BaseModel):
     order: int = 0
     created_at: datetime
     updated_at: datetime
+
+
+class TaskProductivityStats(BaseModel):
+    """Статистика продуктивности по задачам"""
+    total_completed: int = 0  # Всего выполнено задач
+    completed_today: int = 0  # Выполнено сегодня
+    completed_this_week: int = 0  # Выполнено на этой неделе
+    completed_this_month: int = 0  # Выполнено в этом месяце
+    current_streak: int = 0  # Текущая серия дней подряд
+    best_streak: int = 0  # Лучшая серия дней
+    streak_dates: List[str] = []  # Даты текущего стрика для отображения
+    daily_stats: List[dict] = []  # Статистика по дням за последние 7 дней
 
 
 class TaskReorderItem(BaseModel):
