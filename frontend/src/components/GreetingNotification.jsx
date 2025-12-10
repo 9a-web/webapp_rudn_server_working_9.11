@@ -4,7 +4,7 @@ import { Sun, Moon, Droplets, Wind } from 'lucide-react';
 
 // Standalone версия компонента для показа в очереди
 export const GreetingNotificationContent = ({ greeting, onClose }) => {
-  const hasWeather = greeting.weather && greeting.type === 'morning';
+  const hasWeather = greeting.weather != null;
   
   return (
     <motion.div
@@ -46,7 +46,7 @@ export const GreetingNotificationContent = ({ greeting, onClose }) => {
           </div>
         </div>
         
-        {/* Погода для утреннего уведомления */}
+        {/* Погода для уведомлений */}
         {hasWeather && (
           <div className="mt-3 pt-3 border-t border-white/25">
             <div className="flex items-center justify-between">
