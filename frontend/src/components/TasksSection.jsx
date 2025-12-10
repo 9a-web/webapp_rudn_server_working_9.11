@@ -61,6 +61,10 @@ export const TasksSection = ({ userSettings, selectedDate, weekNumber, onModalSt
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomDetailModalOpen, setIsRoomDetailModalOpen] = useState(false);
   
+  // Статистика продуктивности
+  const [productivityStats, setProductivityStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  
   // Категории задач с эмодзи
   const getCategoryEmoji = (category) => {
     const categories = {
