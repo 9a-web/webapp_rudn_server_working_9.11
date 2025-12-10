@@ -536,12 +536,12 @@ const Home = () => {
     const hour = new Date().getHours();
     let actionType = null;
     
-    // Ночной совенок (после 00:00)
-    if (hour >= 0 && hour < 6) {
+    // Ночной совенок (с 23:00 до 04:00)
+    if (hour >= 23 || hour < 4) {
       actionType = 'night_usage';
     }
-    // Утренняя пташка (до 08:00)
-    else if (hour >= 5 && hour < 8) {
+    // Утренняя пташка (до 08:00, но не в ночное время)
+    else if (hour >= 4 && hour < 8) {
       actionType = 'early_usage';
     }
     
