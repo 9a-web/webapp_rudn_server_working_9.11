@@ -201,19 +201,19 @@ def test_productivity_stats_api():
         return False
 def main():
     """Main test execution"""
-    print("🚀 Starting Backend API Testing for Journal Statistics API")
+    print("🚀 Starting Backend API Testing for Productivity Stats API")
     print(f"Backend URL: {BACKEND_URL}")
     print(f"Test started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print()
     
-    # Test journal statistics API
-    success = test_journal_statistics_api()
+    # Test productivity statistics API
+    success = test_productivity_stats_api()
     
     print("=" * 80)
     if success:
-        print("🎉 ALL TESTS PASSED - Journal Statistics API Working Correctly!")
+        print("🎉 ALL TESTS PASSED - Productivity Stats API Working Correctly!")
     else:
-        print("💥 TESTS FAILED - Issues found in Journal Statistics API")
+        print("💥 TESTS FAILED - Issues found in Productivity Stats API")
     print("=" * 80)
     
     return 0 if success else 1
