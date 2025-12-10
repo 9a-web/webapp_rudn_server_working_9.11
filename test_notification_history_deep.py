@@ -7,6 +7,8 @@ import uuid
 import sys
 
 # Configuration
+ROOT_DIR = Path(__file__).parent
+load_dotenv(ROOT_DIR / 'backend' / '.env')
 BASE_URL = "http://localhost:8001/api"
 MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017/rudn_schedule")
 DB_NAME = "rudn_schedule" # As per server.py defaults, though server.py uses os.environ['DB_NAME'] if set.
