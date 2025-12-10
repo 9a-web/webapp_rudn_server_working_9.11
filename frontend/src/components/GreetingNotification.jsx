@@ -97,15 +97,9 @@ export const GreetingNotification = ({ userFirstName, testHour = null, onRequest
       let message = "";
       let weather = null;
 
-      // Morning: 04:00 - 11:59
-      if (hour >= 4 && hour < 12) {
-        type = 'morning';
-        title = userFirstName ? `Доброе утро, ${userFirstName}!` : 'Доброе утро!';
-        message = 'Желаем продуктивного дня и отличного настроения ✨';
-        
-        // Загружаем погоду для утреннего уведомления
+      // Функция загрузки погоды
+      const loadWeather = async () => {
         try {
-          // Используем тот же подход для определения backend URL
           let backendUrl = '';
           try {
             if (import.meta.env.VITE_BACKEND_URL) {
@@ -127,17 +121,27 @@ export const GreetingNotification = ({ userFirstName, testHour = null, onRequest
           
           const response = await fetch(`${backendUrl}/api/weather`);
           if (response.ok) {
-            weather = await response.json();
+            return await response.json();
           }
         } catch (err) {
           console.error('Error loading weather for greeting:', err);
         }
+        return null;
+      };
+
+      // Morning: 04:00 - 11:59
+      if (hour >= 4 && hour < 12) {
+        type = 'morning';
+        title = userFirstName ? `Доброе утро, ${userFirstName}!` : 'Доброе утро!';
+        message = 'Желаем продуктивного дня и отличного настроения ✨';
+        weather = await loadWeather();
       } 
-      // Night: 22:00 - 04:59
+      // Night: 22:00 - 03:59
       else if (hour >= 22 || hour < 4) {
         type = 'night';
         title = userFirstName ? `Доброй ночи, ${userFirstName}!` : 'Доброй ночи!';
         message = 'Пора отдыхать и набираться сил перед завтрашним днем 🌙';
+        weather = await loadWeather();
       }
 
       if (type) {
