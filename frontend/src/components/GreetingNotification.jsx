@@ -159,7 +159,7 @@ export const GreetingNotification = ({ userFirstName, testHour = null, onRequest
           setGreeting(greetingData);
           setTimeout(() => {
             setGreeting(null);
-          }, 8000); // Увеличим время показа т.к. теперь больше информации
+          }, 10000); // 10 секунд для показа уведомления с погодой
         }
       }
     };
