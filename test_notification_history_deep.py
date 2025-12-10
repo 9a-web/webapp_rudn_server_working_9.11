@@ -5,22 +5,26 @@ from datetime import datetime, timedelta
 from motor.motor_asyncio import AsyncIOMotorClient
 import uuid
 import sys
+from dotenv import load_dotenv
+from pathlib import Path
+
+# Load env
+ROOT_DIR = Path("/app")
+load_dotenv(ROOT_DIR / 'backend' / '.env')
 
 # Configuration
-ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / 'backend' / '.env')
 BASE_URL = "http://localhost:8001/api"
-MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017/rudn_schedule")
-DB_NAME = "rudn_schedule" # As per server.py defaults, though server.py uses os.environ['DB_NAME'] if set.
-# Let's check environment variable for DB_NAME or default to rudn_schedule
-# In server.py: db = client[os.environ['DB_NAME']]
+MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
+DB_NAME = os.environ.get("DB_NAME", "rudn_schedule")
+
+print(f"DEBUG: Using DB_NAME={DB_NAME}")
 
 TEST_TELEGRAM_ID = 123456789
 
 async def setup_test_data():
     print(f"Connecting to MongoDB at {MONGO_URL}...")
     client = AsyncIOMotorClient(MONGO_URL)
-    db = client[os.environ.get('DB_NAME', 'rudn_schedule')]
+    db = client[DB_NAME]
     
     # 1. Clear existing history for test user
     print(f"Clearing history for user {TEST_TELEGRAM_ID}...")
@@ -75,11 +79,6 @@ async def test_api():
             print(f"   FAILED: Expected count 25, got {count}")
             return False
             
-        # Check sorting (should be newest first)
-        # Item 0 should be "Test Notification 1" (created last loop, wait. Loop 0: sent_at = base. Loop 24: sent_at = base - 240min.)
-        # Logic: Loop i=0 is newest (base_time). Loop i=24 is oldest.
-        # So item[0] from API should be "Test Notification 1"
-        
         first_title = history[0]["title"]
         print(f"   First item title: {first_title}")
         if first_title != "Test Notification 1":
@@ -100,7 +99,6 @@ async def test_api():
             print(f"   FAILED: Expected 10 items, got {len(history)}")
             return False
             
-        # Should start with "Test Notification 11"
         first_title = history[0]["title"]
         print(f"   First item title: {first_title}")
         if first_title != "Test Notification 11":
